@@ -17,26 +17,26 @@ CharmFunction Runner::pop() {
 	//ensure that the stack never changes size
 	//this is by placing more zeroes at the start
 	//as stuff is popped off the end
-	stack.insert(stack.begin(), Runner::zeroF());
-	CharmFunction tempCharmF = stack.at(stack.size() - 1);
-	stack.pop_back();
-	modifiedStackArea--;
+	Runner::stack.insert(Runner::stack.begin(), Runner::zeroF());
+	CharmFunction tempCharmF = Runner::stack.at(Runner::stack.size() - 1);
+	Runner::stack.pop_back();
+	if (Runner::modifiedStackArea != 0) Runner::modifiedStackArea--;
 	return tempCharmF;
 }
 
 void Runner::push(CharmFunction f) {
 	//ensure the stack never changes size again
 	//pop an element off the back of the stack
-	stack.push_back(f);
-	stack.erase(stack.begin());
-	modifiedStackArea++;
+	Runner::stack.push_back(f);
+	Runner::stack.erase(stack.begin());
+	Runner::modifiedStackArea++;
 }
 
 void Runner::swap(unsigned int n1, unsigned int n2) {
-	CharmFunction tempFromN1 = stack.at(n1);
-	CharmFunction tempFromN2 = stack.at(n2);
-	stack[n1] = tempFromN2;
-	stack[n2] = tempFromN1;
+	CharmFunction tempFromN1 = Runner::stack.at(n1);
+	CharmFunction tempFromN2 = Runner::stack.at(n2);
+	Runner::stack[n1] = tempFromN2;
+	Runner::stack[n2] = tempFromN1;
 	Runner::updateModifiedStackArea();
 }
 
@@ -45,23 +45,23 @@ void Runner::updateModifiedStackArea() {
 	//then set the modifiedStackArea accordingly
 	for (unsigned int stackIndex = 0; stackIndex < MAX_STACK; stackIndex++) {
 		//do all the checks to make sure it's unchanged
-		if (stack[stackIndex].functionType == NUMBER_FUNCTION) {
-			if (stack[stackIndex].numberValue.whichType == INTEGER_VALUE) {
-				if (stack[stackIndex].numberValue.integerValue == 0) {
+		if (Runner::stack[stackIndex].functionType == NUMBER_FUNCTION) {
+			if (Runner::stack[stackIndex].numberValue.whichType == INTEGER_VALUE) {
+				if (Runner::stack[stackIndex].numberValue.integerValue == 0) {
 					//the stack cell is unchanged, keep going
 					//also i hate how i have to make all these calls in order
 					//looks freakin disgusting, but there's some unknown behavior
 					//if i dont (accessing an uninitialized value in a struct)
 				} else {
-					modifiedStackArea = MAX_STACK - stackIndex;
+					Runner::modifiedStackArea = MAX_STACK - stackIndex;
 					break;
 				}
 			} else {
-				modifiedStackArea = MAX_STACK - stackIndex;
+				Runner::modifiedStackArea = MAX_STACK - stackIndex;
 				break;
 			}
 		} else {
-			modifiedStackArea = MAX_STACK - stackIndex;
+			Runner::modifiedStackArea = MAX_STACK - stackIndex;
 			break;
 		}
 	}
@@ -73,14 +73,18 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 
 Runner::Runner() {
 	//initialize the stack
-	modifiedStackArea = 0;
+	Runner::modifiedStackArea = 0;
 	for (unsigned int stackIndex = 0; stackIndex < Runner::MAX_STACK; stackIndex++) {
-		Runner::push(Runner::zeroF());
+		Runner::stack.push_back(Runner::zeroF());
 	}
 }
 
 std::vector<CharmFunction> Runner::getStack() {
-	return stack;
+	return Runner::stack;
+}
+
+unsigned int Runner::getModifiedStackArea() {
+	return Runner::modifiedStackArea;
 }
 
 void Runner::run(std::vector<CharmFunction> parsedProgram) {

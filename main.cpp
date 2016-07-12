@@ -15,8 +15,14 @@ int main(int argc, char const *argv[]) {
 	for (auto currentFunction : parsedProgram) {
 		printf("%i ", currentFunction.functionType);
 	}
+	printf("\n");
 	runner.run(parsedProgram);
-	
+	printf("MODIFIED STACK AREA: %i\n", runner.getModifiedStackArea());
+	printf("THE STACK (just the types):\n");
+	std::vector<CharmFunction> postStack = runner.getStack();
+	for (unsigned int stackIndex = 0; stackIndex < runner.getModifiedStackArea(); stackIndex++) {
+		printf("%i ", postStack.at(8192 - stackIndex - 1).functionType);
+	}
 	printf("\n");
 	return 0;
 }

@@ -25,5 +25,6 @@ private:
 public:
 	Runner();
 	std::vector<CharmFunction> getStack();
+	unsigned int getModifiedStackArea();
 	void run(std::vector<CharmFunction> parsedProgram);
 };
