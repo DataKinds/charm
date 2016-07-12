@@ -1,5 +1,7 @@
 #include <string>
 #include <stdexcept>
+#include <fstream>
+#include <sstream>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -11,6 +13,24 @@
 int main(int argc, char const *argv[]) {
 	Parser parser = Parser();
 	Runner runner = Runner();
+	//first, we print fun info and load the prelude
+	printf("Charm Interpreter v%s\n", "0.0.1");
+	printf("Made by @Aearnus\n");
+	printf("Looking for Prelude.charm...\n");
+	std::stringstream preludeFile;
+	try {
+		std::ifstream fd("Prelude.charm");
+		std::string line;
+		while (std::getline(fd, line)) {
+			preludeFile << line;
+		}
+		//load up the Prelude.charm file
+		runner.run(parser.parse(preludeFile.str()));
+		printf("Prelude.charm loaded.\n");
+	} catch (std::exception &e) {
+		printf("Prelude.charm nonexistant or unopenable.\n");
+	}
+
 	//begin the interactive loop
 	while (true) {
 		std::string codeInput(readline("Charm$ "));

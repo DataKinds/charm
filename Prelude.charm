@@ -1,1 +1,2 @@
 p := dup pp
+print := p newline
