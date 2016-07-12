@@ -20,8 +20,8 @@ int main(int argc, char const *argv[]) {
 	printf("MODIFIED STACK AREA: %i\n", runner.getModifiedStackArea());
 	printf("THE STACK (just the types):\n");
 	std::vector<CharmFunction> postStack = runner.getStack();
-	for (unsigned int stackIndex = 0; stackIndex < runner.getModifiedStackArea(); stackIndex++) {
-		printf("%i ", postStack.at(postStack.size() - stackIndex - 1).functionType);
+	for (unsigned int stackIndex = runner.getModifiedStackArea(); stackIndex > 0; stackIndex--) {
+		printf("%i ", postStack.at(postStack.size() - stackIndex).functionType);
 	}
 	printf("\n");
 	return 0;
