@@ -11,7 +11,6 @@ class Runner {
 private:
 	//the stack is automatically initialized to 8192 zero ints
 	std::vector<CharmFunction> stack;
-	const unsigned int MAX_STACK = 8192;
 	//says how much of the stack was changed, for printing n stuff
 	unsigned int modifiedStackArea;
 	//update the modifiedStackArea, really only called on swap
@@ -29,6 +28,7 @@ private:
 	void handleDefinedFunctions(CharmFunction f);
 public:
 	Runner();
+	const unsigned int MAX_STACK = 8192;
 	//a helper function to see if a charm function is a number / an int
 	bool isInt(CharmFunction f);
 	std::vector<CharmFunction> getStack();
