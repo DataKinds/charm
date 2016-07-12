@@ -55,7 +55,7 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 	}
 	for (unsigned long long lineNum = 0; lineNum < tokenizedString.size(); lineNum++) {
 		for (unsigned long long tokenNum = 0; tokenNum < tokenizedString[lineNum].size(); tokenNum++) {
-
+			printf("PARSING %s\n", tokenizedString[lineNum][tokenNum].c_str());
 			CharmFunction currentFunction;
 			currentFunction.functionType = Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]);
 			if (currentFunction.functionType == DEFINED_FUNCTION) {
@@ -81,43 +81,37 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 				//then, that second STRING_FUNCTION is popped
 				//and we continue. if there are no other STRING_FUNCTIONs,
 				//then we just end the string at the end of the line
-				unsigned long long nextTokenNum = tokenNum + 1;
-				while (nextTokenNum < tokenizedString[lineNum].size()) {
-					if (Parser::recognizeFunction(tokenizedString[lineNum][nextTokenNum]) == STRING_FUNCTION) {
-						break;
-					}
-					nextTokenNum++;
-				}
 				//create a string stream to compile the string for the funcion
 				std::stringstream ss;
 				//fill in the stringstream
-				for (unsigned long long stringIndex = tokenNum; stringIndex < nextTokenNum; stringIndex++) {
-					ss << tokenizedString[lineNum][stringIndex] << " ";
-					//pop each token as it's added to the string
-					tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + stringIndex);
+				//until the line ends or another " occurs
+				tokenNum++;
+				while ((tokenNum < tokenizedString[lineNum].size()) &&
+			           (Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]) != STRING_FUNCTION)) {
+						   ss << tokenizedString[lineNum][tokenNum] << " ";
+						   printf("ERASING %s\n", tokenizedString[lineNum][tokenNum].c_str());
+						   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
 				}
 				//make sure that the final quote was removed if it exists
 				//(AKA we're not at the end of the line)
-				if (nextTokenNum < tokenizedString[lineNum].size())
-					tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + nextTokenNum);
+				//if (nextTokenNum < tokenizedString[lineNum].size()) {
+				//	printf("ERASING \": %s\n", tokenizedString[lineNum][nextTokenNum].c_str());
+				//	tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + nextTokenNum);
+				//}
 				//FINALLY we can fill in currentFunction
 				currentFunction.stringValue = ss.str();
 			} else if (currentFunction.functionType == LIST_FUNCTION) {
 				//same thing as before, except it's a list
 				//and not a string. this time, we look for a "]"
 				//to end the list (or a new line. that works too)
-				unsigned long long nextTokenNum = tokenNum + 1;
-				while (nextTokenNum < tokenizedString[lineNum].size()) {
-					if (tokenizedString[lineNum][nextTokenNum] == "]") {
-						break;
-					}
-					nextTokenNum++;
-				}
 				//first, we have to make another string with the contents
 				//this is just like the string
 				std::stringstream ss;
-				for (unsigned long long tokenIndex = tokenNum; tokenIndex < nextTokenNum; tokenIndex++) {
-					ss << tokenizedString[lineNum][tokenIndex] << " ";
+				tokenNum++;
+				while ((tokenNum < tokenizedString[lineNum].size()) &&
+					   (tokenizedString[lineNum][tokenNum] != "]")) {
+						   ss << tokenizedString[lineNum][tokenNum] << " ";
+						   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
 				}
 				//finally, we can put it into the currentFunction
 				currentFunction.literalFunctions = parse(ss.str());
