@@ -31,12 +31,7 @@ public:
 	static void i(Runner* r);
 	static void ifthen(Runner* r);
 	//BOOLEAN OPS
-	static void orOp(Runner* r);
-	static void andOp(Runner* r);
-	static void xorOp(Runner* r);
-	static void equals(Runner* r);
-	static void lessThan(Runner* r);
-	static void greaterThan(Runner* r);
+	static void nor(Runner* r);
 	//TYPE INSPECIFIC MATH
 	static void abs(Runner* r);
 	//INTEGER OPS

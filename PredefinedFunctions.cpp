@@ -15,7 +15,7 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//CONTROL FLOW
 	"i", "ifthen",
 	//BOOLEAN OPS - TRUE: >=1, FALSE: <1 - INTEGER ONLY
-	"or", "and", "xor", "=", "<", ">",
+	"nor",
 	//TYPE INSPECIFIC MATH
 	"abs",
 	//INTEGER OPS
@@ -37,6 +37,11 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
 	if (functionName == "at") PredefinedFunctions::at(r);
 	if (functionName == "insert") PredefinedFunctions::insert(r);
 	if (functionName == "concat") PredefinedFunctions::concat(r);
+	//CONTROL FLOW
+	if (functionName == "i") PredefinedFunctions::i(r);
+	if (functionName == "ifthen") PredefinedFunctions::ifthen(r);
+	//BOOLEAN OPS
+	if (functionName == "nor") PredefinedFunctions::nor(r); //you can make all logic out of this
 }
 
 void PredefinedFunctions::p(Runner* r) {
@@ -217,4 +222,22 @@ void PredefinedFunctions::ifthen(Runner* r) {
 		} else {
 			runtime_die("Non list passed to `ifthen`.");
 		}
+}
+
+void PredefinedFunctions::nor(Runner* r) {
+	CharmFunction f1 = r->pop();
+	CharmFunction f2 = r->pop();
+	if (r->isInt(f1) && r->isInt(f2)) {
+		CharmFunction out;
+		out.functionType = NUMBER_FUNCTION;
+		CharmNumber outNum;
+		outNum.whichType = INTEGER_VALUE;
+		//cancer incoming
+		outNum.integerValue = ((f1.numberValue.integerValue > 0) || (f2.numberValue.integerValue > 0));
+		//no more cancer
+		out.numberValue = outNum;
+		r->push(out);
+	} else {
+		runtime_die("Non integer passed to logic function.");
+	}
 }
