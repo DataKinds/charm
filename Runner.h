@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include "ParserTypes.h"
 
@@ -28,6 +29,8 @@ private:
 	void handleDefinedFunctions(CharmFunction f);
 public:
 	Runner();
+	//a helper function to see if a charm function is a number / an int
+	bool isInt(CharmFunction f);
 	std::vector<CharmFunction> getStack();
 	unsigned int getModifiedStackArea();
 	std::vector<FunctionDefinition> getFunctionDefinitions();
@@ -36,6 +39,6 @@ public:
 	//pop off top of stack
 	CharmFunction pop();
 	//swap values at index n1 and n2 from the top (zero-indexed)
-	void swap(unsigned int n1, unsigned int n2);
+	void swap(unsigned long long n1, unsigned long long n2);
 	void run(std::vector<CharmFunction> parsedProgram);
 };

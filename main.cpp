@@ -1,4 +1,5 @@
 #include <string>
+#include <stdexcept>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -16,7 +17,11 @@ int main(int argc, char const *argv[]) {
 		printf("%i ", currentFunction.functionType);
 	}
 	printf("\n");
-	runner.run(parsedProgram);
+	try {
+		runner.run(parsedProgram);
+	} catch (const std::runtime_error& e) {
+
+	}
 	printf("MODIFIED STACK AREA: %i\n", runner.getModifiedStackArea());
 	printf("THE STACK (just the types): ");
 	std::vector<CharmFunction> postStack = runner.getStack();

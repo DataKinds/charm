@@ -3,6 +3,7 @@
 #include "Runner.h"
 #include "ParserTypes.h"
 #include "PredefinedFunctions.h"
+#include "Error.h"
 
 CharmFunction Runner::zeroF() {
 	CharmFunction zeroFunction;
@@ -33,7 +34,7 @@ void Runner::push(CharmFunction f) {
 	Runner::modifiedStackArea++;
 }
 
-void Runner::swap(unsigned int n1, unsigned int n2) {
+void Runner::swap(unsigned long long n1, unsigned long long n2) {
 	CharmFunction tempFromN1 = Runner::stack.at(n1);
 	CharmFunction tempFromN2 = Runner::stack.at(n2);
 	Runner::stack[n1] = tempFromN2;
@@ -41,22 +42,26 @@ void Runner::swap(unsigned int n1, unsigned int n2) {
 	Runner::updateModifiedStackArea();
 }
 
+bool isInt(CharmFunction f) {
+	if (f.functionType == NUMBER_FUNCTION) {
+		if (f.numberValue.whichType == INTEGER_VALUE) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void Runner::updateModifiedStackArea() {
 	//go from the front of the stack to the back
 	//then set the modifiedStackArea accordingly
 	for (unsigned int stackIndex = 0; stackIndex < MAX_STACK; stackIndex++) {
 		//do all the checks to make sure it's unchanged
-		if (Runner::stack[stackIndex].functionType == NUMBER_FUNCTION) {
-			if (Runner::stack[stackIndex].numberValue.whichType == INTEGER_VALUE) {
-				if (Runner::stack[stackIndex].numberValue.integerValue == 0) {
-					//the stack cell is unchanged, keep going
-					//also i hate how i have to make all these calls in order
-					//looks freakin disgusting, but there's some unknown behavior
-					//if i dont (accessing an uninitialized value in a struct)
-				} else {
-					Runner::modifiedStackArea = MAX_STACK - stackIndex;
-					break;
-				}
+		if (isInt(Runner::stack[stackIndex])) {
+			if (Runner::stack[stackIndex].numberValue.integerValue == 0) {
+				//the stack cell is unchanged, keep going
+				//also i hate how i have to make all these calls in order
+				//looks freakin disgusting, but there's some unknown behavior
+				//if i dont (accessing an uninitialized value in a struct)
 			} else {
 				Runner::modifiedStackArea = MAX_STACK - stackIndex;
 				break;
@@ -108,6 +113,36 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 	//PredefinedFunctions.h holds all the functions written in C++
 	//other than that, if these functions aren't built in, they are run through
 	//the functionDefinitions table.
+
+	//first, make sure that the function we're trying to run exists in the PredefinedFunctions
+	//table. if it doesn't - assume it's defined in Charm and run through the
+	//functionDefinitions table.
+	bool isPredefinedFunction = false;
+	for (auto predefinedFunctionName : PredefinedFunctions::cppFunctionNames) {
+		if (predefinedFunctionName == f.functionName) {
+			isPredefinedFunction = true;
+			break;
+		}
+	}
+	if (isPredefinedFunction) {
+		//run the predefined function!
+		PredefinedFunctions::functionLookup(f.functionName, this);
+	} else {
+		//alright, now we get down and dirty
+		//look through the functionDefinitions table for a function with
+		//a matching name, and run that. if there are no functions - throw
+		//an error.
+		bool functionFound = false;
+		for (FunctionDefinition fD : functionDefinitions) {
+			if (fD.functionName == f.functionName) {
+				functionFound = true;
+				Runner::run(fD.functionBody);
+			}
+		}
+		if (!functionFound) {
+			runtime_die("Unknown function `" + f.functionName + "`.");
+		}
+	}
 }
 
 void Runner::run(std::vector<CharmFunction> parsedProgram) {
