@@ -42,7 +42,7 @@ void Runner::swap(unsigned long long n1, unsigned long long n2) {
 	Runner::updateModifiedStackArea();
 }
 
-bool isInt(CharmFunction f) {
+bool Runner::isInt(CharmFunction f) {
 	if (f.functionType == NUMBER_FUNCTION) {
 		if (f.numberValue.whichType == INTEGER_VALUE) {
 			return true;
