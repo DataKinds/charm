@@ -16,8 +16,11 @@ private:
 	void push(CharmFunction f);
 	//pop off top of stack
 	CharmFunction pop();
-	//swap values at
-	void swap(unsigned long long n1, unsigned long long n2);
+	//swap values at index n1 and n2 from the top (zero-indexed)
+	void swap(unsigned int n1, unsigned int n2);
+	//handle the functions that we don't know about
+	//and / or handle built in functions
+	void handleDefinedFunctions(CharmFunction f);
 public:
 	Runner();
 	void run(std::vector<CharmFunction> parsedProgram);
