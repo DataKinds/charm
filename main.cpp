@@ -21,7 +21,7 @@ int main(int argc, char const *argv[]) {
 	printf("THE STACK (just the types):\n");
 	std::vector<CharmFunction> postStack = runner.getStack();
 	for (unsigned int stackIndex = 0; stackIndex < runner.getModifiedStackArea(); stackIndex++) {
-		printf("%i ", postStack.at(8192 - stackIndex - 1).functionType);
+		printf("%i ", postStack.at(postStack.size() - stackIndex - 1).functionType);
 	}
 	printf("\n");
 	return 0;
