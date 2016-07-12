@@ -36,5 +36,6 @@ public:
 	Runner();
 	std::vector<CharmFunction> getStack();
 	unsigned int getModifiedStackArea();
+	std::vector<FunctionDefinition> getFunctionDefinitions();
 	void run(std::vector<CharmFunction> parsedProgram);
 };

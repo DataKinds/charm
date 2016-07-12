@@ -18,10 +18,16 @@ int main(int argc, char const *argv[]) {
 	printf("\n");
 	runner.run(parsedProgram);
 	printf("MODIFIED STACK AREA: %i\n", runner.getModifiedStackArea());
-	printf("THE STACK (just the types):\n");
+	printf("THE STACK (just the types): ");
 	std::vector<CharmFunction> postStack = runner.getStack();
 	for (unsigned int stackIndex = runner.getModifiedStackArea(); stackIndex > 0; stackIndex--) {
 		printf("%i ", postStack.at(postStack.size() - stackIndex).functionType);
+	}
+	printf("\n");
+	printf("DEFINED FUNCTIONS: ");
+	auto functionDefinitions = runner.getFunctionDefinitions();
+	for (auto currentFunction : functionDefinitions) {
+		printf("%s ", currentFunction.functionName.c_str());
 	}
 	printf("\n");
 	return 0;

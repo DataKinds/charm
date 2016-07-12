@@ -103,6 +103,10 @@ unsigned int Runner::getModifiedStackArea() {
 	return Runner::modifiedStackArea;
 }
 
+std::vector<FunctionDefinition> Runner::getFunctionDefinitions() {
+	return Runner::functionDefinitions;
+}
+
 void Runner::run(std::vector<CharmFunction> parsedProgram) {
 	for (CharmFunction currentFunction : parsedProgram) {
 		//alright, now we get into the running portion
