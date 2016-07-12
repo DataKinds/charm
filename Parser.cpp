@@ -77,7 +77,7 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 			} else if (currentFunction.functionType == STRING_FUNCTION) {
 				//next deal with STRING_FUNCTION
 				//now it's getting hard: a string continues
-				//until it hits the next STRING_FUNCTION
+				//until it hits the next STRING_FUNCTION, popping along the way
 				//then, that second STRING_FUNCTION is popped
 				//and we continue. if there are no other STRING_FUNCTIONs,
 				//then we just end the string at the end of the line
@@ -93,7 +93,13 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 				//fill in the stringstream
 				for (unsigned long long stringIndex = tokenNum; stringIndex < nextTokenNum; stringIndex++) {
 					ss << tokenizedString[lineNum][stringIndex] << " ";
+					//pop each token as it's added to the string
+					tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + stringIndex);
 				}
+				//make sure that the final quote was removed if it exists
+				//(AKA we're not at the end of the line)
+				if (nextTokenNum < tokenizedString[lineNum].size())
+					tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + nextTokenNum);
 				//FINALLY we can fill in currentFunction
 				currentFunction.stringValue = ss.str();
 			} else if (currentFunction.functionType == LIST_FUNCTION) {
