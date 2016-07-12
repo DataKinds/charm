@@ -20,6 +20,7 @@ CharmFunction Runner::pop() {
 	stack.insert(stack.begin(), Runner::zeroF());
 	CharmFunction tempCharmF = stack.at(stack.size() - 1);
 	stack.pop_back();
+	modifiedStackArea--;
 	return tempCharmF;
 }
 
@@ -28,6 +29,7 @@ void Runner::push(CharmFunction f) {
 	//pop an element off the back of the stack
 	stack.push_back(f);
 	stack.erase(stack.begin());
+	modifiedStackArea++;
 }
 
 void Runner::swap(unsigned int n1, unsigned int n2) {
@@ -35,6 +37,34 @@ void Runner::swap(unsigned int n1, unsigned int n2) {
 	CharmFunction tempFromN2 = stack.at(n2);
 	stack[n1] = tempFromN2;
 	stack[n2] = tempFromN1;
+	Runner::updateModifiedStackArea();
+}
+
+void Runner::updateModifiedStackArea() {
+	//go from the front of the stack to the back
+	//then set the modifiedStackArea accordingly
+	for (unsigned int stackIndex = 0; stackIndex < MAX_STACK; stackIndex++) {
+		//do all the checks to make sure it's unchanged
+		if (stack[stackIndex].functionType == NUMBER_FUNCTION) {
+			if (stack[stackIndex].numberValue.whichType == INTEGER_VALUE) {
+				if (stack[stackIndex].numberValue.integerValue == 0) {
+					//the stack cell is unchanged, keep going
+					//also i hate how i have to make all these calls in order
+					//looks freakin disgusting, but there's some unknown behavior
+					//if i dont (accessing an uninitialized value in a struct)
+				} else {
+					modifiedStackArea = MAX_STACK - stackIndex;
+					break;
+				}
+			} else {
+				modifiedStackArea = MAX_STACK - stackIndex;
+				break;
+			}
+		} else {
+			modifiedStackArea = MAX_STACK - stackIndex;
+			break;
+		}
+	}
 }
 
 void Runner::handleDefinedFunctions(CharmFunction f) {
@@ -43,9 +73,14 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 
 Runner::Runner() {
 	//initialize the stack
+	modifiedStackArea = 0;
 	for (unsigned int stackIndex = 0; stackIndex < Runner::MAX_STACK; stackIndex++) {
 		Runner::push(Runner::zeroF());
 	}
+}
+
+std::vector<CharmFunction> Runner::getStack() {
+	return stack;
 }
 
 void Runner::run(std::vector<CharmFunction> parsedProgram) {

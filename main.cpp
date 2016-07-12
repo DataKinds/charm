@@ -11,10 +11,12 @@ int main(int argc, char const *argv[]) {
 	Runner runner = Runner();
 	std::string codeInput(readline("Charm$ "));
 	std::vector<CharmFunction> parsedProgram = parser.parse(codeInput);
+	printf("TOKEN TYPES: ");
 	for (auto currentFunction : parsedProgram) {
 		printf("%i ", currentFunction.functionType);
 	}
 	runner.run(parsedProgram);
+	
 	printf("\n");
 	return 0;
 }
