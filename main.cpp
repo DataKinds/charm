@@ -20,7 +20,8 @@ int main(int argc, char const *argv[]) {
 	try {
 		runner.run(parsedProgram);
 	} catch (const std::runtime_error& e) {
-
+		printf("ERRROR: %s\n", e.what());
+		return -1;
 	}
 	printf("MODIFIED STACK AREA: %i\n", runner.getModifiedStackArea());
 	printf("THE STACK (just the types): ");
