@@ -1,7 +1,9 @@
 #include <vector>
 #include <sstream>
+
 #include "Parser.h"
 #include "ParserTypes.h"
+#include "Debug.h"
 
 Parser::Parser() {
 }
@@ -91,8 +93,8 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 			for (; equalsIndex < tokenizedString[lineNum].size(); equalsIndex++) {
 				ss << tokenizedString[lineNum][equalsIndex] << " ";
 			}
-			printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
-			printf("FUNCTION BODY IS %s\n", ss.str().c_str());
+			ONLYDEBUG printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
+			ONLYDEBUG printf("FUNCTION BODY IS %s\n", ss.str().c_str());
 			currentFunction.literalFunctions = parse(ss.str());
 			//we outta here!
 			out.push_back(currentFunction);
@@ -100,7 +102,7 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 			break;
 		} else {
 			for (unsigned long long tokenNum = 0; tokenNum < tokenizedString[lineNum].size(); tokenNum++) {
-				printf("PARSING %s\n", tokenizedString[lineNum][tokenNum].c_str());
+				ONLYDEBUG printf("PARSING %s\n", tokenizedString[lineNum][tokenNum].c_str());
 				CharmFunction currentFunction;
 				currentFunction.functionType = Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]);
 				if (currentFunction.functionType == DEFINED_FUNCTION) {
@@ -134,7 +136,7 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 					while ((tokenNum < tokenizedString[lineNum].size()) &&
 				           (Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]) != STRING_FUNCTION)) {
 							   ss << tokenizedString[lineNum][tokenNum] << " ";
-							   printf("ERASING %s\n", tokenizedString[lineNum][tokenNum].c_str());
+							   ONLYDEBUG printf("ERASING %s\n", tokenizedString[lineNum][tokenNum].c_str());
 							   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
 					}
 					//make sure that the final quote was removed if it exists
