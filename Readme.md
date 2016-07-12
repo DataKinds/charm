@@ -11,4 +11,4 @@ TODO:
 
 DEPENDENCIES:
 
-- libreadline and related development packages
+- libreadline and related development packages (`libreadline-dev on apt-based systems`)
