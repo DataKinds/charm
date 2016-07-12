@@ -85,8 +85,10 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 			currentFunction.functionName = tokenizedString[lineNum][equalsIndex - 1];
 			std::stringstream ss;
 			//populate the stringstream with the tokens after the :=
-			while (equalsIndex < tokenizedString[lineNum].size()) {
-				equalsIndex++;
+			//this call ensures that the first token won't be a :=, but rather,
+			//the first token past that
+			equalsIndex++;
+			for (; equalsIndex < tokenizedString[lineNum].size(); equalsIndex++) {
 				ss << tokenizedString[lineNum][equalsIndex] << " ";
 			}
 			printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
