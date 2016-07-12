@@ -35,6 +35,15 @@ bool Parser::isStringNumber(std::string str) {
 	return true;
 }
 
+bool Parser::isLineFunctionDefinition(std::vector<std::string> line) {
+	for (unsigned long long tokenIndex = 0; tokenIndex < line.size(); tokenIndex++) {
+		if (Parser::recognizeFunction(line[tokenIndex]) == FUNCTION_DEFINITION) {
+			return true;
+		}
+	}
+	return false;
+}
+
 CharmFunctionType Parser::recognizeFunction(std::string s) {
 	if (s == "[") return LIST_FUNCTION;
 	if (s == "\"") return STRING_FUNCTION;
