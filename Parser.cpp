@@ -81,25 +81,23 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 			}
 			//alright, now we found the :=
 			//let's make sure that it's not the first or last element
-			if ((equalsIndex == 0) || (equalsIndex >= (tokenizedString[lineNum].size() - 1)))
-				break;
-			//now we set the stuff!
-			currentFunction.functionName = tokenizedString[lineNum][equalsIndex - 1];
-			std::stringstream ss;
-			//populate the stringstream with the tokens after the :=
-			//this call ensures that the first token won't be a :=, but rather,
-			//the first token past that
-			equalsIndex++;
-			for (; equalsIndex < tokenizedString[lineNum].size(); equalsIndex++) {
-				ss << tokenizedString[lineNum][equalsIndex] << " ";
+			if (!((equalsIndex == 0) || (equalsIndex >= (tokenizedString[lineNum].size() - 1)))) {
+				//now we set the stuff!
+				currentFunction.functionName = tokenizedString[lineNum][equalsIndex - 1];
+				std::stringstream ss;
+				//populate the stringstream with the tokens after the :=
+				//this call ensures that the first token won't be a :=, but rather,
+				//the first token past that
+				equalsIndex++;
+				for (; equalsIndex < tokenizedString[lineNum].size(); equalsIndex++) {
+					ss << tokenizedString[lineNum][equalsIndex] << " ";
+				}
+				ONLYDEBUG printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
+				ONLYDEBUG printf("FUNCTION BODY IS %s\n", ss.str().c_str());
+				currentFunction.literalFunctions = parse(ss.str());
+				//we outta here!
+				out.push_back(currentFunction);
 			}
-			ONLYDEBUG printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
-			ONLYDEBUG printf("FUNCTION BODY IS %s\n", ss.str().c_str());
-			currentFunction.literalFunctions = parse(ss.str());
-			//we outta here!
-			out.push_back(currentFunction);
-			//now that we're done, skip the rest of the line
-			break;
 		} else {
 			for (unsigned long long tokenNum = 0; tokenNum < tokenizedString[lineNum].size(); tokenNum++) {
 				ONLYDEBUG printf("PARSING %s\n", tokenizedString[lineNum][tokenNum].c_str());

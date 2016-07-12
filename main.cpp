@@ -22,7 +22,7 @@ int main(int argc, char const *argv[]) {
 		std::ifstream fd("Prelude.charm");
 		std::string line;
 		while (std::getline(fd, line)) {
-			preludeFile << line;
+			preludeFile << line << "\n";
 			printf("%s\n", line.c_str());
 		}
 		//load up the Prelude.charm file
