@@ -27,8 +27,8 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
 	if (functionName == "swap") PredefinedFunctions::swap(r);
 	//LIST / STRING MANIPULATIONS
 	if (functionName == "at") PredefinedFunctions::at(r);
-	if (functionName == "cons") PredefinedFunctions::cons(r);
-	if (functionName == "concat") PredefinedFunctions::concat(r);
+	//if (functionName == "cons") PredefinedFunctions::cons(r);
+	//if (functionName == "concat") PredefinedFunctions::concat(r);
 }
 
 void PredefinedFunctions::p(Runner* r) {
