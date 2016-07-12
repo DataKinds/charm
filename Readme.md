@@ -2,12 +2,12 @@
 
 This is based off of Forth and Joy. Documentation coming soon.
 
-`" hello world " print`
+`" hello " " world " concat p`
 
 TODO:
 
-- allow function definitions lmao
 - write a prelude
+- documentation of functions
 
 DEPENDENCIES:
 
