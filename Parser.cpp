@@ -45,8 +45,9 @@ CharmFunctionType Parser::recognizeFunction(std::string s) {
 }
 
 std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
+	std::vector<CharmFunction> out;
 	std::vector<std::string> tokenizedString = Parser::splitString(charmInput, ' ');
-	for (unsigned int tokenPointer = 0; tokenPointer < tokenizedString.size(); tokenPointer++) {
+	for (unsigned long long tokenPointer = 0; tokenPointer < tokenizedString.size(); tokenPointer++) {
 		CharmFunction currentFunction;
 		currentFunction.functionType = Parser::recognizeFunction(tokenizedString[tokenPointer]);
 		if (currentFunction.functionType == DEFINED_FUNCTION) {
@@ -72,6 +73,17 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 			//then, that second STRING_FUNCTION is popped
 			//and we continue. if there are no other STRING_FUNCTIONs,
 			//then we just end the string at the end of the line
+			unsigned long long nextStringFunctionPointer = tokenPointer + 1;
+			while (nextStringFunctionPointer < tokenizedString.size()) {
+				if (Parser::recognizeFunction(tokenizedString[nextStringFunctionPointer]) == STRING_FUNCTION) {
+					break;
+				}
+				nextStringFunctionPointer++;
+			}
+		} else if (currentFunction.functionType == LIST_FUNCTION) {
+			//same thing as before, except it's a list
+			//and not a string
 		}
+		out.push_back(currentFunction);
 	}
 }
