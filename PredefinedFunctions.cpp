@@ -26,7 +26,7 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
 	//INPUT / OUTPUT
-	if (functionName == "p") PredefinedFunctions::p(r);
+	if (functionName == "pp") PredefinedFunctions::p(r);
 	if (functionName == "newline") PredefinedFunctions::newline(r);
 	//STACK MANIPULATIONS
 	if (functionName == "dup") PredefinedFunctions::dup(r);
