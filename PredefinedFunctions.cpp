@@ -19,10 +19,16 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 };
 
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
+	//INPUT / OUTPUT
 	if (functionName == "p") PredefinedFunctions::p(r);
+	//STACK MANIPULATIONS
 	if (functionName == "dup") PredefinedFunctions::dup(r);
 	if (functionName == "pop") PredefinedFunctions::pop(r);
 	if (functionName == "swap") PredefinedFunctions::swap(r);
+	//LIST / STRING MANIPULATIONS
+	if (functionName == "at") PredefinedFunctions::at(r);
+	if (functionName == "cons") PredefinedFunctions::cons(r);
+	if (functionName == "concat") PredefinedFunctions::concat(r);
 }
 
 void PredefinedFunctions::p(Runner* r) {
@@ -74,6 +80,27 @@ void PredefinedFunctions::swap(Runner* r) {
 		}
 		r->swap(r->MAX_STACK - ((unsigned long long)f1.numberValue.integerValue), r->MAX_STACK - ((unsigned long long)f2.numberValue.integerValue));
 	} else {
-		runtime_die("Float passed to `swap`.");
+		runtime_die("Non integer passed to `swap`.");
+	}
+}
+
+void PredefinedFunctions::at(Runner* r) {
+	//index number
+	CharmFunction f1 = r->pop();
+	//list / string
+	CharmFunction f2 = r->pop();
+	if (r->isInt(f1)) {
+		CharmFunction out;
+		if (f2.functionType == LIST_FUNCTION) {
+			out = f2.literalFunctions.at(f1.numberValue.integerValue % f2.literalFunctions.size());
+		} else if (f2.functionType == STRING_FUNCTION) {
+			out.functionType = STRING_FUNCTION;
+			out.stringValue = f2.stringValue[f1.numberValue.integerValue % f2.stringValue.size()];
+		} else {
+			runtime_die("Neither a list nor a string was passed to `at`");
+		}
+		r->push(out);
+	} else {
+		runtime_die("Non integer passed to `at`");
 	}
 }

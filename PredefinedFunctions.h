@@ -21,4 +21,8 @@ public:
 	static void dup(Runner* r);
 	static void pop(Runner* r);
 	static void swap(Runner* r);
+	//LIST / STRING MANIPULATIONS
+	static void at(Runner* r);
+	static void cons(Runner* r);
+	static void concat(Runner* r);
 };
