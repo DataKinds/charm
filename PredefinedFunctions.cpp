@@ -11,11 +11,11 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//STACK MANIPULATIONS
 	"dup", "pop", "swap",
 	//LIST MANIPULATIONS
-	"at", "cons", "concat",
+	"len", "at", "insert", "concat",
 	//CONTROL FLOW
 	"i", "ifthen",
 	//MATH OPS AND TYPE COERCION
-	"=", "<", ">", "+", "-", "/", "*", "tofloat", "toint"
+	"=", "<", ">", "+", "-", "/", "*", "%", "abs", "tofloat", "toint"
 };
 
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
@@ -26,9 +26,10 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
 	if (functionName == "pop") PredefinedFunctions::pop(r);
 	if (functionName == "swap") PredefinedFunctions::swap(r);
 	//LIST / STRING MANIPULATIONS
+	if (functionName == "len") PredefinedFunctions::len(r);
 	if (functionName == "at") PredefinedFunctions::at(r);
-	//if (functionName == "cons") PredefinedFunctions::cons(r);
-	//if (functionName == "concat") PredefinedFunctions::concat(r);
+	if (functionName == "insert") PredefinedFunctions::insert(r);
+	if (functionName == "concat") PredefinedFunctions::concat(r);
 }
 
 void PredefinedFunctions::p(Runner* r) {
@@ -84,6 +85,29 @@ void PredefinedFunctions::swap(Runner* r) {
 	}
 }
 
+void PredefinedFunctions::len(Runner* r) {
+	//list to check length of
+	CharmFunction f1 = r->pop();
+	//push list back on because we dont need to get rid of it
+	r->push(f1);
+	CharmFunction out;
+	out.functionType = NUMBER_FUNCTION;
+	CharmNumber num;
+	num.whichType = INTEGER_VALUE;
+	//make sure f1 is a list or string
+	if (f1.functionType == LIST_FUNCTION) {
+		num.integerValue = f1.literalFunctions.size();
+	} else if (f1.functionType == STRING_FUNCTION) {
+		num.integerValue = f1.stringValue.size();
+	} else {
+		//so if it's a bad type, i was going to just report a len of 0 or 1
+		//but i feel like that would be really misleading. eh, i'll just do 1
+		num.integerValue = 1;
+	}
+	out.numberValue = num;
+	r->push(out);
+}
+
 void PredefinedFunctions::at(Runner* r) {
 	//index number
 	CharmFunction f1 = r->pop();
@@ -101,6 +125,25 @@ void PredefinedFunctions::at(Runner* r) {
 		}
 		r->push(out);
 	} else {
-		runtime_die("Non integer passed to `at`");
+		runtime_die("Non integer index passed to `at`");
 	}
+}
+
+void PredefinedFunctions::insert(Runner* r) {
+	//get index to insert in
+	CharmFunction f1 = r->pop();
+	//get element to insert
+	CharmFunction f2 = r->pop();
+	//get list or string
+	CharmFunction f3 = r->pop();
+	//make sure f1 is an int
+	if (!r->isInt(f1))
+		runtime_die("Non integer index passed to `insert`.");
+	if (f3.functionType == LIST_FUNCTION) {
+		f3.literalFunctions.insert(f3.literalFunctions.begin() + (f1.numberValue.integerValue % f3.literalFunctions.size()), f2);
+	}
+}
+
+void PredefinedFunctions::concat(Runner* r) {
+
 }

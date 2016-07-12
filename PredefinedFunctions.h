@@ -22,7 +22,8 @@ public:
 	static void pop(Runner* r);
 	static void swap(Runner* r);
 	//LIST / STRING MANIPULATIONS
+	static void len(Runner* r);
 	static void at(Runner* r);
-	//static void cons(Runner* r);
-	//static void concat(Runner* r);
+	static void insert(Runner* r);
+	static void concat(Runner* r);
 };
