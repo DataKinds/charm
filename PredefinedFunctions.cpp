@@ -14,13 +14,20 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	"len", "at", "insert", "concat",
 	//CONTROL FLOW
 	"i", "ifthen",
-	//MATH OPS AND TYPE COERCION
-	"=", "<", ">", "+", "-", "/", "*", "%", "abs", "tofloat", "toint"
+	//BOOLEAN OPS - TRUE: >=1, FALSE: <1 - INTEGER ONLY
+	"or", "and", "xor", "=", "<", ">",
+	//TYPE INSPECIFIC MATH
+	"abs",
+	//INTEGER OPS
+	"+", "-", "/", "*", "%", "toint",
+	//FLOAT OPS
+	"+f", "-f", "/f", "*f", "tofloat"
 };
 
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
 	//INPUT / OUTPUT
 	if (functionName == "p") PredefinedFunctions::p(r);
+	if (functionName == "newline") PredefinedFunctions::newline(r);
 	//STACK MANIPULATIONS
 	if (functionName == "dup") PredefinedFunctions::dup(r);
 	if (functionName == "pop") PredefinedFunctions::pop(r);
@@ -55,6 +62,10 @@ void PredefinedFunctions::print(CharmFunction f1) {
 		}
 		printf(" ]");
 	}
+}
+
+void PredefinedFunctions::newline(Runner* r) {
+	printf("\n");
 }
 
 void PredefinedFunctions::dup(Runner* r) {
@@ -113,6 +124,7 @@ void PredefinedFunctions::at(Runner* r) {
 	CharmFunction f1 = r->pop();
 	//list / string
 	CharmFunction f2 = r->pop();
+	r->push(f2);
 	if (r->isInt(f1)) {
 		CharmFunction out;
 		if (f2.functionType == LIST_FUNCTION) {
@@ -141,9 +153,68 @@ void PredefinedFunctions::insert(Runner* r) {
 		runtime_die("Non integer index passed to `insert`.");
 	if (f3.functionType == LIST_FUNCTION) {
 		f3.literalFunctions.insert(f3.literalFunctions.begin() + (f1.numberValue.integerValue % f3.literalFunctions.size()), f2);
+	} else if (f3.functionType == STRING_FUNCTION) {
+		//only allow a string to be inserted into another string
+		if (f3.functionType == STRING_FUNCTION) {
+			f3.stringValue.insert(f1.numberValue.integerValue % f3.stringValue.size(), f2.stringValue);
+		} else {
+			runtime_die("Attempted to `insert` a non string into a string.");
+		}
 	}
+	r->push(f3);
 }
 
 void PredefinedFunctions::concat(Runner* r) {
+	//get first list
+	CharmFunction f1 = r->pop();
+	//get second list (first in order of concatination)
+	CharmFunction f2 = r->pop();
+	//make sure they're both lists or strings
+	if ((f1.functionType == LIST_FUNCTION) && (f2.functionType == LIST_FUNCTION)) {
+		f2.literalFunctions.insert(f2.literalFunctions.end(), f1.literalFunctions.begin(), f1.literalFunctions.end());
+	} else if ((f1.functionType == STRING_FUNCTION) && (f2.functionType == STRING_FUNCTION)) {
+		f2.stringValue = f2.stringValue + f1.stringValue;
+	} else {
+		runtime_die("Unmatching types passed to `concat`.");
+	}
+	r->push(f2);
+}
 
+void PredefinedFunctions::i(Runner* r) {
+	//pop the top of the stack and run it
+	CharmFunction f1 = r->pop();
+	if (f1.functionType == LIST_FUNCTION) {
+		r->run(f1.literalFunctions);
+	} else {
+		runtime_die("Non list passed to `i`.");
+	}
+}
+
+void PredefinedFunctions::ifthen(Runner* r) {
+	//this one is gonna take 3 arguments:
+	//stack[2] = condition to run truthy section
+	//stack[1] = truthy section (if...)
+	//stack[0] = falsy section (else...)
+	//have to reverse it because popping is weird
+	CharmFunction falsy = r->pop();
+	CharmFunction truthy = r->pop();
+	CharmFunction condFunction = r->pop();
+	if ((condFunction.functionType == LIST_FUNCTION) &&
+		(truthy.functionType == LIST_FUNCTION) &&
+		(falsy.functionType == LIST_FUNCTION)) {
+			r->run(condFunction.literalFunctions);
+			//now we check the top of the stack to see if it's truthy or falsy
+			CharmFunction cond = r->pop();
+			if (r->isInt(cond)) {
+				if (cond.numberValue.integerValue > 0) {
+					r->run(truthy.literalFunctions);
+				} else {
+					r->run(falsy.literalFunctions);
+				}
+			} else {
+				runtime_die("`ifthen` condition returned non integer.");
+			}
+		} else {
+			runtime_die("Non list passed to `ifthen`.");
+		}
 }
