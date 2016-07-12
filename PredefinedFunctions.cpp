@@ -6,6 +6,8 @@
 #include "Error.h"
 
 const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
+	//INPUT / OUTPUT
+	"p",
 	//STACK MANIPULATIONS
 	"dup", "pop", "swap",
 	//LIST MANIPULATIONS
@@ -17,9 +19,35 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 };
 
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
+	if (functionName == "p") PredefinedFunctions::p(r);
 	if (functionName == "dup") PredefinedFunctions::dup(r);
 	if (functionName == "pop") PredefinedFunctions::pop(r);
 	if (functionName == "swap") PredefinedFunctions::swap(r);
+}
+
+void PredefinedFunctions::p(Runner* r) {
+	PredefinedFunctions::print(r->pop());
+}
+
+void PredefinedFunctions::print(CharmFunction f1) {
+	if (f1.functionType == NUMBER_FUNCTION) {
+		if (f1.numberValue.whichType == INTEGER_VALUE) {
+			printf("%Li", f1.numberValue.integerValue);
+		} else if (f1.numberValue.whichType == FLOAT_VALUE) {
+			printf("%Lf", f1.numberValue.floatValue);
+		}
+	} else if (f1.functionType == STRING_FUNCTION) {
+		printf("%s", f1.stringValue.c_str());
+	} else if (f1.functionType == DEFINED_FUNCTION) {
+		printf("%s", f1.functionName.c_str());
+	} else if (f1.functionType == LIST_FUNCTION) {
+		//oh boi a recursive print call
+		printf("[ ");
+		for (CharmFunction f : f1.literalFunctions) {
+			PredefinedFunctions::print(f);
+		}
+		printf(" ]");
+	}
 }
 
 void PredefinedFunctions::dup(Runner* r) {

@@ -28,7 +28,7 @@ private:
 	void handleDefinedFunctions(CharmFunction f);
 public:
 	Runner();
-	const unsigned int MAX_STACK = 8192;
+	const unsigned int MAX_STACK = 20000;
 	//a helper function to see if a charm function is a number / an int
 	bool isInt(CharmFunction f);
 	std::vector<CharmFunction> getStack();
