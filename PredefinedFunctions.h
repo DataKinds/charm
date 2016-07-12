@@ -23,6 +23,6 @@ public:
 	static void swap(Runner* r);
 	//LIST / STRING MANIPULATIONS
 	static void at(Runner* r);
-	static void cons(Runner* r);
-	static void concat(Runner* r);
+	//static void cons(Runner* r);
+	//static void concat(Runner* r);
 };
