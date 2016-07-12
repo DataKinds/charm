@@ -8,3 +8,7 @@ TODO:
 
 - allow function definitions lmao
 - write a prelude
+
+DEPENDENCIES:
+
+- libreadline and related development packages
