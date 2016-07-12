@@ -3,6 +3,8 @@
 #include <vector>
 
 enum CharmFunctionType {
+	FUNCTION_DEFINITION, //not a function, gets removed upon running
+						 //serves to create static function definitions
 	LIST_FUNCTION,  //not really a function, but
 	                //if the thing is in brackets,
 				    //this makes it a lot easier
@@ -34,9 +36,9 @@ struct CharmFunction {
 	std::string stringValue;
 	//ONLY USED WITH NUMBER_FUNCTION
 	CharmNumber numberValue;
-	//ONLY USED WITH QUOTE FUNCTION
+	//ONLY USED WITH LIST_FUNCTION AND FUNCTION_DEFINITION
 	std::vector<CharmFunction> literalFunctions;
-	//ONLY USED WITH DEFINED FUNCTION
+	//ONLY USED WITH DEFINED_FUNCTION AND FUNCTION_DEFINITION
 	std::string functionName;
 };
 

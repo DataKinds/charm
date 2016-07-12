@@ -6,6 +6,7 @@ private:
 	std::vector<std::string> splitString(const std::string s, char delim);
 	bool isCharDigit(char c);
 	bool isStringNumber(std::string str);
+	bool isLineFunctionDefinition(std::vector<std::string> line);
 	CharmFunctionType recognizeFunction(std::string s);
 public:
 	Parser();
