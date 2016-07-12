@@ -23,6 +23,7 @@ int main(int argc, char const *argv[]) {
 		std::string line;
 		while (std::getline(fd, line)) {
 			preludeFile << line;
+			printf("%s\n", line.c_str());
 		}
 		//load up the Prelude.charm file
 		runner.run(parser.parse(preludeFile.str()));
@@ -37,9 +38,9 @@ int main(int argc, char const *argv[]) {
 		std::vector<CharmFunction> parsedProgram = parser.parse(codeInput);
 		ONLYDEBUG printf("TOKEN TYPES: ");
 		for (auto currentFunction : parsedProgram) {
-			printf("%i ", currentFunction.functionType);
+			ONLYDEBUG printf("%i ", currentFunction.functionType);
 		}
-		printf("\n");
+		ONLYDEBUG printf("\n");
 		try {
 			runner.run(parsedProgram);
 		} catch (const std::runtime_error& e) {
