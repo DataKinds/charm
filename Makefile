@@ -1,4 +1,4 @@
-FILES = main.cpp Parser.cpp Runner.cpp
+FILES = main.cpp Parser.cpp Runner.cpp PredefinedFunctions.cpp
 LIBS = -lreadline
 
 all:

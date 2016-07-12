@@ -2,6 +2,7 @@
 
 #include "Runner.h"
 #include "ParserTypes.h"
+#include "PredefinedFunctions.h"
 
 CharmFunction Runner::zeroF() {
 	CharmFunction zeroFunction;
@@ -83,10 +84,6 @@ void Runner::addFunctionDefinition(FunctionDefinition fD) {
 	}
 }
 
-void Runner::handleDefinedFunctions(CharmFunction f) {
-	printf("UNIMPLEMENTED: running function %s\n", f.functionName.c_str());
-}
-
 Runner::Runner() {
 	//initialize the stack
 	Runner::modifiedStackArea = 0;
@@ -105,6 +102,12 @@ unsigned int Runner::getModifiedStackArea() {
 
 std::vector<FunctionDefinition> Runner::getFunctionDefinitions() {
 	return Runner::functionDefinitions;
+}
+
+void Runner::handleDefinedFunctions(CharmFunction f) {
+	//PredefinedFunctions.h holds all the functions written in C++
+	//other than that, if these functions aren't built in, they are run through
+	//the functionDefinitions table.
 }
 
 void Runner::run(std::vector<CharmFunction> parsedProgram) {

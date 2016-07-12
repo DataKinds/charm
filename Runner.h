@@ -23,12 +23,6 @@ private:
 	void addFunctionDefinition(FunctionDefinition fD);
 	//return a CharmFunction that for all intents and purposes is zero
 	CharmFunction zeroF();
-	//push to top of stack
-	void push(CharmFunction f);
-	//pop off top of stack
-	CharmFunction pop();
-	//swap values at index n1 and n2 from the top (zero-indexed)
-	void swap(unsigned int n1, unsigned int n2);
 	//handle the functions that we don't know about
 	//and / or handle built in functions
 	void handleDefinedFunctions(CharmFunction f);
@@ -37,5 +31,11 @@ public:
 	std::vector<CharmFunction> getStack();
 	unsigned int getModifiedStackArea();
 	std::vector<FunctionDefinition> getFunctionDefinitions();
+	//push to top of stack
+	void push(CharmFunction f);
+	//pop off top of stack
+	CharmFunction pop();
+	//swap values at index n1 and n2 from the top (zero-indexed)
+	void swap(unsigned int n1, unsigned int n2);
 	void run(std::vector<CharmFunction> parsedProgram);
 };
