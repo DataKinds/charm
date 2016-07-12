@@ -67,6 +67,22 @@ void Runner::updateModifiedStackArea() {
 	}
 }
 
+void Runner::addFunctionDefinition(FunctionDefinition fD) {
+	//first, check and make sure there's no other definition with
+	//the same name. if there is, overwrite it. if not, just push_back
+	//this definition.
+	bool functionExists = false;
+	for (unsigned long long definitionIndex = 0; definitionIndex < Runner::functionDefinitions.size(); definitionIndex++) {
+		if (functionDefinitions[definitionIndex].functionName == fD.functionName) {
+			functionDefinitions[definitionIndex] = fD;
+			functionExists = true;
+		}
+	}
+	if (!functionExists) {
+		functionDefinitions.push_back(fD);
+	}
+}
+
 void Runner::handleDefinedFunctions(CharmFunction f) {
 	printf("UNIMPLEMENTED: running function %s\n", f.functionName.c_str());
 }
@@ -102,6 +118,13 @@ void Runner::run(std::vector<CharmFunction> parsedProgram) {
 			//now we push on the lists
 			Runner::push(currentFunction);
 			//wow this is easy right? now get ready baby
+		} else if (currentFunction.functionType == FUNCTION_DEFINITION) {
+			//lets define some functions bruh
+			FunctionDefinition tempFunction;
+			tempFunction.functionName = currentFunction.functionName;
+			tempFunction.functionBody = currentFunction.literalFunctions;
+			Runner::addFunctionDefinition(tempFunction);
+			//that was easy too! oh no...
 		} else if (currentFunction.functionType == DEFINED_FUNCTION) {
 			//let's do these defined functions now
 			Runner::handleDefinedFunctions(currentFunction);

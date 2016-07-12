@@ -1,6 +1,11 @@
 #include <vector>
 #include "ParserTypes.h"
 
+struct FunctionDefinition {
+	std::string functionName;
+	std::vector<CharmFunction> functionBody;
+};
+
 class Runner {
 private:
 	//the stack is automatically initialized to 8192 zero ints
@@ -11,6 +16,11 @@ private:
 	//update the modifiedStackArea, really only called on swap
 	//because swap is the only one that's hard to predict
 	void updateModifiedStackArea();
+	//alright, this is the nitty gritty
+	//here is the table of function definitions:
+	std::vector<FunctionDefinition> functionDefinitions;
+	//and this is how you add them
+	void addFunctionDefinition(FunctionDefinition fD);
 	//return a CharmFunction that for all intents and purposes is zero
 	CharmFunction zeroF();
 	//push to top of stack
