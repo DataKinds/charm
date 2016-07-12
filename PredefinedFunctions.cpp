@@ -7,7 +7,7 @@
 
 const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//INPUT / OUTPUT
-	"p", "newline",
+	"pp", "newline",
 	//STACK MANIPULATIONS
 	"dup", "pop", "swap",
 	//LIST MANIPULATIONS
