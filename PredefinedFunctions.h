@@ -39,6 +39,5 @@ public:
 	static void minusI(Runner* r);
 	static void divI(Runner* r);
 	static void timesI(Runner* r);
-	static void modulo(Runner* r);
 	static void toInt(Runner* r);
 };

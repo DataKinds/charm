@@ -51,6 +51,15 @@ bool Runner::isInt(CharmFunction f) {
 	return false;
 }
 
+bool Runner::isFloat(CharmFunction f) {
+	if (f.functionType == NUMBER_FUNCTION) {
+		if (f.numberValue.whichType == FLOAT_VALUE) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void Runner::updateModifiedStackArea() {
 	//go from the front of the stack to the back
 	//then set the modifiedStackArea accordingly

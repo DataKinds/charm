@@ -42,6 +42,14 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
 	if (functionName == "ifthen") PredefinedFunctions::ifthen(r);
 	//BOOLEAN OPS
 	if (functionName == "nor") PredefinedFunctions::nor(r); //you can make all logic out of this
+	//TYPE INSPECIFIC MATH
+	if (functionName == "abs") PredefinedFunctions::abs(r);
+	//INTEGER OPS
+	if (functionName == "+") PredefinedFunctions::plusI(r);
+	if (functionName == "-") PredefinedFunctions::minusI(r);
+	if (functionName == "/") PredefinedFunctions::divI(r);
+	if (functionName == "*") PredefinedFunctions::timesI(r);
+	if (functionName == "toint") PredefinedFunctions::toInt(r);
 }
 
 void PredefinedFunctions::p(Runner* r) {
@@ -239,5 +247,78 @@ void PredefinedFunctions::nor(Runner* r) {
 		r->push(out);
 	} else {
 		runtime_die("Non integer passed to logic function.");
+	}
+}
+
+void PredefinedFunctions::abs(Runner* r) {
+	CharmFunction f1 = r->pop();
+	if (r->isInt(f1)) {
+		std::abs(f1.numberValue.integerValue);
+	} else if (r->isFloat(f1)) {
+		if (f1.numberValue.floatValue < 0) {
+			f1.numberValue.floatValue = -f1.numberValue.floatValue;
+		}
+	} else {
+		runtime_die("Non number passed to `abs`.");
+	}
+}
+
+void PredefinedFunctions::plusI(Runner* r) {
+	CharmFunction f1 = r->pop();
+	CharmFunction f2 = r->pop();
+	if (r->isInt(f1) && r->isInt(f2)) {
+		f1.numberValue.integerValue = f1.numberValue.integerValue + f2.numberValue.integerValue;
+	} else {
+		runtime_die("Non integer passed to `+`.");
+	}
+	r->push(f1);
+}
+
+void PredefinedFunctions::minusI(Runner* r) {
+	CharmFunction f1 = r->pop();
+	CharmFunction f2 = r->pop();
+	if (r->isInt(f1) && r->isInt(f2)) {
+		f1.numberValue.integerValue = f2.numberValue.integerValue - f1.numberValue.integerValue;
+	} else {
+		runtime_die("Non integer passed to `-`.");
+	}
+	r->push(f1);
+}
+
+void PredefinedFunctions::divI(Runner* r) {
+	CharmFunction f1 = r->pop();
+	CharmFunction f2 = r->pop();
+	if (r->isInt(f1) && r->isInt(f2)) {
+		//f1 used as answer
+		f1.numberValue.integerValue = f2.numberValue.integerValue / f1.numberValue.integerValue;
+		//f2 used as modulus
+		f2.numberValue.integerValue = f2.numberValue.integerValue % f1.numberValue.integerValue;
+	} else {
+		runtime_die("Non integer passed to `+`.");
+	}
+	r->push(f2);
+	r->push(f1);
+}
+
+void PredefinedFunctions::timesI(Runner* r) {
+	CharmFunction f1 = r->pop();
+	CharmFunction f2 = r->pop();
+	if (r->isInt(f1) && r->isInt(f2)) {
+		f1.numberValue.integerValue = f1.numberValue.integerValue * f2.numberValue.integerValue;
+	} else {
+		runtime_die("Non integer passed to `*`.");
+	}
+	r->push(f1);
+}
+
+void PredefinedFunctions::toInt(Runner* r) {
+	CharmFunction f1 = r->pop();
+	if (r->isFloat(f1)) {
+		f1.numberValue.whichType = INTEGER_VALUE;
+		f1.numberValue.integerValue = (long long)f1.numberValue.floatValue;
+	} else if (r->isInt(f1)) {
+		//do nothing, it's already an int
+	} else {
+		runtime_die("Non number passed to `toInt`.");
 	}
 }
