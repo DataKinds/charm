@@ -35,6 +35,7 @@ int main(int argc, char const *argv[]) {
 	//begin the interactive loop
 	while (true) {
 		std::string codeInput(readline("Charm$ "));
+		add_history(codeInput.c_str());
 		std::vector<CharmFunction> parsedProgram = parser.parse(codeInput);
 		ONLYDEBUG printf("TOKEN TYPES: ");
 		for (auto currentFunction : parsedProgram) {
