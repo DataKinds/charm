@@ -103,7 +103,7 @@ void PredefinedFunctions::swap(Runner* r) {
 		if ((f1.numberValue.integerValue >= r->MAX_STACK) || (f2.numberValue.integerValue >= r->MAX_STACK)) {
 			runtime_die("Overflowing pointers passed to `swap`.");
 		}
-		r->swap(r->MAX_STACK - ((unsigned long long)f1.numberValue.integerValue), r->MAX_STACK - ((unsigned long long)f2.numberValue.integerValue));
+		r->swap((unsigned long long)f1.numberValue.integerValue, (unsigned long long)f2.numberValue.integerValue);
 	} else {
 		runtime_die("Non integer passed to `swap`.");
 	}
