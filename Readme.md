@@ -8,7 +8,7 @@ This is based off of Forth and Joy.
 
 - libreadline and related development packages (`libreadline-dev on apt-based systems`)
 
-## [DOCUMENTATION](https://github.com/aearnus/charm/Documentation.md)
+## [DOCUMENTATION](https://github.com/aearnus/charm/blob/master/Documentation.md)
 
 ## TODO:
 
