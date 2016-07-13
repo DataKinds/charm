@@ -29,12 +29,19 @@ bool Parser::isCharDigit(char c) {
 }
 
 bool Parser::isStringNumber(std::string str) {
+	bool hasDigit = false;
+	bool hasPunctuation = false;
 	for (auto c : str) {
 		if (!Parser::isCharDigit(c)) {
 			return false;
 		}
+		if (c == '.' || c == '-') {
+			hasPunctuation = true;
+		} else {
+			hasDigit = true;
+		}
 	}
-	return true;
+	return (hasDigit && hasPunctuation) || hasDigit;
 }
 
 bool Parser::isLineFunctionDefinition(std::vector<std::string> line) {

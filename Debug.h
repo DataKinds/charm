@@ -1,2 +1,2 @@
-#define DEBUGMODE false
+#define DEBUGMODE true
 #define ONLYDEBUG if(DEBUGMODE)
