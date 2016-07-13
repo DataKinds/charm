@@ -1,4 +1,8 @@
 p := dup pp
 print := p newline
 flip := 0 1 swap
+pushListFront := 0 flip insert
+pushListBack :=
+popListFront :=
+popListBack :=
 stackNTimes := [ 1 - dup ] [ flip dup 0 2 swap stackNTimes ] [ ] ifthen
