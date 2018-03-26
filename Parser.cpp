@@ -162,21 +162,28 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 					tokenNum++;
 					int listDepth = 1;
 					while ((tokenNum < tokenizedString[lineNum].size()) &&
-						   listDepth) {
-							   if (Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]) == LIST_FUNCTION) {
+						   (listDepth > 0)) {
+							   std::string token = tokenizedString[lineNum][tokenNum];
+							   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
+							   if (Parser::recognizeFunction(token) == LIST_FUNCTION) {
 								   //if we see another "[" inside of here, we increase listDepth
 								   listDepth++;
-							   } else if (tokenizedString[lineNum][tokenNum] == "]") {
+							   } else if (token == "]") {
 								   //else, we decrease listDepth
 								   //remember, the loop ends when listDepth is zero, and it starts at one.
 								   //additionally: ] is NOT a function and is not parsed as one, and weirdness ensues if it is
 								   listDepth++;
+								   if (listDepth <= 0) {
+									   break;
+								   }
+								   //don't push the ] to the string to recursively parse
+								   continue;
 							   }
-							   ss << tokenizedString[lineNum][tokenNum] << " ";
-							   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
+							   ss << token << " ";
 					}
 					//finally, we can put it into the currentFunction
 					currentFunction.literalFunctions = parse(ss.str());
+
 				}
 				out.push_back(currentFunction);
 			}
