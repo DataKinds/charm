@@ -160,8 +160,18 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 					//this is just like the string
 					std::stringstream ss;
 					tokenNum++;
+					int listDepth = 1;
 					while ((tokenNum < tokenizedString[lineNum].size()) &&
-						   (tokenizedString[lineNum][tokenNum] != "]")) {
+						   listDepth) {
+							   if (Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]) == LIST_FUNCTION) {
+								   //if we see another "[" inside of here, we increase listDepth
+								   listDepth++;
+							   } else if (tokenizedString[lineNum][tokenNum] == "]") {
+								   //else, we decrease listDepth
+								   //remember, the loop ends when listDepth is zero, and it starts at one.
+								   //additionally: ] is NOT a function and is not parsed as one, and weirdness ensues if it is
+								   listDepth++;
+							   }
 							   ss << tokenizedString[lineNum][tokenNum] << " ";
 							   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
 					}
