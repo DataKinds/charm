@@ -72,7 +72,7 @@ void PredefinedFunctions::print(CharmFunction f1) {
 		printf("[ ");
 		for (CharmFunction f : f1.literalFunctions) {
 			PredefinedFunctions::print(f);
-			printf(" ")
+			printf(" ");
 		}
 		printf("]");
 	}
