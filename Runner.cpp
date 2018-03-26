@@ -62,6 +62,30 @@ void Runner::createStack(unsigned long long length, CharmFunction name) {
 	}
 }
 
+CharmFunction Runner::getReference(CharmFunction key) {
+	for (Reference r : references) {
+		if (r.key == key) {
+			return r.value;
+		}
+	}
+	return Stack::zeroF();
+}
+
+void Runner::setReference(CharmFunction key, CharmFunction value) {
+	Reference newRef;
+	newRef.key = key;
+	newRef.value = value;
+	for (unsigned long long n = 0; n < references.size(); n++) {
+		if (references[n].key == key) {
+			//if the ref was previously defined
+			references[n] = newRef;
+			return;
+		}
+	}
+	//if it wasn't previously defined then
+	references.push_back(newRef);
+}
+
 std::vector<FunctionDefinition> Runner::getFunctionDefinitions() {
 	return Runner::functionDefinitions;
 }

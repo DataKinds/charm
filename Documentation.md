@@ -60,13 +60,17 @@ NOTE: The default stack is christened the name `0`. Any stack that tries to crea
 
 - `createstack` - creates a new stack with a specified name and length, but does not switch to it - s[1]: the length of the stack, s[0]: the name of the stack (any type here is permissible!)
 
+NOTE: creating a large stack may take a longer time! Stacks are implemented as `std::vector`s of a fairly large struct, which has to be initialized on creation.
+
 - `switchstack` - switch to the specified stack - s[0]: the name of the stack to switch to
 
 ### REFERENCE GETTING / SETTING
 
 - `getref` - gets a reference to an object by the name specified, puts it on the top of the stack - s[0]: the name of the object
 
-- `setref` - sets the value of an object referred to by the name specified - s[1]: the name of the object
+NOTE: getting an undefined reference will just push a `0` to the top of the stack, just like if you were to pop off of an empty stack.
+
+- `setref` - sets the value of an object referred to by the name specified - s[1]: the name of the object, s[0]: the value of the object
 
 ### RIPPED OUT OF `PredefinedFunctions.CPP`
 
@@ -95,10 +99,8 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//FLOAT OPS
 	"+f", "-f", "/f", "*f", "tofloat",
 	//STACK CREATION/DESTRUCTION
-	//TODO
 	"createstack", "switchstack",
 	//REF GETTING/SETTING
-	//TODO
 	"getref", "setref"
 };
 ```

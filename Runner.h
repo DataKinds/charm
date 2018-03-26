@@ -8,6 +8,11 @@ struct FunctionDefinition {
 	std::vector<CharmFunction> functionBody;
 };
 
+struct Reference {
+	CharmFunction key;
+	CharmFunction value;
+};
+
 class Runner {
 private:
 	//alright, this is the nitty gritty
@@ -24,14 +29,20 @@ private:
 	CharmFunction currentStackName;
 	//and here is the list of all of our stacks
 	std::vector<Stack> stacks;
+	//and the list of all of our references
+	std::vector<Reference> references;
 public:
 	Runner();
+	std::vector<FunctionDefinition> getFunctionDefinitions();
+
 	const unsigned int MAX_STACK = 20000;
 	bool doesStackExist(CharmFunction name);
 	Stack* getCurrentStack();
-	std::vector<FunctionDefinition> getFunctionDefinitions();
 	void switchCurrentStack(CharmFunction name);
 	void createStack(unsigned long long length, CharmFunction name);
+
+	CharmFunction getReference(CharmFunction key);
+	void setReference(CharmFunction key, CharmFunction value);
 
 	void run(std::vector<CharmFunction> parsedProgram);
 };

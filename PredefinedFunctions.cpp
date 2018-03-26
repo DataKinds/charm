@@ -29,10 +29,8 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//FLOAT OPS
 	"+f", "-f", "/f", "*f", "tofloat",
 	//STACK CREATION/DESTRUCTION
-	//TODO
 	"createstack", "switchstack",
 	//REF GETTING/SETTING
-	//TODO
 	"getref", "setref"
 };
 
@@ -364,9 +362,14 @@ void PredefinedFunctions::switchStack(Runner* r) {
 }
 
 void PredefinedFunctions::getRef(Runner* r) {
-	;
+	CharmFunction f1 = r->getCurrentStack()->pop();
+	r->getCurrentStack()->push(r->getReference(f1));
 }
 
 void PredefinedFunctions::setRef(Runner* r) {
-	;
+	//the value of the reference
+	CharmFunction f1 = r->getCurrentStack()->pop();
+	//the name of the reference
+	CharmFunction f2 = r->getCurrentStack()->pop();
+	r->setReference(f2, f1);
 }
