@@ -4,6 +4,7 @@
 #include "ParserTypes.h"
 #include "PredefinedFunctions.h"
 #include "Error.h"
+#include "Debug.h"
 
 CharmFunction Runner::zeroF() {
 	CharmFunction zeroFunction;
@@ -158,28 +159,35 @@ void Runner::run(std::vector<CharmFunction> parsedProgram) {
 	for (CharmFunction currentFunction : parsedProgram) {
 		//alright, now we get into the running portion
 		if (currentFunction.functionType == NUMBER_FUNCTION) {
+			ONLYDEBUG puts("RUNNING AS NUMBER_FUNCTION");
 			//first, let's do the numbers
 			Runner::push(currentFunction);
 			//easy, right? let's do more
 		} else if (currentFunction.functionType == STRING_FUNCTION) {
+			ONLYDEBUG puts("RUNNING AS STRING_FUNCTION");
 			//now we push strings onto the stack
 			Runner::push(currentFunction);
 			//still p easy ye
 		} else if (currentFunction.functionType == LIST_FUNCTION) {
+			ONLYDEBUG puts("RUNNING AS LIST_FUNCTION");
 			//now we push on the lists
 			Runner::push(currentFunction);
 			//wow this is easy right? now get ready baby
 		} else if (currentFunction.functionType == FUNCTION_DEFINITION) {
+			ONLYDEBUG puts("RUNNING AS FUNCTION_DEFINTION");
 			//lets define some functions bruh
 			FunctionDefinition tempFunction;
 			tempFunction.functionName = currentFunction.functionName;
 			tempFunction.functionBody = currentFunction.literalFunctions;
 			Runner::addFunctionDefinition(tempFunction);
+			ONLYDEBUG printf("ADDED FUNCTION DEFINITION FOR %s\n", tempFunction.functionName.c_str());
 			//that was easy too! oh no...
 		} else if (currentFunction.functionType == DEFINED_FUNCTION) {
+			ONLYDEBUG puts("RUNNING AS DEFINED_FUNCTION");
 			//let's do these defined functions now
 			Runner::handleDefinedFunctions(currentFunction);
 			//lol you thought i'd do it here
 		}
 	}
+	ONLYDEBUG puts("EXITING RUNNER::RUN");
 }

@@ -26,7 +26,7 @@ int main(int argc, char const *argv[]) {
 			printf("%s\n", line.c_str());
 		}
 		//load up the Prelude.charm file
-		runner.run(parser.parse(preludeFile.str()));
+		runner.run(parser.lex(preludeFile.str()));
 		printf("Prelude.charm loaded.\n");
 	} catch (std::exception &e) {
 		printf("Prelude.charm nonexistant or unopenable.\n");
@@ -36,7 +36,7 @@ int main(int argc, char const *argv[]) {
 	while (true) {
 		std::string codeInput(readline("Charm$ "));
 		add_history(codeInput.c_str());
-		std::vector<CharmFunction> parsedProgram = parser.parse(codeInput);
+		std::vector<CharmFunction> parsedProgram = parser.lex(codeInput);
 		ONLYDEBUG printf("TOKEN TYPES: ");
 		for (auto currentFunction : parsedProgram) {
 			ONLYDEBUG printf("%i ", currentFunction.functionType);

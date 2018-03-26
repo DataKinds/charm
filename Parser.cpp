@@ -63,7 +63,135 @@ CharmFunctionType Parser::recognizeFunction(std::string s) {
 	return DEFINED_FUNCTION;
 }
 
-std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
+CharmFunction Parser::parseDefinition(std::vector<std::string> line) {
+	//if there was a function definition, do some weird stuff
+	//set functionType to FUNCTION_DEFINITION (duh)
+	//take the first token before the := and set it to the functionName
+	//take all the tokens after the :=, parse them, and make them the literalFunctions
+	CharmFunction currentFunction;
+	currentFunction.functionType = FUNCTION_DEFINITION;
+	unsigned long long equalsIndex = 0;
+	while (Parser::recognizeFunction(line[equalsIndex]) != FUNCTION_DEFINITION) {
+		equalsIndex++;
+	}
+	//alright, now we found the :=
+	//let's make sure that it's not the first or last element
+	if (!((equalsIndex == 0) || (equalsIndex >= (line.size() - 1)))) {
+		//now we set the stuff!
+		currentFunction.functionName = line[equalsIndex - 1];
+		std::stringstream ss;
+		//populate the stringstream with the tokens after the :=
+		//this call ensures that the first token won't be a :=, but rather,
+		//the first token past that
+		equalsIndex++;
+		for (; equalsIndex < line.size(); equalsIndex++) {
+			ss << line[equalsIndex] << " ";
+		}
+		ONLYDEBUG printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
+		ONLYDEBUG printf("FUNCTION BODY IS %s\n", ss.str().c_str());
+		//DIRTY HACK ALERT
+		currentFunction.literalFunctions = Parser::lex(ss.str());
+		//END DIRTY HACK
+		//we outta here!
+	}
+	return currentFunction;
+}
+
+CharmFunction Parser::parseDefinedFunction(std::string tok) {
+	CharmFunction out;
+	out.functionType = DEFINED_FUNCTION;
+	out.functionName = tok;
+	return out;
+}
+
+CharmFunction Parser::parseNumberFunction(std::string tok) {
+	CharmFunction out;
+	out.functionType = NUMBER_FUNCTION;
+	CharmNumber numberValue;
+	//if it contains a '.' it's a long double
+	//if not it's a long long
+	if (tok.find('.') != std::string::npos) {
+		numberValue.whichType = FLOAT_VALUE;
+		numberValue.floatValue = std::stold(tok);
+	} else {
+		numberValue.whichType = INTEGER_VALUE;
+		numberValue.integerValue = std::stoll(tok);
+	}
+	out.numberValue = numberValue;
+	return out;
+}
+
+CharmFunction Parser::parseStringFunction(std::vector<std::string> *line, unsigned long long *tokenNum) {
+	CharmFunction out;
+	out.functionType = STRING_FUNCTION;
+	//now it's getting hard: a string continues
+	//until it hits the next STRING_FUNCTION, popping along the way
+	//then, that second STRING_FUNCTION is popped
+	//and we continue. if there are no other STRING_FUNCTIONs,
+	//then we just end the string at the end of the line
+	//create a string stream to compile the string for the funcion
+	std::stringstream ss;
+	//fill in the stringstream
+	//until the line ends or another " occurs
+	(*tokenNum)++;
+	while (((*tokenNum) < line->size()) &&
+		   (Parser::recognizeFunction((*line)[*tokenNum]) != STRING_FUNCTION)) {
+			   ss << (*line)[*tokenNum] << " ";
+			   ONLYDEBUG printf("ERASING %s\n", (*line)[*tokenNum].c_str());
+			   (*line).erase(line->begin() + (*tokenNum));
+	}
+	//make sure that the final quote was removed if it exists
+	//(AKA we're not at the end of the line)
+	//FINALLY we can fill in out
+	out.stringValue = ss.str();
+	return out;
+}
+
+CharmFunction Parser::parseListFunction(std::vector<std::string> *line, unsigned long long *tokenNum) {
+	CharmFunction out;
+	out.functionType = LIST_FUNCTION;
+	//and not a string. this time, we look for a "]"
+	//to end the list (or a new line. that works too)
+	//first, we have to make another string with the contents
+	//this is just like the string
+	std::stringstream ss;
+	(*tokenNum)++;
+	int listDepth = 1;
+	while ((*tokenNum) < line->size()) {
+		ONLYDEBUG printf("LIST DEPTH %i\n", listDepth);
+		std::string token = (*line)[*tokenNum];
+		line->erase(line->begin() + (*tokenNum));
+		if (Parser::recognizeFunction(token) == LIST_FUNCTION) {
+		   //if we see another "[" inside of here, we increase listDepth in order to not break on the first ]
+		   listDepth++;
+		} else if (token == "]") {
+		   //else, we decrease listDepth
+		   //remember, the loop ends when listDepth is zero, and it starts at one.
+		   //additionally: ] is NOT a function and is not parsed as one, and weirdness ensues if it is
+		   listDepth--;
+		   if (listDepth <= 0) {
+			   break;
+		   }
+		   //don't push the ] to the string to recursively parse
+		   continue;
+		}
+		ss << token << " ";
+	}
+	//finally, we can put the inside of the [ ] into the out
+	out.literalFunctions = Parser::lex(ss.str());
+	ONLYDEBUG printf("CONTINUING PARSING AT TOKEN NUM %llu, WHICH IS %s\n", (*tokenNum), (*line)[*tokenNum].c_str());
+	//NOTE: this is after hours of debugging, I've deemed this necessary
+	//tl;dr version: the call to `erase` a few lines above mutates the vector
+	//to the point where tokenNum actually refers to the next token ready to be
+	//consumed, but parse() doesn't know that and will increment it anyway.
+	//thus, we decrement it in order to counteract that. hopefully it doesn't
+	//cause any meaningful bugs.
+	(*tokenNum)--;
+	return out;
+}
+
+
+std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
 	std::vector<CharmFunction> out;
 	//first split the string on newlines
@@ -77,121 +205,24 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 		//first, check and make sure that this line doesn't
 		//contain a function definition before parsing it
 		if (isLineFunctionDefinition(tokenizedString[lineNum])) {
-			//if there was a function definition, do some weird stuff
-			//set functionType to FUNCTION_DEFINITION (duh)
-			//take the first token before the := and set it to the functionName
-			//take all the tokens after the :=, parse them, and make them the literalFunctions
-			CharmFunction currentFunction;
-			currentFunction.functionType = FUNCTION_DEFINITION;
-			unsigned long long equalsIndex = 0;
-			while (Parser::recognizeFunction(tokenizedString[lineNum][equalsIndex]) != FUNCTION_DEFINITION) {
-				equalsIndex++;
-			}
-			//alright, now we found the :=
-			//let's make sure that it's not the first or last element
-			if (!((equalsIndex == 0) || (equalsIndex >= (tokenizedString[lineNum].size() - 1)))) {
-				//now we set the stuff!
-				currentFunction.functionName = tokenizedString[lineNum][equalsIndex - 1];
-				std::stringstream ss;
-				//populate the stringstream with the tokens after the :=
-				//this call ensures that the first token won't be a :=, but rather,
-				//the first token past that
-				equalsIndex++;
-				for (; equalsIndex < tokenizedString[lineNum].size(); equalsIndex++) {
-					ss << tokenizedString[lineNum][equalsIndex] << " ";
-				}
-				ONLYDEBUG printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
-				ONLYDEBUG printf("FUNCTION BODY IS %s\n", ss.str().c_str());
-				currentFunction.literalFunctions = parse(ss.str());
-				//we outta here!
-				out.push_back(currentFunction);
-			}
+			out.push_back(Parser::parseDefinition(tokenizedString[lineNum]));
 		} else {
 			for (unsigned long long tokenNum = 0; tokenNum < tokenizedString[lineNum].size(); tokenNum++) {
 				ONLYDEBUG printf("PARSING %s\n", tokenizedString[lineNum][tokenNum].c_str());
 				CharmFunction currentFunction;
-				currentFunction.functionType = Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]);
-				if (currentFunction.functionType == DEFINED_FUNCTION) {
+				CharmFunctionType type = Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]);
+				if (type == DEFINED_FUNCTION) {
 					//deal with DEFINED_FUNCTION first, easiest to deal with
-					currentFunction.functionName = tokenizedString[lineNum][tokenNum];
-				} else if (currentFunction.functionType == NUMBER_FUNCTION) {
+					currentFunction = Parser::parseDefinedFunction(tokenizedString[lineNum][tokenNum]);
+				} else if (type == NUMBER_FUNCTION) {
 					//next deal with NUMBER_FUNCTION
-					CharmNumber numberValue;
-					//if it contains a '.' it's a long double
-					//if not it's a long long
-					if (tokenizedString[lineNum][tokenNum].find('.') != std::string::npos) {
-						numberValue.whichType = FLOAT_VALUE;
-						numberValue.floatValue = std::stold(tokenizedString[lineNum][tokenNum]);
-					} else {
-						numberValue.whichType = INTEGER_VALUE;
-						numberValue.integerValue = std::stoi(tokenizedString[lineNum][tokenNum]);
-					}
-					currentFunction.numberValue = numberValue;
-				} else if (currentFunction.functionType == STRING_FUNCTION) {
+					currentFunction = Parser::parseNumberFunction(tokenizedString[lineNum][tokenNum]);
+				} else if (type == STRING_FUNCTION) {
 					//next deal with STRING_FUNCTION
-					//now it's getting hard: a string continues
-					//until it hits the next STRING_FUNCTION, popping along the way
-					//then, that second STRING_FUNCTION is popped
-					//and we continue. if there are no other STRING_FUNCTIONs,
-					//then we just end the string at the end of the line
-					//create a string stream to compile the string for the funcion
-					std::stringstream ss;
-					//fill in the stringstream
-					//until the line ends or another " occurs
-					tokenNum++;
-					while ((tokenNum < tokenizedString[lineNum].size()) &&
-				           (Parser::recognizeFunction(tokenizedString[lineNum][tokenNum]) != STRING_FUNCTION)) {
-							   ss << tokenizedString[lineNum][tokenNum] << " ";
-							   ONLYDEBUG printf("ERASING %s\n", tokenizedString[lineNum][tokenNum].c_str());
-							   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
-					}
-					//make sure that the final quote was removed if it exists
-					//(AKA we're not at the end of the line)
-					//if (nextTokenNum < tokenizedString[lineNum].size()) {
-					//	printf("ERASING \": %s\n", tokenizedString[lineNum][nextTokenNum].c_str());
-					//	tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + nextTokenNum);
-					//}
-					//FINALLY we can fill in currentFunction
-					currentFunction.stringValue = ss.str();
-				} else if (currentFunction.functionType == LIST_FUNCTION) {
+					currentFunction = Parser::parseStringFunction(&tokenizedString[lineNum], &tokenNum);
+				} else if (type == LIST_FUNCTION) {
 					//same thing as before, except it's a list
-					//and not a string. this time, we look for a "]"
-					//to end the list (or a new line. that works too)
-					//first, we have to make another string with the contents
-					//this is just like the string
-					std::stringstream ss;
-					tokenNum++;
-					int listDepth = 1;
-					while (tokenNum < tokenizedString[lineNum].size()) {
-						ONLYDEBUG printf("LIST DEPTH %i\n", listDepth);
-						std::string token = tokenizedString[lineNum][tokenNum];
-						tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
-						if (Parser::recognizeFunction(token) == LIST_FUNCTION) {
-						   //if we see another "[" inside of here, we increase listDepth in order to not break on the first ]
-						   listDepth++;
-						} else if (token == "]") {
-						   //else, we decrease listDepth
-						   //remember, the loop ends when listDepth is zero, and it starts at one.
-						   //additionally: ] is NOT a function and is not parsed as one, and weirdness ensues if it is
-						   listDepth--;
-						   if (listDepth <= 0) {
-							   break;
-						   }
-						   //don't push the ] to the string to recursively parse
-						   continue;
-						}
-						ss << token << " ";
-					}
-					//finally, we can put the inside of the [ ] into the currentFunction
-					currentFunction.literalFunctions = parse(ss.str());
-					ONLYDEBUG printf("CONTINUING PARSING AT TOKEN NUM %llu, WHICH IS %s\n", tokenNum, tokenizedString[lineNum][tokenNum].c_str());
-					//NOTE: this is after hours of debugging, I've deemed this necessary
-					//tl;dr version: the call to `erase` a few lines above mutates the vector
-					//to the point where tokenNum actually refers to the next token ready to be
-					//consumed, but parse() doesn't know that and will increment it anyway.
-					//thus, we decrement it in order to counteract that. hopefully it doesn't
-					//cause any meaningful bugs.
-					tokenNum--;
+					currentFunction = Parser::parseListFunction(&tokenizedString[lineNum], &tokenNum);
 				}
 				out.push_back(currentFunction);
 			}
