@@ -343,11 +343,24 @@ void PredefinedFunctions::toInt(Runner* r) {
 }
 
 void PredefinedFunctions::createStack(Runner* r) {
-	;
+	//name of the stack
+	CharmFunction f1 = r->getCurrentStack()->pop();
+	//length of the stack
+	CharmFunction f2 = r->getCurrentStack()->pop();
+	if (Stack::isInt(f2)) {
+		if (f2.numberValue.integerValue > 0) {
+			r->createStack(f2.numberValue.integerValue, f1);
+		} else {
+			runtime_die("Negative integer or zero passed to `createStack`.");
+		}
+	} else {
+		runtime_die("Non integer passed to `createStack`.");
+	}
 }
 
 void PredefinedFunctions::switchStack(Runner* r) {
-	;
+	CharmFunction f1 = r->getCurrentStack()->pop();
+	r->switchCurrentStack(f1);
 }
 
 void PredefinedFunctions::getRef(Runner* r) {
