@@ -45,3 +45,26 @@ All arguments are popped off the stack, and explained in the order that you shou
 - `-` - subtracts - s[1], s[0]
 
 - `*` - multiplies - s[1], s[0]
+
+### RIPPED OUT OF `PredefinedFunctions.CPP`
+
+```
+const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
+	//INPUT / OUTPUT
+	"pp", "newline",
+	//STACK MANIPULATIONS
+	"dup", "pop", "swap",
+	//LIST MANIPULATIONS
+	"len", "at", "insert", "concat",
+	//CONTROL FLOW
+	"i", "ifthen",
+	//BOOLEAN OPS - TRUE: >=1, FALSE: <1 - INTEGER ONLY
+	"nor",
+	//TYPE INSPECIFIC MATH
+	"abs",
+	//INTEGER OPS
+	"+", "-", "/", "*", "%", "toint",
+	//FLOAT OPS
+	"+f", "-f", "/f", "*f", "tofloat"
+};
+```
