@@ -58,7 +58,7 @@ NOTE: `ifthen` doesn't pop the condition afterwards.
 
 NOTE: The default stack is christened the name `0`. Any stack that tries to create a new stack of name `0` will face _undefined behavior_.
 
-- `createstack` - creates a new stack with a specified name and length - s[1]: the length of the stack, s[0]: the name of the stack (any type here is permissible!)
+- `createstack` - creates a new stack with a specified name and length, but does not switch to it - s[1]: the length of the stack, s[0]: the name of the stack (any type here is permissible!)
 
 - `switchstack` - switch to the specified stack - s[0]: the name of the stack to switch to
 
