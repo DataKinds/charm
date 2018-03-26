@@ -37,3 +37,11 @@ All arguments are popped off the stack, and explained in the order that you shou
 - `insert` - inserts element at index of function - s[2]: function to be inserted in, s[1]: function to insert, s[0]: index to insert integer
 
 - `concat` - concatenates two lists or strings - s[1]: first function to concatenate, s[0]: second function to concatenate
+
+### ARITHMETIC (NOTE: floating point operations aren't implemented yet)
+
+- `+` - adds - s[1], s[0]
+
+- `-` - subtracts - s[1], s[0]
+
+- `*` - multiplies - s[1], s[0]
