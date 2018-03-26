@@ -14,6 +14,14 @@ All arguments are popped off the stack, and explained in the order that you shou
 
 ## PREPROGRAMMED FUNCTIONS
 
+### CONTROL FLOW
+
+- `ifthen` - takes a condition to run, then a list to run if the top of the stack is greater than 0 and a list to run if the top of the stack is less than 0 - s[2]: condition (as a list of functions), s[1]: truthy list (as a list of functions), s[2]: falsy list (as a list of functions).
+
+NOTE: `ifthen` doesn't pop the condition afterwards.
+
+- `i` - like Lisp's `unquote`, pop a list off the stack then run it - s[0]: the list to `i`nterpret
+
 ### IO
 
 - `pp` - pops a value and prints it - s[0]: function to print
@@ -67,4 +75,13 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//FLOAT OPS
 	"+f", "-f", "/f", "*f", "tofloat"
 };
+```
+
+## PRELUDE FUNCTIONS
+
+```
+p := dup pp
+print := p newline
+flip := 0 1 swap
+stackNTimes := [ 1 - dup ] [ flip dup 0 2 swap stackNTimes ] [ ] ifthen pop
 ```
