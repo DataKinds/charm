@@ -1,4 +1,4 @@
-FILES = main.cpp Parser.cpp Runner.cpp PredefinedFunctions.cpp
+FILES = main.cpp Parser.cpp Runner.cpp Stack.cpp PredefinedFunctions.cpp
 LIBS = -lreadline
 
 DEBUG ?= false

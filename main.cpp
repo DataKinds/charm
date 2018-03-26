@@ -48,10 +48,10 @@ int main(int argc, char const *argv[]) {
 			printf("ERRROR: %s\n", e.what());
 			return -1;
 		}
-		ONLYDEBUG printf("MODIFIED STACK AREA: %i\n", runner.getModifiedStackArea());
+		ONLYDEBUG printf("MODIFIED STACK AREA: %i\n", runner.getCurrentStack()->getModifiedStackArea());
 		ONLYDEBUG printf("THE STACK (just the types): ");
-		std::vector<CharmFunction> postStack = runner.getStack();
-		for (unsigned int stackIndex = runner.getModifiedStackArea(); stackIndex > 0; stackIndex--) {
+		std::vector<CharmFunction> postStack = runner.getCurrentStack()->stack;
+		for (unsigned int stackIndex = runner.getCurrentStack()->getModifiedStackArea(); stackIndex > 0; stackIndex--) {
 			ONLYDEBUG printf("%i ", postStack.at(postStack.size() - stackIndex).functionType);
 		}
 		ONLYDEBUG printf("\n");

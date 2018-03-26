@@ -54,6 +54,20 @@ NOTE: `ifthen` doesn't pop the condition afterwards.
 
 - `*` - multiplies - s[1], s[0]
 
+### STACK CREATION / DESTRUCTION
+
+NOTE: The default stack is christened the name `0`. Any stack that tries to create a new stack of name `0` will face _undefined behavior_.
+
+- `createstack` - creates a new stack with a specified name and length - s[1]: the length of the stack, s[0]: the name of the stack (any type here is permissible!)
+
+- `switchstack` - switch to the specified stack - s[0]: the name of the stack to switch to
+
+### REFERENCE GETTING / SETTING
+
+- `getref` - gets a reference to an object by the name specified, puts it on the top of the stack - s[0]: the name of the object
+
+- `setref` - sets the value of an object referred to by the name specified - s[1]: the name of the object
+
 ### RIPPED OUT OF `PredefinedFunctions.CPP`
 
 ```
@@ -62,8 +76,14 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	"pp", "newline",
 	//STACK MANIPULATIONS
 	"dup", "pop", "swap",
-	//LIST MANIPULATIONS
+	//TRAVERSABLE (STRING/LIST) MANIPULATIONS
 	"len", "at", "insert", "concat",
+	//LIST MANIPULATIONS
+	//TODO
+	"fold", "map", "zip",
+	//STRING MANIPULATIONS
+	//TODO
+	"tocharlist", "fromcharlist"
 	//CONTROL FLOW
 	"i", "ifthen",
 	//BOOLEAN OPS - TRUE: >=1, FALSE: <1 - INTEGER ONLY
@@ -73,7 +93,13 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//INTEGER OPS
 	"+", "-", "/", "*", "%", "toint",
 	//FLOAT OPS
-	"+f", "-f", "/f", "*f", "tofloat"
+	"+f", "-f", "/f", "*f", "tofloat",
+	//STACK CREATION/DESTRUCTION
+	//TODO
+	"createstack", "switchstack",
+	//REF GETTING/SETTING
+	//TODO
+	"getref", "setref"
 };
 ```
 

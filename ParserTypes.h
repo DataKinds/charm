@@ -41,6 +41,54 @@ struct CharmFunction {
 	//ONLY USED WITH DEFINED_FUNCTION AND FUNCTION_DEFINITION
 	std::string functionName;
 };
+inline bool operator==(const CharmFunction& lhs, const CharmFunction& rhs){
+	if (lhs.functionType == rhs.functionType) {
+		switch (lhs.functionType) {
+			case LIST_FUNCTION:
+			if (lhs.literalFunctions.size() != rhs.literalFunctions.size()) {
+				return false;
+			} else {
+				for (unsigned long long n = 0; n < lhs.literalFunctions.size(); n++) {
+					if (!(lhs.literalFunctions[n] == rhs.literalFunctions[n])) {
+						return false;
+					}
+				}
+				return true;
+			}
+			break;
+
+			case NUMBER_FUNCTION:
+			if (rhs.numberValue.whichType == lhs.numberValue.whichType) {
+				if (lhs.numberValue.whichType == INTEGER_VALUE) {
+					return (lhs.numberValue.integerValue == rhs.numberValue.integerValue);
+				} else {
+					return (lhs.numberValue.floatValue == rhs.numberValue.floatValue);
+				}
+			} else {
+				return false;
+			}
+			break;
+
+			case STRING_FUNCTION:
+			return (lhs.stringValue == rhs.stringValue);
+			break;
+
+			case DEFINED_FUNCTION:
+			return (lhs.functionName == rhs.functionName);
+			break;
+
+			case FUNCTION_DEFINITION:
+			//should never happen
+			return false;
+			break;
+		}
+	} else {
+		return false;
+	}
+	//somehow, you skirted around the entire if/else. impressive?
+	return false;
+}
+
 
 //ALL DEFINITIONS ARE CONSTANTS
 struct CharmDefinition {

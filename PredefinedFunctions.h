@@ -40,4 +40,10 @@ public:
 	static void divI(Runner* r);
 	static void timesI(Runner* r);
 	static void toInt(Runner* r);
+	//STACK CREATION/DESTRUCTION
+	static void createStack(Runner* r);
+	static void switchStack(Runner* r);
+	//REF GETTING/SETTING
+	static void getRef(Runner* r);
+	static void setRef(Runner* r);
 };
