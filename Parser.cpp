@@ -64,6 +64,7 @@ CharmFunctionType Parser::recognizeFunction(std::string s) {
 }
 
 std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
+	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
 	std::vector<CharmFunction> out;
 	//first split the string on newlines
 	std::vector<std::string> newlineSplitString = Parser::splitString(charmInput, '\n');
@@ -161,29 +162,36 @@ std::vector<CharmFunction> Parser::parse(const std::string charmInput) {
 					std::stringstream ss;
 					tokenNum++;
 					int listDepth = 1;
-					while ((tokenNum < tokenizedString[lineNum].size()) &&
-						   (listDepth > 0)) {
-							   std::string token = tokenizedString[lineNum][tokenNum];
-							   tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
-							   if (Parser::recognizeFunction(token) == LIST_FUNCTION) {
-								   //if we see another "[" inside of here, we increase listDepth
-								   listDepth++;
-							   } else if (token == "]") {
-								   //else, we decrease listDepth
-								   //remember, the loop ends when listDepth is zero, and it starts at one.
-								   //additionally: ] is NOT a function and is not parsed as one, and weirdness ensues if it is
-								   listDepth++;
-								   if (listDepth <= 0) {
-									   break;
-								   }
-								   //don't push the ] to the string to recursively parse
-								   continue;
-							   }
-							   ss << token << " ";
+					while (tokenNum < tokenizedString[lineNum].size()) {
+						ONLYDEBUG printf("LIST DEPTH %i\n", listDepth);
+						std::string token = tokenizedString[lineNum][tokenNum];
+						tokenizedString[lineNum].erase(tokenizedString[lineNum].begin() + tokenNum);
+						if (Parser::recognizeFunction(token) == LIST_FUNCTION) {
+						   //if we see another "[" inside of here, we increase listDepth in order to not break on the first ]
+						   listDepth++;
+						} else if (token == "]") {
+						   //else, we decrease listDepth
+						   //remember, the loop ends when listDepth is zero, and it starts at one.
+						   //additionally: ] is NOT a function and is not parsed as one, and weirdness ensues if it is
+						   listDepth--;
+						   if (listDepth <= 0) {
+							   break;
+						   }
+						   //don't push the ] to the string to recursively parse
+						   continue;
+						}
+						ss << token << " ";
 					}
-					//finally, we can put it into the currentFunction
+					//finally, we can put the inside of the [ ] into the currentFunction
 					currentFunction.literalFunctions = parse(ss.str());
-
+					ONLYDEBUG printf("CONTINUING PARSING AT TOKEN NUM %llu, WHICH IS %s\n", tokenNum, tokenizedString[lineNum][tokenNum].c_str());
+					//NOTE: this is after hours of debugging, I've deemed this necessary
+					//tl;dr version: the call to `erase` a few lines above mutates the vector
+					//to the point where tokenNum actually refers to the next token ready to be
+					//consumed, but parse() doesn't know that and will increment it anyway.
+					//thus, we decrement it in order to counteract that. hopefully it doesn't
+					//cause any meaningful bugs.
+					tokenNum--;
 				}
 				out.push_back(currentFunction);
 			}
