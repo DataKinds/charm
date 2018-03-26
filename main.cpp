@@ -27,9 +27,9 @@ int main(int argc, char const *argv[]) {
 		}
 		//load up the Prelude.charm file
 		runner.run(parser.lex(preludeFile.str()));
-		printf("Prelude.charm loaded.\n");
+		printf("Prelude.charm loaded.\n\n");
 	} catch (std::exception &e) {
-		printf("Prelude.charm nonexistant or unopenable.\n");
+		printf("Prelude.charm nonexistant or unopenable.\n\n");
 	}
 
 	//begin the interactive loop
