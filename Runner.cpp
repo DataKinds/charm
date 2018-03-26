@@ -35,10 +35,10 @@ void Runner::push(CharmFunction f) {
 }
 
 void Runner::swap(unsigned long long n1, unsigned long long n2) {
-	CharmFunction tempFromN1 = Runner::stack.at(n1);
-	CharmFunction tempFromN2 = Runner::stack.at(n2);
-	Runner::stack[n1] = tempFromN2;
-	Runner::stack[n2] = tempFromN1;
+	CharmFunction tempFromN1 = Runner::stack.at(Runner::stack.size() - n1 - 1);
+	CharmFunction tempFromN2 = Runner::stack.at(Runner::stack.size() - n2 - 1);
+	Runner::stack[Runner::stack.size() - n1 - 1] = tempFromN2;
+	Runner::stack[Runner::stack.size() - n2 - 1] = tempFromN1;
 	Runner::updateModifiedStackArea();
 }
 

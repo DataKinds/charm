@@ -26,7 +26,7 @@ All arguments are popped off the stack, and explained in the order that you shou
 
 - `pop` - pops a function - s[0]: function to pop
 
-- `swap` - swaps two functions - s[1]: the first function's pointer integer, s[0]: the second function's pointer integer
+- `swap` - swaps two functions n elements from the top of the stack - s[1]: the first function's pointer integer, s[0]: the second function's pointer integer
 
 ### LIST / STRING MANIPULATION
 
