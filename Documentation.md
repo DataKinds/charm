@@ -38,13 +38,13 @@ NOTE: `ifthen` doesn't pop the condition afterwards.
 
 ### LIST / STRING MANIPULATION
 
-- `len` - returns length of function - s[0]: list or string to measure length of
+- `len` - returns length of list or string - s[0]: list or string to measure length of
 
-- `at` - returns element at index of function - s[1]: list or string to index, s[0]: index integer
+- `at` - returns element at index of list or string - s[1]: list or string to index, s[0]: index integer
 
-- `insert` - inserts element at index of function - s[2]: function to be inserted in, s[1]: function to insert, s[0]: index to insert integer
+- `insert` - inserts element at index of function - s[2]: list to be inserted in, s[1]: function to insert, s[0]: index to insert at
 
-- `concat` - concatenates two lists or strings - s[1]: first function to concatenate, s[0]: second function to concatenate
+- `concat` - concatenates two lists or strings - s[1]: first list or string to concatenate, s[0]: second list or string to concatenate
 
 ### ARITHMETIC (NOTE: floating point operations aren't implemented yet)
 
@@ -106,6 +106,8 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 ```
 
 ## PRELUDE FUNCTIONS
+
+
 
 ```
 p := dup pp
