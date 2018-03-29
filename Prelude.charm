@@ -1,4 +1,14 @@
+" OUTPUT FUNCTIONS " pop
 p := dup pp
 print := p newline
+
+" STACK MANIPULATION " pop
 flip := 0 1 swap
-stackNTimes := [ 1 - dup ] [ flip dup 0 2 swap stackNTimes ] [ ] ifthen pop
+stack := [ 1 - dup ] [ flip dup 0 2 swap stackNTimes ] [ ] ifthen pop
+
+" LIST MANIPULATION " pop
+"[ list ] <number> repeat" pop
+_repeat_args := flip dup 0 2 swap 1 -
+_repeat_iter := 0 2 swap dup 0 2 swap concat flip 2 0 swap 1 -
+_repeat      :=  [ dup ] [ _repeat_iter _repeat ] [ pop flip pop ] ifthen
+repeat       := _repeat_args _repeat
