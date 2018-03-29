@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <fstream>
 #include <sstream>
+#include <deque>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -51,7 +52,7 @@ int main(int argc, char const *argv[]) {
 		}
 		ONLYDEBUG printf("MODIFIED STACK AREA: %i\n", runner.getCurrentStack()->getModifiedStackArea());
 		ONLYDEBUG printf("THE STACK (just the types): ");
-		std::vector<CharmFunction> postStack = runner.getCurrentStack()->stack;
+		std::deque<CharmFunction> postStack = runner.getCurrentStack()->stack;
 		for (unsigned int stackIndex = runner.getCurrentStack()->getModifiedStackArea(); stackIndex > 0; stackIndex--) {
 			ONLYDEBUG printf("%i ", postStack.at(postStack.size() - stackIndex).functionType);
 		}

@@ -1,6 +1,6 @@
 #pragma once
 #include "ParserTypes.h"
-
+#include <deque>
 
 class Stack {
 private:
@@ -10,7 +10,7 @@ private:
 public:
     Stack(unsigned long long size, CharmFunction name);
     //the stack is automatically initialized to MAX_INT zero ints
-    std::vector<CharmFunction> stack;
+    std::deque<CharmFunction> stack;
     //check to see if the stack name is equal
     //to some CharmFunction passed in. this is so
     //runner can properly select its current stack
