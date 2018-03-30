@@ -24,7 +24,7 @@ private:
 
 	//handle the functions that we don't know about
 	//and / or handle built in functions
-	void handleDefinedFunctions(CharmFunction f);
+	void handleDefinedFunctions(CharmFunction f, FunctionDefinition* context);
 	//this is the name of the current stack that we
 	//are working with. by default, this is stack 0
 	CharmFunction currentStackName;
@@ -45,5 +45,6 @@ public:
 	CharmFunction getReference(CharmFunction key);
 	void setReference(CharmFunction key, CharmFunction value);
 
+	void runWithDefinitionContext(std::vector<CharmFunction> parsedProgram, FunctionDefinition* context);
 	void run(std::vector<CharmFunction> parsedProgram);
 };

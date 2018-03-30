@@ -90,7 +90,7 @@ std::vector<FunctionDefinition> Runner::getFunctionDefinitions() {
 	return Runner::functionDefinitions;
 }
 
-void Runner::handleDefinedFunctions(CharmFunction f) {
+void Runner::handleDefinedFunctions(CharmFunction f, FunctionDefinition* context) {
 	//PredefinedFunctions.h holds all the functions written in C++
 	//other than that, if these functions aren't built in, they are run through
 	//the functionDefinitions table.
@@ -107,7 +107,9 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 	}
 	if (isPredefinedFunction) {
 		//run the predefined function!
-		PredefinedFunctions::functionLookup(f.functionName, this);
+		//(note: the function context AKA the definition we are running code from
+		//is passed in for tail call optimization in PredefinedFunctions.cpp::ifthen())
+		PredefinedFunctions::functionLookup(f.functionName, this, context);
 	} else {
 		//alright, now we get down and dirty
 		//look through the functionDefinitions table for a function with
@@ -127,7 +129,9 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 						Runner::run(functionBodyCopy);
 					}
 				}
-				Runner::run(fD.functionBody);
+				//ooh. the only time we use this call!
+				FunctionDefinition fDCopy = fD;
+				Runner::runWithDefinitionContext(fD.functionBody, &fDCopy);
 			}
 		}
 		if (!functionFound) {
@@ -136,7 +140,7 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 	}
 }
 
-void Runner::run(std::vector<CharmFunction> parsedProgram) {
+void Runner::runWithDefinitionContext(std::vector<CharmFunction> parsedProgram, FunctionDefinition* context) {
 	for (CharmFunction currentFunction : parsedProgram) {
 		//alright, now we get into the running portion
 		if (currentFunction.functionType == NUMBER_FUNCTION) {
@@ -167,9 +171,13 @@ void Runner::run(std::vector<CharmFunction> parsedProgram) {
 		} else if (currentFunction.functionType == DEFINED_FUNCTION) {
 			ONLYDEBUG puts("RUNNING AS DEFINED_FUNCTION");
 			//let's do these defined functions now
-			Runner::handleDefinedFunctions(currentFunction);
+			Runner::handleDefinedFunctions(currentFunction, context);
 			//lol you thought i'd do it here
 		}
 	}
 	ONLYDEBUG puts("EXITING RUNNER::RUN");
+}
+
+void Runner::run(std::vector<CharmFunction> parsedProgram) {
+	Runner::runWithDefinitionContext(parsedProgram, nullptr);
 }

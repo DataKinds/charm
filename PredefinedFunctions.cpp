@@ -4,6 +4,7 @@
 #include "PredefinedFunctions.h"
 #include "ParserTypes.h"
 #include "Error.h"
+#include "Debug.h"
 
 const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//INPUT / OUTPUT
@@ -34,7 +35,7 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	"getref", "setref"
 };
 
-void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
+void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, FunctionDefinition* context) {
 	//INPUT / OUTPUT
 	if (functionName == "pp") PredefinedFunctions::p(r);
 	if (functionName == "newline") PredefinedFunctions::newline(r);
@@ -49,7 +50,7 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r) {
 	if (functionName == "concat") PredefinedFunctions::concat(r);
 	//CONTROL FLOW
 	if (functionName == "i") PredefinedFunctions::i(r);
-	if (functionName == "ifthen") PredefinedFunctions::ifthen(r);
+	if (functionName == "ifthen") PredefinedFunctions::ifthen(r, context);
 	//BOOLEAN OPS
 	if (functionName == "nor") PredefinedFunctions::nor(r); //you can make all logic out of this
 	//TYPE INSPECIFIC MATH
@@ -202,18 +203,100 @@ void PredefinedFunctions::i(Runner* r) {
 	}
 }
 
-void PredefinedFunctions::ifthen(Runner* r) {
+void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
+	//the arguments to this function are a little different...
+	//ifthen performs very basic tail-call optimization on its two sections (truthy/falsy)
+	//if truthy (or falsy) end with the function itself (found through fD.functionName), then
+	//the tail-call optimizer kicks in and the function simply loops instead of
+	//creating a new stack frame by calling r->run()
+
 	//this one is gonna take 3 arguments:
 	//stack[2] = condition to run truthy section
 	//stack[1] = truthy section (if...)
 	//stack[0] = falsy section (else...)
 	//have to reverse it because popping is weird
 	CharmFunction falsy = r->getCurrentStack()->pop();
+	bool falsyTailCall = false;
 	CharmFunction truthy = r->getCurrentStack()->pop();
+	bool truthyTailCall = false;
 	CharmFunction condFunction = r->getCurrentStack()->pop();
 	if ((condFunction.functionType == LIST_FUNCTION) &&
 		(truthy.functionType == LIST_FUNCTION) &&
 		(falsy.functionType == LIST_FUNCTION)) {
+			//first, we run checks to set the tail call bools
+			if (context != nullptr) {
+				if (truthy.literalFunctions.back().functionName == context->functionName) {
+					truthyTailCall = true;
+				}
+				if (falsy.literalFunctions.back().functionName == context->functionName) {
+					falsyTailCall = true;
+				}
+				//now, if we _DO_ have a tail call, modify truthy/falsy and enter a loop instead
+				//there are 3 seperate cases here: truthy tail call, falsy tail call, or both
+				if (truthyTailCall) {
+					ONLYDEBUG printf("ENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
+					//remove the tail call
+					truthy.literalFunctions.pop_back();
+					while (1) {
+						r->run(condFunction.literalFunctions);
+						CharmFunction cond = r->getCurrentStack()->pop();
+						if (Stack::isInt(cond)) {
+							if (cond.numberValue.integerValue > 0) {
+								r->run(truthy.literalFunctions);
+							} else {
+								r->run(falsy.literalFunctions);
+								//end this function immediately once the tail call loop ends
+								return;
+							}
+						} else {
+							runtime_die("`ifthen` condition returned non integer.");
+						}
+					}
+				}
+				if (falsyTailCall) {
+					ONLYDEBUG printf("ENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
+					//remove the tail call
+					falsy.literalFunctions.pop_back();
+					while (1) {
+						r->run(condFunction.literalFunctions);
+						CharmFunction cond = r->getCurrentStack()->pop();
+						if (Stack::isInt(cond)) {
+							if (cond.numberValue.integerValue > 0) {
+								r->run(truthy.literalFunctions);
+								//end this function immediately once the tail call loop ends
+								return;
+							} else {
+								r->run(falsy.literalFunctions);
+							}
+						} else {
+							runtime_die("`ifthen` condition returned non integer.");
+						}
+					}
+				}
+				//here's an extra special case: if both truthy and falsy have a tail call
+				//that is: `f := [ <cond> ] [ <code> f ] [ <code> f ] ifthen`
+				//this is equivalent to `f := [ <cond> ] [ <code> ] [ <code> ] ifthen f`
+				//so we run it as an infinite loop
+				if (truthyTailCall && falsyTailCall) {
+					ONLYDEBUG printf("ENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
+					//remove the tail calls
+					truthy.literalFunctions.pop_back();
+					falsy.literalFunctions.pop_back();
+					while (1) {
+						CharmFunction cond = r->getCurrentStack()->pop();
+						if (Stack::isInt(cond)) {
+							if (cond.numberValue.integerValue > 0) {
+								r->run(truthy.literalFunctions);
+							} else {
+								r->run(falsy.literalFunctions);
+							}
+						} else {
+							runtime_die("`ifthen` condition returned non integer.");
+						}
+					}
+				}
+			}
+			//but if not (or context was nullptr), continue execution as normal
 			r->run(condFunction.literalFunctions);
 			//now we check the top of the stack to see if it's truthy or falsy
 			CharmFunction cond = r->getCurrentStack()->pop();

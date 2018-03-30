@@ -13,7 +13,7 @@ private:
 	static bool isInt(CharmFunction f);
 public:
 	static const std::vector<std::string> cppFunctionNames;
-	static void functionLookup(std::string functionName, Runner* r);
+	static void functionLookup(std::string functionName, Runner* r, FunctionDefinition* context);
 	//INPUT / OUTPUT
 	static inline void print(CharmFunction f1);
 	static inline void p(Runner* r);
@@ -29,7 +29,7 @@ public:
 	static inline void concat(Runner* r);
 	//CONTROL FLOW
 	static inline void i(Runner* r);
-	static inline void ifthen(Runner* r);
+	static inline void ifthen(Runner* r, FunctionDefinition* context);
 	//BOOLEAN OPS
 	static inline void nor(Runner* r);
 	//TYPE INSPECIFIC MATH
