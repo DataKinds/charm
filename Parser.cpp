@@ -91,6 +91,10 @@ bool Parser::analyzeIsFunctionTailCallRecursive(CharmFunction f) {
 void Parser::analyzeDefinition(CharmFunction *f) {
 	//first, we fill in the info and see if the function is not recursive/inlineable
 	f->definitionInfo.inlineable = Parser::analyzeIsFunctionInlineable(*f);
+	//then we fill in the inlineDefinitions deque, for parsing future DEFINED_FUNCTIONs
+	if (f->definitionInfo.inlineable) {
+		inlineDefinitions.push_back(*f);
+	}
 	f->definitionInfo.tailCallRecursive = Parser::analyzeIsFunctionTailCallRecursive(*f);
 }
 
@@ -254,6 +258,24 @@ std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 				if (type == DEFINED_FUNCTION) {
 					//deal with DEFINED_FUNCTION first, easiest to deal with
 					currentFunction = Parser::parseDefinedFunction(tokenizedString[lineNum][tokenNum]);
+					//if we're doing inline optimizations, do them here:
+					#ifdef OPTIMIZE_INLINE
+					if (OPTIMIZE_INLINE) {
+						//search through the inline definitions that have been parsed to see if this function is inlineable
+						for (CharmFunction possibleInlineF : inlineDefinitions) {
+							if (currentFunction.functionName == possibleInlineF.functionName) {
+								ONLYDEBUG printf("PERFORMING INLINE REPLACEMENT FOR %s\n    %s -> ", currentFunction.functionName.c_str(), currentFunction.functionName.c_str());
+								for (unsigned long long inlineIndex = 0; inlineIndex < possibleInlineF.literalFunctions.size(); inlineIndex++) {
+									out.push_back(possibleInlineF.literalFunctions[inlineIndex]);
+									ONLYDEBUG printf("%s ", charmFunctionToString(possibleInlineF.literalFunctions[inlineIndex]).c_str());
+								}
+								ONLYDEBUG printf("\n");
+								//skip over the function's own out.push_back
+								continue;
+							}
+						}
+					}
+					#endif
 				} else if (type == NUMBER_FUNCTION) {
 					//next deal with NUMBER_FUNCTION
 					currentFunction = Parser::parseNumberFunction(tokenizedString[lineNum][tokenNum]);

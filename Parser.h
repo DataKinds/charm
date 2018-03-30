@@ -1,4 +1,5 @@
 #include <vector>
+#include <deque>
 #include "ParserTypes.h"
 
 class Parser {
@@ -13,6 +14,8 @@ private:
 	bool analyzeIsFunctionInlineable(CharmFunction f);
 	bool analyzeIsFunctionTailCallRecursive(CharmFunction f);
 	void analyzeDefinition(CharmFunction *f);
+
+	std::deque<CharmFunction> inlineDefinitions;
 
 	CharmFunction parseDefinition(std::vector<std::string> line);
 	CharmFunction parseDefinedFunction(std::string tok);

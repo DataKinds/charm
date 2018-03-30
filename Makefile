@@ -2,14 +2,13 @@ FILES = main.cpp Parser.cpp Runner.cpp Stack.cpp PredefinedFunctions.cpp
 LIBS = -lreadline
 CFLAGS =
 
+
+# Compilation flags
 DEBUG ?= false
+OPTIMIZE_INLINE ?= true
 
-all: create-debug-h
-	g++ -Wall -g --std=c++11 $(CFLAGS) $(FILES) $(LIBS) -o charm
+all:
+	g++ -Wall -g --std=c++11 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CFLAGS) $(FILES) $(LIBS) -o charm
 
-release: create-debug-h
+release:
 	g++ -Wall -O3 --std=c++11 $(FILES) $(LIBS) -o charm-release
-
-.PHONY: create-debug-h
-create-debug-h:
-	echo "#define ONLYDEBUG if(DEBUGMODE)\n#define DEBUGMODE $(DEBUG)" > Debug.h

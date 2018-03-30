@@ -73,7 +73,7 @@ void PredefinedFunctions::p(Runner* r) {
 }
 
 void PredefinedFunctions::print(CharmFunction f1) {
-	printf("%s", charmFunctionToString(f1));
+	printf("%s", charmFunctionToString(f1).c_str());
 }
 
 void PredefinedFunctions::newline(Runner* r) {
