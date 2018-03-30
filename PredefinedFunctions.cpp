@@ -73,25 +73,7 @@ void PredefinedFunctions::p(Runner* r) {
 }
 
 void PredefinedFunctions::print(CharmFunction f1) {
-	if (f1.functionType == NUMBER_FUNCTION) {
-		if (f1.numberValue.whichType == INTEGER_VALUE) {
-			printf("%Li", f1.numberValue.integerValue);
-		} else if (f1.numberValue.whichType == FLOAT_VALUE) {
-			printf("%Lf", f1.numberValue.floatValue);
-		}
-	} else if (f1.functionType == STRING_FUNCTION) {
-		printf("%s", f1.stringValue.c_str());
-	} else if (f1.functionType == DEFINED_FUNCTION) {
-		printf("%s", f1.functionName.c_str());
-	} else if (f1.functionType == LIST_FUNCTION) {
-		//oh boi a recursive print call
-		printf("[ ");
-		for (CharmFunction f : f1.literalFunctions) {
-			PredefinedFunctions::print(f);
-			printf(" ");
-		}
-		printf("]");
-	}
+	printf("%s", charmFunctionToString(f1));
 }
 
 void PredefinedFunctions::newline(Runner* r) {

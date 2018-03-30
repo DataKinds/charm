@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <sstream>
 #include <vector>
 
 enum CharmFunctionType {
@@ -47,7 +48,46 @@ struct CharmFunction {
 	//ONLY USED WITH FUNCTION_DEFINITION
 	CharmFunctionDefinitionInfo definitionInfo;
 };
+inline std::string charmFunctionToString(CharmFunction f) {
+	std::stringstream out;
+	switch (f.functionType) {
+		case FUNCTION_DEFINITION:
+		out << f.functionName << ":=";
+		for (CharmFunction fs : f.literalFunctions) {
+			out << charmFunctionToString(fs) << " ";
+		}
+		break;
 
+		case LIST_FUNCTION:
+		out << "[ ";
+		for (CharmFunction fs : f.literalFunctions) {
+			out << charmFunctionToString(fs) << " ";
+		}
+		out << "]";
+		break;
+
+		case NUMBER_FUNCTION:
+		switch (f.numberValue.whichType) {
+			case INTEGER_VALUE:
+			out << f.numberValue.integerValue;
+			break;
+
+			case FLOAT_VALUE:
+			out << f.numberValue.floatValue;
+			break;
+		}
+		break;
+
+		case STRING_FUNCTION:
+		out << "\" " << f.stringValue << " \"";
+		break;
+
+		case DEFINED_FUNCTION:
+		out << f.functionName;
+		break;
+	}
+	return out.str();
+}
 
 inline bool operator==(const CharmFunction& lhs, const CharmFunction& rhs){
 	if (lhs.functionType == rhs.functionType) {
