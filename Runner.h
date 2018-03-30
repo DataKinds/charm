@@ -6,6 +6,7 @@
 struct FunctionDefinition {
 	std::string functionName;
 	std::vector<CharmFunction> functionBody;
+	CharmFunctionDefinitionInfo definitionInfo;
 };
 
 struct Reference {

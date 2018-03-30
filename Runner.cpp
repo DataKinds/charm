@@ -117,6 +117,16 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 		for (FunctionDefinition fD : functionDefinitions) {
 			if (fD.functionName == f.functionName) {
 				functionFound = true;
+				//wait! before we run it, check and make sure this function isn't tail recursive
+				if (fD.definitionInfo.tailCallRecursive) {
+					//if it is, drop the last call to itself and just run it in a loop
+					//TODO: exiting a tail-call loop?
+					std::vector<CharmFunction> functionBodyCopy = fD.functionBody;
+					functionBodyCopy.pop_back();
+					while (1) {
+						Runner::run(functionBodyCopy);
+					}
+				}
 				Runner::run(fD.functionBody);
 			}
 		}
@@ -150,6 +160,7 @@ void Runner::run(std::vector<CharmFunction> parsedProgram) {
 			FunctionDefinition tempFunction;
 			tempFunction.functionName = currentFunction.functionName;
 			tempFunction.functionBody = currentFunction.literalFunctions;
+			tempFunction.definitionInfo = currentFunction.definitionInfo;
 			Runner::addFunctionDefinition(tempFunction);
 			ONLYDEBUG printf("ADDED FUNCTION DEFINITION FOR %s\n", tempFunction.functionName.c_str());
 			//that was easy too! oh no...

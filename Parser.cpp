@@ -84,6 +84,7 @@ bool Parser::analyzeIsFunctionInlineable(CharmFunction f) {
 bool Parser::analyzeIsFunctionTailCallRecursive(CharmFunction f) {
 	//this is only static, basic tail call recursion analysis.
 	//this only catches functions of form `f := <code> f`
+	//and sends this flag off to Runner.cpp::handleDefinedFunctions()
 	//the rest of the tail call recursion code happens within PredefinedFunctions.cpp::ifthen
 	//over there, the usual case is caught, with code of the form `f := [ <cond> ] [ <code> f] [ <code> f ] ifthen`
 	return (f.functionName == f.literalFunctions.back().functionName);
