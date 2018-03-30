@@ -259,7 +259,6 @@ std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 					//deal with DEFINED_FUNCTION first, easiest to deal with
 					currentFunction = Parser::parseDefinedFunction(tokenizedString[lineNum][tokenNum]);
 					//if we're doing inline optimizations, do them here:
-					#ifdef OPTIMIZE_INLINE
 					if (OPTIMIZE_INLINE) {
 						bool couldInline = false;
 						//search through the inline definitions that have been parsed to see if this function is inlineable
@@ -288,7 +287,6 @@ std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 							continue;
 						}
 					}
-					#endif
 				} else if (type == NUMBER_FUNCTION) {
 					//next deal with NUMBER_FUNCTION
 					currentFunction = Parser::parseNumberFunction(tokenizedString[lineNum][tokenNum]);
