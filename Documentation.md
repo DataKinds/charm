@@ -1,6 +1,6 @@
 # DOCUMENTATION
 
-Charm has an extremely simple syntax. Everything is space delimited, and there is only one special construct - the function definition. Functions are defined using `function name := function body`. Lists are defined using `[ ]`. Strings are defined using `" "`. Numbers can be either integers (`long long`s) or floats (`long double`s). The stack is initialized to 20000 (to be changed) zero integers.
+Charm has an extremely simple syntax. Everything is space delimited, and there is only one special construct - the function definition. Functions are defined using `function name := function body` and are tail call optimized for most use cases. Lists are defined using `[ ]`. Strings are defined using `" "`. Numbers can be either integers (`long long`s) or floats (`long double`s). The stack is initialized to 20000 (to be changed) zero integers.
 
 Everything in Charm is a function - there are number functions, string functions, and list functions.
 
@@ -19,6 +19,8 @@ All arguments are popped off the stack, and explained in the order that you shou
 - `ifthen` - takes a condition to run, then a list to run if the top of the stack is greater than 0 and a list to run if the top of the stack is less than 0 - s[2]: condition (as a list of functions), s[1]: truthy list (as a list of functions), s[2]: falsy list (as a list of functions).
 
 NOTE: `ifthen` doesn't pop the condition afterwards.
+
+ANOTHER NOTE: `ifthen` is tail call optimized, meaning that if you call your function from the very end (tail) of an `ifthen` call, you won't pollute your computer's call stack and it will be as fast as a C `for` loop.
 
 - `i` - like Lisp's `unquote`, pop a list off the stack then run it - s[0]: the list to `i`nterpret
 
@@ -157,3 +159,18 @@ _map_iter := dup
 map       := dup
 
 ```
+
+# OTHER NOTES
+
+Charm uses a self-written optimizing interpreter. I'm very interested in the use cases and the effectiveness of the optimizations. The interpreter performs two optimizations: inlining and tail-call.
+
+Inlining optimization is enabled by default through the compilation option `-DOPTIMIZE_INLINE=true`. Inlining optimization occurs if the interpreter detects that a function isn't recursive. If it isn't, the interpreter writes in the contents of the function wherever it is called, instead of writing the function itself (like a text macro). This removes 1 (or more, depending on how deep the inlining goes) layer of function redirection.
+
+Tail-call optimization is necessary for this language, as there are no other ways to achieve a looping construct but recursion. There are a few cases which get tail-call optimized into a loop. These few cases are:
+
+* `f := <code> f`
+* `f := [ <cond> ] [ <code> f ] [ <code> ] ifthen`
+* `f := [ <cond> ] [ <code> ] [ <code> f ] ifthen`
+* `f := [ <cond> ] [ <code> f ] [ <code> f ] ifthen` (gets unrolled into a loop of the first form, ends up looking like `f := [ <cond> ] [ <code> ] [ <code> ] ifthen f`)
+
+(If you can think of any other cases or a more general case, please open an issue!). These optimizations should allow for looping code that does not smash the calling stack and significant speedups. If there are any cases where these optimizations seem to be causing incorrect side effects, please create an issue or get into contact with me.
