@@ -3,5 +3,4 @@ charm
 charm-release
 gmon.out
 *.stats
-Debug.h
 *.gch
