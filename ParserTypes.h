@@ -30,6 +30,10 @@ struct CharmNumber {
 	//and integers, we add both
 };
 
+struct CharmFunctionDefinitionInfo {
+	bool inlineable;
+	bool tailCallRecursive;
+};
 struct CharmFunction {
 	CharmFunctionType functionType;
 	//ONLY USED WITH STRING_FUNCTION
@@ -44,10 +48,6 @@ struct CharmFunction {
 	CharmFunctionDefinitionInfo definitionInfo;
 };
 
-struct CharmFunctionDefinitionInfo {
-	bool inlineable;
-	bool tailCallRecursive;
-}
 
 inline bool operator==(const CharmFunction& lhs, const CharmFunction& rhs){
 	if (lhs.functionType == rhs.functionType) {
