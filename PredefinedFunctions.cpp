@@ -249,6 +249,8 @@ void PredefinedFunctions::ifthen(Runner* r) {
 		}
 }
 
+
+
 void PredefinedFunctions::nor(Runner* r) {
 	CharmFunction f1 = r->getCurrentStack()->pop();
 	CharmFunction f2 = r->getCurrentStack()->pop();

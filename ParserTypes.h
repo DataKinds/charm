@@ -40,7 +40,15 @@ struct CharmFunction {
 	std::vector<CharmFunction> literalFunctions;
 	//ONLY USED WITH DEFINED_FUNCTION AND FUNCTION_DEFINITION
 	std::string functionName;
+	//ONLY USED WITH FUNCTION_DEFINITION
+	CharmFunctionDefinitionInfo definitionInfo;
 };
+
+struct CharmFunctionDefinitionInfo {
+	bool inlineable;
+	bool tailCallRecursive;
+}
+
 inline bool operator==(const CharmFunction& lhs, const CharmFunction& rhs){
 	if (lhs.functionType == rhs.functionType) {
 		switch (lhs.functionType) {

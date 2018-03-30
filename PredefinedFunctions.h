@@ -15,35 +15,35 @@ public:
 	static const std::vector<std::string> cppFunctionNames;
 	static void functionLookup(std::string functionName, Runner* r);
 	//INPUT / OUTPUT
-	static void print(CharmFunction f1);
-	static void p(Runner* r);
-	static void newline(Runner* r);
+	static inline void print(CharmFunction f1);
+	static inline void p(Runner* r);
+	static inline void newline(Runner* r);
 	//STACK MANIPULATIONS
-	static void dup(Runner* r);
-	static void pop(Runner* r);
-	static void swap(Runner* r);
+	static inline void dup(Runner* r);
+	static inline void pop(Runner* r);
+	static inline void swap(Runner* r);
 	//LIST / STRING MANIPULATIONS
-	static void len(Runner* r);
-	static void at(Runner* r);
-	static void insert(Runner* r);
-	static void concat(Runner* r);
+	static inline void len(Runner* r);
+	static inline void at(Runner* r);
+	static inline void insert(Runner* r);
+	static inline void concat(Runner* r);
 	//CONTROL FLOW
-	static void i(Runner* r);
-	static void ifthen(Runner* r);
+	static inline void i(Runner* r);
+	static inline void ifthen(Runner* r);
 	//BOOLEAN OPS
-	static void nor(Runner* r);
+	static inline void nor(Runner* r);
 	//TYPE INSPECIFIC MATH
-	static void abs(Runner* r);
+	static inline void abs(Runner* r);
 	//INTEGER OPS
-	static void plusI(Runner* r);
-	static void minusI(Runner* r);
-	static void divI(Runner* r);
-	static void timesI(Runner* r);
-	static void toInt(Runner* r);
+	static inline void plusI(Runner* r);
+	static inline void minusI(Runner* r);
+	static inline void divI(Runner* r);
+	static inline void timesI(Runner* r);
+	static inline void toInt(Runner* r);
 	//STACK CREATION/DESTRUCTION
-	static void createStack(Runner* r);
-	static void switchStack(Runner* r);
+	static inline void createStack(Runner* r);
+	static inline void switchStack(Runner* r);
 	//REF GETTING/SETTING
-	static void getRef(Runner* r);
-	static void setRef(Runner* r);
+	static inline void getRef(Runner* r);
+	static inline void setRef(Runner* r);
 };

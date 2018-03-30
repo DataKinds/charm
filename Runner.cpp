@@ -38,7 +38,7 @@ bool Runner::doesStackExist(CharmFunction name) {
 	return false;
 }
 Stack* Runner::getCurrentStack() {
-	for (unsigned long long s = 0; s < stacks.size(); s++) {
+	for (unsigned int s = 0; s < stacks.size(); s++) {
 		if (stacks[s].isNameEqualTo(Runner::currentStackName)) {
 			return &(stacks[s]);
 		}

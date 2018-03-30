@@ -205,6 +205,7 @@ std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 		//first, check and make sure that this line doesn't
 		//contain a function definition before parsing it
 		if (isLineFunctionDefinition(tokenizedString[lineNum])) {
+			//deal with FUNCTION_DEFINITION
 			out.push_back(Parser::parseDefinition(tokenizedString[lineNum]));
 		} else {
 			for (unsigned long long tokenNum = 0; tokenNum < tokenizedString[lineNum].size(); tokenNum++) {
