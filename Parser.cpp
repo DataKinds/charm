@@ -261,6 +261,7 @@ std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 					//if we're doing inline optimizations, do them here:
 					#ifdef OPTIMIZE_INLINE
 					if (OPTIMIZE_INLINE) {
+						bool couldInline = false;
 						//search through the inline definitions that have been parsed to see if this function is inlineable
 						for (CharmFunction possibleInlineF : inlineDefinitions) {
 							if (currentFunction.functionName == possibleInlineF.functionName) {
@@ -270,9 +271,21 @@ std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 									ONLYDEBUG printf("%s ", charmFunctionToString(possibleInlineF.literalFunctions[inlineIndex]).c_str());
 								}
 								ONLYDEBUG printf("\n");
-								//skip over the function's own out.push_back
-								continue;
+								if (DEBUGMODE) {
+									printf("AFTER INLINE OPTIMIZATION, OUT NOW LOOKS LIKE THIS:\n     ");
+									for (CharmFunction f : out) {
+										printf("%s ", charmFunctionToString(f).c_str());
+									}
+									printf("\n");
+								}
+								//break out of the inline function search once a matching func was found
+								couldInline = true;
+								break;
 							}
+						}
+						if (couldInline) {
+							//skip over the function's own out.push_back
+							continue;
 						}
 					}
 					#endif
@@ -287,6 +300,13 @@ std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
 					currentFunction = Parser::parseListFunction(&tokenizedString[lineNum], &tokenNum);
 				}
 				out.push_back(currentFunction);
+				if (DEBUGMODE) {
+					printf("AFTER 1 TOKEN, OUT NOW LOOKS LIKE THIS:\n     ");
+					for (CharmFunction f : out) {
+						printf("%s ", charmFunctionToString(f).c_str());
+					}
+					printf("\n");
+				}
 			}
 		}
 	}
