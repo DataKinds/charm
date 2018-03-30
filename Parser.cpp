@@ -174,12 +174,19 @@ CharmFunction Parser::parseStringFunction(std::vector<std::string> *line, unsign
 	//then we just end the string at the end of the line
 	//create a string stream to compile the string for the funcion
 	std::stringstream ss;
+	//also: we have to skip the first space in the output, so keep a bool for that
+	bool skippedSpace = false;
 	//fill in the stringstream
 	//until the line ends or another " occurs
 	(*tokenNum)++;
 	while (((*tokenNum) < line->size()) &&
 		   (Parser::recognizeFunction((*line)[*tokenNum]) != STRING_FUNCTION)) {
-			   ss << (*line)[*tokenNum] << " ";
+			   if (skippedSpace) {
+				   ss << " ";
+			   } else {
+				   skippedSpace = true;
+			   }
+			   ss << (*line)[*tokenNum];
 			   ONLYDEBUG printf("ERASING %s\n", (*line)[*tokenNum].c_str());
 			   (*line).erase(line->begin() + (*tokenNum));
 	}
