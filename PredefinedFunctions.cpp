@@ -246,6 +246,7 @@ void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
 							} else {
 								r->run(falsy.literalFunctions);
 								//end this function immediately once the tail call loop ends
+								ONLYDEBUG printf("DISENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
 								return;
 							}
 						} else {
@@ -264,6 +265,7 @@ void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
 							if (cond.numberValue.integerValue > 0) {
 								r->run(truthy.literalFunctions);
 								//end this function immediately once the tail call loop ends
+								ONLYDEBUG printf("DISENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
 								return;
 							} else {
 								r->run(falsy.literalFunctions);
@@ -295,6 +297,8 @@ void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
 						}
 					}
 				}
+				//good joke
+				ONLYDEBUG printf("DISENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
 			}
 			//but if not (or context was nullptr), continue execution as normal
 			r->run(condFunction.literalFunctions);
