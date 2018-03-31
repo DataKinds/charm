@@ -141,7 +141,8 @@ void PredefinedFunctions::at(Runner* r) {
 	if (Stack::isInt(f1)) {
 		CharmFunction out;
 		if (f2.functionType == LIST_FUNCTION) {
-			out = f2.literalFunctions.at(f1.numberValue.integerValue % f2.literalFunctions.size());
+			out.functionType = LIST_FUNCTION;
+			out.literalFunctions = { f2.literalFunctions.at(f1.numberValue.integerValue % f2.literalFunctions.size()) };
 		} else if (f2.functionType == STRING_FUNCTION) {
 			out.functionType = STRING_FUNCTION;
 			out.stringValue = f2.stringValue[f1.numberValue.integerValue % f2.stringValue.size()];
@@ -276,7 +277,7 @@ void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
 					}
 				}
 				//here's an extra special case: if both truthy and falsy have a tail call
-				//that is: `f := [ <cond> ] [ <code> f ] [ <code> f ] ifthen`
+				//th(at) is: `f := [ <cond> ] [ <code> f ] [ <code> f ] ifthen`
 				//this is equivalent to `f := [ <cond> ] [ <code> ] [ <code> ] ifthen f`
 				//so we run it as an infinite loop
 				if (truthyTailCall && falsyTailCall) {
