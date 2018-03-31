@@ -1,0 +1,386 @@
+example_function:
+    desc: Pops and pushes
+    source: |
+        len
+    pops:
+        - type: list
+          desc: Just a list
+    pushes:
+        - type: int
+          desc: Just an int
+
+native_functions:
+    - category: Input / Output
+      functions:
+        - pp:
+              desc: Prints the function off the top of the stack.
+              source: |
+                  void PredefinedFunctions::p(Runner* r) {
+                  	PredefinedFunctions::print(r->getCurrentStack()->pop());
+                  }
+
+                  void PredefinedFunctions::print(CharmFunction f1) {
+                  	printf("%s", charmFunctionToString(f1).c_str());
+                  }
+              pops:
+                  - type: any
+                    desc: The function that will be printed
+              pushes:
+        - newline:
+              desc: Prints a newline.
+              source: |
+                  void PredefinedFunctions::newline(Runner* r) {
+                  	printf("\n");
+                  }
+              pops:
+              pushes:
+    - category: Stack Manipulations
+      functions:
+        - dup:
+              desc: Duplicates the top value on the stack.
+              source: |
+                  void PredefinedFunctions::dup(Runner* r) {
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	r->getCurrentStack()->push(f1);
+                  	r->getCurrentStack()->push(f1);
+                  }
+              pops:
+                  - type: any
+                    desc: The duplicand
+              pushes:
+                  - type: any
+                    desc: The duplicand
+                  - type: any
+                    desc: The duplicand
+        - pop:
+              desc: Pops the top value off the stack.
+              source: |
+                  void PredefinedFunctions::pop(Runner* r) {
+                  	r->getCurrentStack()->pop();
+                  }
+              pops:
+                  - type: any
+                    desc: The popped function
+              pushes:
+        - swap:
+              desc: Swaps two values on the stack.
+              source: |
+                 void PredefinedFunctions::swap(Runner* r) {
+                 	CharmFunction f1 = r->getCurrentStack()->pop();
+                 	CharmFunction f2 = r->getCurrentStack()->pop();
+                 	//check to make sure we've got ints that are positive and below MAX_STACK
+                 	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                 		if ((f1.numberValue.integerValue < 0) || (f2.numberValue.integerValue < 0)) {
+                 			runtime_die("Negative int passed to `swap`.");
+                 		}
+                 		if ((f1.numberValue.integerValue >= r->MAX_STACK) || (f2.numberValue.integerValue >= r->MAX_STACK)) {
+                 			runtime_die("Overflowing pointers passed to `swap`.");
+                 		}
+                 		r->getCurrentStack()->swap((unsigned long long)f1.numberValue.integerValue, (unsigned long long)f2.numberValue.integerValue);
+                 	} else {
+                 		runtime_die("Non integer passed to `swap`.");
+                 	}
+                 }
+              pops:
+                  - type: int
+                    desc: The stack index of a value to swap
+                  - type: int
+                    desc: The stack index of the other value to swap
+              pushes:
+    - category: List / String Manipulations
+      functions:
+        - len:
+              desc: Finds the length of a list or string.
+              note:
+                  - This can be used with any type, but will push a trivial value.
+              source: |
+                  void PredefinedFunctions::len(Runner* r) {
+                  	//list to check length of
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	//push list back on because we dont need to get rid of it
+                  	r->getCurrentStack()->push(f1);
+                  	CharmFunction out;
+                  	out.functionType = NUMBER_FUNCTION;
+                  	CharmNumber num;
+                  	num.whichType = INTEGER_VALUE;
+                  	//make sure f1 is a list or string
+                  	if (f1.functionType == LIST_FUNCTION) {
+                  		num.integerValue = f1.literalFunctions.size();
+                  	} else if (f1.functionType == STRING_FUNCTION) {
+                  		num.integerValue = f1.stringValue.size();
+                  	} else {
+                  		//so if it's a bad type, i was going to just report a len of 0 or 1
+                  		//but i feel like that would be really misleading. eh, i'll just do 1
+                  		num.integerValue = 1;
+                  	}
+                  	out.numberValue = num;
+                  	r->getCurrentStack()->push(out);
+                  }
+              pops:
+                  - type: any
+                    desc: The function to find the length of (usually lists or strings)
+              pushes:
+                  - type: any
+                    desc: The previously popped function
+                  - type: int
+                    desc: The popped function's length
+        - at:
+              desc: Gets the element at an index of a list or string.
+              note:
+                  - This function cannot "unquote" values -- for a list, it pushes a list; and for a string, it pushes a string. This is deliberate, and is in order to prevent naked functions from being pushed to the stack. To "unquote" values, use `i`.
+              source: |
+                  void PredefinedFunctions::at(Runner* r) {
+                  	//index number
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	//list / string
+                  	CharmFunction f2 = r->getCurrentStack()->pop();
+                  	r->getCurrentStack()->push(f2);
+                  	if (Stack::isInt(f1)) {
+                  		CharmFunction out;
+                  		if (f2.functionType == LIST_FUNCTION) {
+                  			out.functionType = LIST_FUNCTION;
+                  			out.literalFunctions = { f2.literalFunctions.at(f1.numberValue.integerValue % f2.literalFunctions.size()) };
+                  		} else if (f2.functionType == STRING_FUNCTION) {
+                  			out.functionType = STRING_FUNCTION;
+                  			out.stringValue = f2.stringValue[f1.numberValue.integerValue % f2.stringValue.size()];
+                  		} else {
+                  			runtime_die("Neither a list nor a string was passed to `at`");
+                  		}
+                  		r->getCurrentStack()->push(out);
+                  	} else {
+                  		runtime_die("Non integer index passed to `at`");
+                  	}
+                  }
+              pops:
+                  - type: list/string
+                    desc: The list or string to index
+                  - type: int
+                    desc: The index
+              pushes:
+                  - type: list/string
+                    desc: The list or string previously popped
+                  - type: list/string
+                    desc: The indexed element
+        - insert:
+              desc: Insert an element into a list or string.
+              source: |
+                 void PredefinedFunctions::insert(Runner* r) {
+                 	//get index to insert in
+                 	CharmFunction f1 = r->getCurrentStack()->pop();
+                 	//get element to insert
+                 	CharmFunction f2 = r->getCurrentStack()->pop();
+                 	//get list or string
+                 	CharmFunction f3 = r->getCurrentStack()->pop();
+                 	//make sure f1 is an int
+                 	if (!Stack::isInt(f1))
+                 		runtime_die("Non integer index passed to `insert`.");
+                 	if (f3.functionType == LIST_FUNCTION) {
+                 		//only allow a list to be inserted into a list
+                 		if (f2.functionType == LIST_FUNCTION) {
+                 			f3.literalFunctions.insert(
+                 				f3.literalFunctions.begin() + (f1.numberValue.integerValue % f3.literalFunctions.size()),
+                 				f2.literalFunctions.begin(),
+                 				f2.literalFunctions.end()
+                 			);
+                 		} else {
+                 			runtime_die("Attempted to `insert` a non list into a list.");
+                 		}
+                 	} else if (f3.functionType == STRING_FUNCTION) {
+                 		//only allow a string to be inserted into another string
+                 		if (f2.functionType == STRING_FUNCTION) {
+                 			f3.stringValue.insert(
+                 				f1.numberValue.integerValue % f3.stringValue.size(),
+                 				f2.stringValue
+                 			);
+                 		} else {
+                 			runtime_die("Attempted to `insert` a non string into a string.");
+                 		}
+                 	}
+                 	r->getCurrentStack()->push(f3);
+                 }
+              pops:
+                  - type: list/string
+                    desc: The list or string to modify
+                  - type: list/string
+                    desc: The element to be unboxed and inserted
+                  - type: int
+                    desc: The insertation index
+              pushes:
+                  - type: list/string
+                    desc: The modified list or string
+        - concat:
+              desc: Concatenates two lists or strings.
+              source: |
+                 void PredefinedFunctions::concat(Runner* r) {
+                 	//get first list
+                 	CharmFunction f1 = r->getCurrentStack()->pop();
+                 	//get second list (first in order of concatination)
+                 	CharmFunction f2 = r->getCurrentStack()->pop();
+                 	//make sure they're both lists or strings
+                 	if ((f1.functionType == LIST_FUNCTION) && (f2.functionType == LIST_FUNCTION)) {
+                 		f2.literalFunctions.insert(f2.literalFunctions.end(), f1.literalFunctions.begin(), f1.literalFunctions.end());
+                 	} else if ((f1.functionType == STRING_FUNCTION) && (f2.functionType == STRING_FUNCTION)) {
+                 		f2.stringValue = f2.stringValue + f1.stringValue;
+                 	} else {
+                 		runtime_die("Unmatching types passed to `concat`.");
+                 	}
+                 	r->getCurrentStack()->push(f2);
+                 }
+              pops:
+                  - type: list/string
+                    desc: The first list or string
+                  - type: list/string
+                    desc: The second list or string
+              pushes:
+                  - type: list/string
+                    desc: The concatenated list or string
+    - category: Control Flow
+      functions:
+        - i:
+              desc: Similar to Lisp's `unquote`, runs the top of the stack as a program.
+              source: |
+                  void PredefinedFunctions::i(Runner* r) {
+                  	//pop the top of the stack and run it
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	if (f1.functionType == LIST_FUNCTION) {
+                  		r->run(f1.literalFunctions);
+                  	} else {
+                  		runtime_die("Non list passed to `i`.");
+                  	}
+                  }
+              pops:
+                  - type: list
+                    desc: The list to be unquoted and run
+              pushes:
+        - ifthen:
+              desc: Branching operator; runs the first block then decides whether or not to run the second or third based off of whether the top of the stack is > 0 or <= 0.
+              note:
+                  - This is the only function which provides inherent tail call optimization. More info is written up in Documentation.md.
+                  - This function does not clean up after itself more than listed -- you need to clear the stack yourself if you want it cleared in a recursive function!
+              source: |
+                  void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
+                  	//the arguments to this function are a little different...
+                  	//ifthen performs very basic tail-call optimization on its two sections (truthy/falsy)
+                  	//if truthy (or falsy) end with the function itself (found through fD.functionName), then
+                  	//the tail-call optimizer kicks in and the function simply loops instead of
+                  	//creating a new stack frame by calling r->run()
+
+                  	//this one is gonna take 3 arguments --
+                  	//stack[2] = condition to run truthy section
+                  	//stack[1] = truthy section (if...)
+                  	//stack[0] = falsy section (else...)
+                  	//have to reverse it because popping is weird
+                  	CharmFunction falsy = r->getCurrentStack()->pop();
+                  	bool falsyTailCall = false;
+                  	CharmFunction truthy = r->getCurrentStack()->pop();
+                  	bool truthyTailCall = false;
+                  	CharmFunction condFunction = r->getCurrentStack()->pop();
+                  	if ((condFunction.functionType == LIST_FUNCTION) &&
+                  		(truthy.functionType == LIST_FUNCTION) &&
+                  		(falsy.functionType == LIST_FUNCTION)) {
+                  			//first, we run checks to set the tail call bools
+                  			if (context != nullptr) {
+                  				if (truthy.literalFunctions.back().functionName == context->functionName) {
+                  					truthyTailCall = true;
+                  				}
+                  				if (falsy.literalFunctions.back().functionName == context->functionName) {
+                  					falsyTailCall = true;
+                  				}
+                  				//now, if we _DO_ have a tail call, modify truthy/falsy and enter a loop instead
+                  				//there are 3 seperate cases here -- truthy tail call, falsy tail call, or both
+                  				if (truthyTailCall) {
+                  					ONLYDEBUG printf("ENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
+                  					//remove the tail call
+                  					truthy.literalFunctions.pop_back();
+                  					while (1) {
+                  						r->run(condFunction.literalFunctions);
+                  						CharmFunction cond = r->getCurrentStack()->pop();
+                  						if (Stack::isInt(cond)) {
+                  							if (cond.numberValue.integerValue > 0) {
+                  								r->run(truthy.literalFunctions);
+                  							} else {
+                  								r->run(falsy.literalFunctions);
+                  								//end this function immediately once the tail call loop ends
+                  								ONLYDEBUG printf("DISENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
+                  								return;
+                  							}
+                  						} else {
+                  							runtime_die("`ifthen` condition returned non integer.");
+                  						}
+                  					}
+                  				}
+                  				if (falsyTailCall) {
+                  					ONLYDEBUG printf("ENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
+                  					//remove the tail call
+                  					falsy.literalFunctions.pop_back();
+                  					while (1) {
+                  						r->run(condFunction.literalFunctions);
+                  						CharmFunction cond = r->getCurrentStack()->pop();
+                  						if (Stack::isInt(cond)) {
+                  							if (cond.numberValue.integerValue > 0) {
+                  								r->run(truthy.literalFunctions);
+                  								//end this function immediately once the tail call loop ends
+                  								ONLYDEBUG printf("DISENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
+                  								return;
+                  							} else {
+                  								r->run(falsy.literalFunctions);
+                  							}
+                  						} else {
+                  							runtime_die("`ifthen` condition returned non integer.");
+                  						}
+                  					}
+                  				}
+                  				//here's an extra special case if both truthy and falsy have a tail call
+                  				//that is `f := [ <cond> ] [ <code> f ] [ <code> f ] ifthen`
+                  				//this is equivalent to `f := [ <cond> ] [ <code> ] [ <code> ] ifthen f`
+                  				//so we run it as an infinite loop
+                  				if (truthyTailCall && falsyTailCall) {
+                  					ONLYDEBUG printf("ENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
+                  					//remove the tail calls
+                  					truthy.literalFunctions.pop_back();
+                  					falsy.literalFunctions.pop_back();
+                  					while (1) {
+                  						CharmFunction cond = r->getCurrentStack()->pop();
+                  						if (Stack::isInt(cond)) {
+                  							if (cond.numberValue.integerValue > 0) {
+                  								r->run(truthy.literalFunctions);
+                  							} else {
+                  								r->run(falsy.literalFunctions);
+                  							}
+                  						} else {
+                  							runtime_die("`ifthen` condition returned non integer.");
+                  						}
+                  					}
+                  				}
+                  				//good joke
+                  				ONLYDEBUG printf("DISENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
+                  			}
+                  			//but if not (or context was nullptr), continue execution as normal
+                  			r->run(condFunction.literalFunctions);
+                  			//now we check the top of the stack to see if it's truthy or falsy
+                  			CharmFunction cond = r->getCurrentStack()->pop();
+                  			if (Stack::isInt(cond)) {
+                  				if (cond.numberValue.integerValue > 0) {
+                  					r->run(truthy.literalFunctions);
+                  				} else {
+                  					r->run(falsy.literalFunctions);
+                  				}
+                  			} else {
+                  				runtime_die("`ifthen` condition returned non integer.");
+                  			}
+                  		} else {
+                  			runtime_die("Non list passed to `ifthen`.");
+                  		}
+                  }
+
+              pops:
+                  - type: list
+                    desc: Condition to run before running truthy or falsy blocks
+                  - type: list
+                    desc: Truthy (> 0) block
+                  - type: list
+                    desc: Falsy (<= 0) block
+              pushes:
+
+prelude_functions:
+    a
