@@ -10,7 +10,11 @@ def generateFunction(f)
             out << "<div>NOTE: #{n}</div>"
         end
     end
-    out << "<div>Code:<pre>#{f[name]["source"]}</pre></div>"
+    out << %Q~
+<div class="codeContainer">
+    Source (click to open/close):
+    <pre class="code">#{f[name]["source"]}</pre>
+</div>~
     out << "<div>Pops:</div>"
     out << "<div>Pushes</div>"
     return out
@@ -27,12 +31,47 @@ end
 
 glossary = YAML.load_file("Glossary.yaml")
 
-puts """
+puts %Q~
 <html>
     <head>
         <title>
             Charm Function Glossary
         </title>
+        <script type="text/javascript">
+            function codeClick(e) {
+                var elem = e.target;
+                var codePre = elem.getElementsByClassName("code")[0];
+                if (codePre.classList.contains("code-open")) {
+                    codePre.classList.remove("code-open");
+                    codePre.style.height = "0";
+                } else {
+                    codePre.classList.add("code-open");
+                    var lineHeight = parseInt(window.getComputedStyle(codePre).lineHeight);
+                    codePre.style.height = (codePre.innerHTML.split("\\n").length * lineHeight) + "px";
+                }
+            }
+            function init() {
+                var codes = document.getElementsByClassName("codeContainer");
+                for (let code of codes) {
+                    code.onclick = function (e) { codeClick(e); };
+                }
+            }
+            window.onload = init;
+        </script>
+        <style type="text/css">
+            .code {
+                overflow-y: hidden;
+                background-color: #ccc;
+                height: 0;
+                padding: 0;
+                transition: height 0.5s linear;
+                transition: padding 0.5s linear;
+            }
+
+            .code-open {
+                padding: 1em;
+            }
+        </style>
     </head>
     <body>
         <h1>
@@ -48,5 +87,4 @@ puts """
         <h2>
             Prelude Functions
         </h2>
-</html>
-"""
+</html>~
