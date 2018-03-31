@@ -166,11 +166,23 @@ void PredefinedFunctions::insert(Runner* r) {
 	if (!Stack::isInt(f1))
 		runtime_die("Non integer index passed to `insert`.");
 	if (f3.functionType == LIST_FUNCTION) {
-		f3.literalFunctions.insert(f3.literalFunctions.begin() + (f1.numberValue.integerValue % f3.literalFunctions.size()), f2);
+		//only allow a list to be inserted into a list
+		if (f2.functionType == LIST_FUNCTION) {
+			f3.literalFunctions.insert(
+				f3.literalFunctions.begin() + (f1.numberValue.integerValue % f3.literalFunctions.size()),
+				f2.literalFunctions.begin(),
+				f2.literalFunctions.end()
+			);
+		} else {
+			runtime_die("Attempted to `insert` a non list into a list.");
+		}
 	} else if (f3.functionType == STRING_FUNCTION) {
 		//only allow a string to be inserted into another string
-		if (f3.functionType == STRING_FUNCTION) {
-			f3.stringValue.insert(f1.numberValue.integerValue % f3.stringValue.size(), f2.stringValue);
+		if (f2.functionType == STRING_FUNCTION) {
+			f3.stringValue.insert(
+				f1.numberValue.integerValue % f3.stringValue.size(),
+				f2.stringValue
+			);
 		} else {
 			runtime_die("Attempted to `insert` a non string into a string.");
 		}
