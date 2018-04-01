@@ -81,7 +81,7 @@ dat://charm-glossary-aearnus.hashbase.io/
 
 Or, use [this link](https://charm-glossary-aearnus.hashbase.io/). Note: this is run on https://hashbase.io/ and I can't guarantee it's veracity.
 
-Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/glossary.html).
+Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/index.html).
 
 ## SUPPORT OR DONATE
 
