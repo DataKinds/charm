@@ -75,7 +75,8 @@ end
 glossary = YAML.load_file("Glossary.yaml")
 
 puts %Q~
-<meta charset="utf-8">
+<!DOCTYPE html>
+<meta charset="utf-8" />
 <html>
     <head>
         <title>
@@ -112,7 +113,7 @@ puts %Q~
                 margin: 0 auto;
                 padding: 4em;
                 padding-top: 2em;
-                box-shadow: 0 0 100px black;
+                box-shadow: 0 0 100px #666;
                 background-color: #fff;
             }
             h2 {
@@ -166,4 +167,5 @@ puts %Q~
         <h2>
             Prelude Functions
         </h2>
+        #{glossary["prelude_functions"].map { |c| generateCategory c }.join("\n")}
 </html>~

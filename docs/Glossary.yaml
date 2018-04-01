@@ -381,6 +381,268 @@ native_functions:
                   - type: list
                     desc: Falsy (<= 0) block
               pushes:
+    - category: Boolean Operations
+      functions:
+        - xor:
+              desc: Exclusive or.
+              note:
+                  - This considers any value greater than 0 as true and less than 0 as false. It is not a bitwise call.
+              source: |
+                void PredefinedFunctions::exor(Runner* r) {
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	CharmFunction f2 = r->getCurrentStack()->pop();
+                  	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                  		CharmFunction out;
+                  		out.functionType = NUMBER_FUNCTION;
+                  		CharmNumber outNum;
+                  		outNum.whichType = INTEGER_VALUE;
+                  		//cancer incoming
+                  		outNum.integerValue = ((f1.numberValue.integerValue > 0) ^ (f2.numberValue.integerValue > 0));
+                  		//no more cancer
+                  		out.numberValue = outNum;
+                  		r->getCurrentStack()->push(out);
+                  	} else {
+                  		runtime_die("Non integer passed to logic function.");
+                  	}
+                }
+              pops:
+                  - type: int
+                    desc: The first value to xor
+                  - type: int
+                    desc: The second value to xor
+              pushes:
+                  - type: int
+                    desc: The result of the xoring
+    - category: Type Inspecific Math
+      functions:
+        - abs:
+              desc: Absolute value.
+              source: |
+                void PredefinedFunctions::abs(Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	if (Stack::isInt(f1)) {
+                		std::abs(f1.numberValue.integerValue);
+                	} else if (Stack::isFloat(f1)) {
+                		if (f1.numberValue.floatValue < 0) {
+                			f1.numberValue.floatValue = -f1.numberValue.floatValue;
+                		}
+                	} else {
+                		runtime_die("Non number passed to `abs`.");
+                	}
+                }
+              pops:
+                  - type: int/float
+                    desc: The value to find the absolute value of
+              pushes:
+                  - type: int/float
+                    desc: The absolute value
+    - category: Integer Operations
+      functions:
+        - +:
+              desc: Addition.
+              source: |
+                void PredefinedFunctions::plusI(Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                		f1.numberValue.integerValue = f1.numberValue.integerValue + f2.numberValue.integerValue;
+                	} else {
+                		runtime_die("Non integer passed to `+`.");
+                	}
+                	r->getCurrentStack()->push(f1);
+                }
+              pops:
+                  - type: int
+                    desc: The first value to add
+                  - type: int
+                    desc: The second value to add
+              pushes:
+                  - type: int
+                    desc: The added values
+        - -:
+              desc: Subtraction.
+              source: |
+                void PredefinedFunctions::minusI(Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                		f1.numberValue.integerValue = f2.numberValue.integerValue - f1.numberValue.integerValue;
+                	} else {
+                		runtime_die("Non integer passed to `-`.");
+                	}
+                	r->getCurrentStack()->push(f1);
+                }
+              pops:
+                  - type: int
+                    desc: The first value to subtract from
+                  - type: int
+                    desc: The second value to subtract
+              pushes:
+                  - type: int
+                    desc: The subtracted values
+        - "*":
+              desc: Multiplication.
+              source: |
+                void PredefinedFunctions::timesI(Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                		f1.numberValue.integerValue = f1.numberValue.integerValue * f2.numberValue.integerValue;
+                	} else {
+                		runtime_die("Non integer passed to `*`.");
+                	}
+                	r->getCurrentStack()->push(f1);
+                }
+              pops:
+                  - type: int
+                    desc: The first value to multiply
+                  - type: int
+                    desc: The second value to multiply
+              pushes:
+                  - type: int
+                    desc: The multiplied values
+        - /:
+              desc: Division.
+              source: |
+                void PredefinedFunctions::divI(Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                		//f1 used as answer
+                		f1.numberValue.integerValue = f2.numberValue.integerValue / f1.numberValue.integerValue;
+                		//f2 used as modulus
+                		f2.numberValue.integerValue = f2.numberValue.integerValue % f1.numberValue.integerValue;
+                	} else {
+                		runtime_die("Non integer passed to `+`.");
+                	}
+                	r->getCurrentStack()->push(f2);
+                	r->getCurrentStack()->push(f1);
+                }
+              pops:
+                  - type: int
+                    desc: The numerator
+                  - type: int
+                    desc: The denominator
+              pushes:
+                  - type: int
+                    desc: The remainder
+                  - type: int
+                    desc: The divided value
+        - toint:
+              desc: Convert a floating point value to an integer through truncation.
+              source: |
+                void PredefinedFunctions::toInt(Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	if (Stack::isFloat(f1)) {
+                		f1.numberValue.whichType = INTEGER_VALUE;
+                		f1.numberValue.integerValue = (long long)f1.numberValue.floatValue;
+                	} else if (Stack::isInt(f1)) {
+                		//do nothing, it's already an int
+                	} else {
+                		runtime_die("Non number passed to `toInt`.");
+                	}
+                }
+              pops:
+                  - type: float
+                    desc: The floating point value to convert
+              pushes:
+                  - type: int/float
+                    desc: The integer representation
+    - category: Stack Creation and Destruction
+      functions:
+        - createstack:
+              desc: Creates a new named stack to work with.
+              note:
+                  - This function does not switch to the specified stack. Use <pre class="code">switchstack</pre> for that.
+                  - The default stack is 20,000 functions long and named <pre class="code">0</pre>.
+              source: |
+                 void PredefinedFunctions::createStack(Runner* r) {
+                 	//name of the stack
+                 	CharmFunction f1 = r->getCurrentStack()->pop();
+                 	//length of the stack
+                 	CharmFunction f2 = r->getCurrentStack()->pop();
+                 	if (Stack::isInt(f2)) {
+                 		if (f2.numberValue.integerValue > 0) {
+                 			r->createStack(f2.numberValue.integerValue, f1);
+                 		} else {
+                 			runtime_die("Negative integer or zero passed to `createStack`.");
+                 		}
+                 	} else {
+                 		runtime_die("Non integer passed to `createStack`.");
+                 	}
+                 }
+              pops:
+                  - type: int
+                    desc: The size of the stack to create
+                  - type: any
+                    desc: The name of the stack
+              pushes:
+        - switchstack:
+              desc: Switches to a named stack.
+              note:
+                  - The default stack is named <pre class="code">0</pre>.
+              source: |
+                  void PredefinedFunctions::switchStack(Runner* r) {
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	r->switchCurrentStack(f1);
+                  }
+              pops:
+                  - type: any
+                    desc: The name of the stack to switch to
+              pushes:
+    - category: Reference Getting and Setting
+      functions:
+        - getref:
+              desc: Gets the value of a global reference.
+              source: |
+                 void PredefinedFunctions::getRef(Runner* r) {
+                 	CharmFunction f1 = r->getCurrentStack()->pop();
+                 	r->getCurrentStack()->push(r->getReference(f1));
+                 }
+              pops:
+                  - type: any
+                    desc: The name of the reference to get
+              pushes:
+        - setref:
+              desc: Sets the value of a global reference.
+              note:
+                  - Though this is not enforced, it's canonical to use <pre class="code">" &lt;description&gt;&lt;function&gt;ref "</pre> as the reference name.
+              source: |
+                  void PredefinedFunctions::setRef(Runner* r) {
+                  	//the value of the reference
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	//the name of the reference
+                  	CharmFunction f2 = r->getCurrentStack()->pop();
+                  	r->setReference(f2, f1);
+                  }
+              pops:
+                  - type: any
+                    desc: The name of the reference
+                  - type: any
+                    desc: The value of the reference
+              pushes:
+
 
 prelude_functions:
-    a
+    - category: Output Functions
+      functions:
+        - p:
+              desc: Prints without popping.
+              source: |
+                 p := dup pp
+              pops:
+                  - type: any
+                    desc: The value to print
+              pushes:
+                  - type: any
+                    desc: The value to print
+        - print:
+              desc: Prints without popping then prints a newline
+              source: |
+                  print := p newline
+              pops:
+                  - type: any
+                    desc: The value to print
+              pushes:
+                  - type: any
+                    desc: The value to print

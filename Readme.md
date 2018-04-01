@@ -46,7 +46,15 @@ make release
 
 To build with debug mode enabled (warning: very verbose!), use `make DEBUG=true`.
 
-## [DOCUMENTATION](https://github.com/aearnus/charm/blob/master/Documentation.md)
+## [OLD, UNUPDATED DOCUMENTATION](https://github.com/aearnus/charm/blob/master/docs/Documentation.md)
+
+## [NEW DOCUMENTATION](dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/glossary.html)
+
+Use the [Beaker Browser](https://beakerbrowser.com/) to access this peer to peer link:
+
+dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/glossary.html
+
+Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/glossary.html).
 
 ## TODO:
 
