@@ -40,8 +40,8 @@ Charm$ " n " getref print
 ## COMPILATION:
 
 ```
-make
-./charm
+make release
+./charm-release
 ```
 
 To build with debug mode enabled (warning: very verbose!), use `make DEBUG=true`.
