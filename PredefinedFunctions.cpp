@@ -15,14 +15,14 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	"len", "at", "insert", "concat",
 	//LIST MANIPULATIONS
 	//TODO
-	"fold", "map", "zip",
+	"zipwith",
 	//STRING MANIPULATIONS
 	//TODO
 	"tocharlist", "fromcharlist",
 	//CONTROL FLOW
 	"i", "ifthen",
 	//BOOLEAN OPS - TRUE: >=1, FALSE: <1 - INTEGER ONLY
-	"nor",
+	"xor",
 	//TYPE INSPECIFIC MATH
 	"abs",
 	//INTEGER OPS
