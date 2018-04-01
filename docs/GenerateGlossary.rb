@@ -1,22 +1,44 @@
 require "yaml"
 
+def generateArgument(a, si)
+    out = ""
+    out << "<dt>Stack index #{si}: #{a["type"]}</dt>"
+    out << "<dd>#{a["desc"]}</dd>"
+    return out
+end
+
 def generateFunction(f)
     name = f.keys.first
     out = ""
     out << "<h3>#{name}</h3>"
-    out << "<div>#{f[name]["desc"]}</div>"
+    out << "<h4>Description</h4>"
+    out << "<div class=\"info\">#{f[name]["desc"]}</div>"
     if !f[name]["note"].nil?
         f[name]["note"].each do |n|
-            out << "<div>NOTE: #{n}</div>"
+            out << "<div class=\"info\">NOTE: #{n}</div>"
         end
+    end
+    if !f[name]["pops"].nil?
+        out << "<div><h4>Pops</h4><dl class=\"info\">"
+        f[name]["pops"].each_with_index do |a, i|
+            out << generateArgument(a, f[name]["pops"].length - (i + 1))
+        end
+        out << "</dl></div>"
+    end
+    if !f[name]["pushes"].nil?
+        out << "<div><h4>Pushes</h4><dl class=\"info\">"
+        f[name]["pushes"].each_with_index do |a, i|
+            out << generateArgument(a, f[name]["pushes"].length - (i + 1))
+        end
+        out << "</dl></div>"
     end
     out << %Q~
 <div class="codeContainer">
-    Source (click to open/close):
+    <button class="codeButton">
+        Source (click to open/close)
+    </button>
     <pre class="code">#{f[name]["source"]}</pre>
 </div>~
-    out << "<div>Pops:</div>"
-    out << "<div>Pushes</div>"
     return out
 end
 
@@ -40,18 +62,18 @@ puts %Q~
         <script type="text/javascript">
             function codeClick(e) {
                 var elem = e.target;
-                var codePre = elem.getElementsByClassName("code")[0];
+                var codePre = elem.parentElement.getElementsByClassName("code")[0];
                 if (codePre.classList.contains("code-open")) {
                     codePre.classList.remove("code-open");
-                    codePre.style.height = "0";
+                    //codePre.style.height = "0";
                 } else {
                     codePre.classList.add("code-open");
-                    var lineHeight = parseInt(window.getComputedStyle(codePre).lineHeight);
-                    codePre.style.height = (codePre.innerHTML.split("\\n").length * lineHeight) + "px";
+                    //var lineHeight = parseInt(window.getComputedStyle(codePre).lineHeight);
+                    //codePre.style.height = (codePre.innerHTML.split("\\n").length * lineHeight) + "px";
                 }
             }
             function init() {
-                var codes = document.getElementsByClassName("codeContainer");
+                var codes = document.getElementsByClassName("codeButton");
                 for (let code of codes) {
                     code.onclick = function (e) { codeClick(e); };
                 }
@@ -59,17 +81,39 @@ puts %Q~
             window.onload = init;
         </script>
         <style type="text/css">
+            html {
+                background-color: #ddd;
+            }
+            body {
+                width: 80%;
+                min-width: 30em;
+                margin: 0 auto;
+                padding: 4em;
+                padding-top: 2em;
+                box-shadow: 0 0 100px black;
+                background-color: #fff;
+            }
+            .info {
+                padding-left: 2em;
+                margin-top: 0.5em;
+                margin-bottom: 0.5em;
+            }
             .code {
                 overflow-y: hidden;
                 background-color: #ccc;
                 height: 0;
                 padding: 0;
-                transition: height 0.5s linear;
-                transition: padding 0.5s linear;
+                margin: 0;
+
+                transition: padding 0.5s cubic-bezier(0, 1, 0, 1);
+                transition: margin 0.5s cubic-bezier(0, 1, 0, 1);
             }
 
             .code-open {
                 padding: 1em;
+                margin-top: 0.75em;
+                margin-bottom: 0.75em;
+                height: auto;
             }
         </style>
     </head>
