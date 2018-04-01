@@ -54,6 +54,10 @@ Use the [Beaker Browser](https://beakerbrowser.com/) to access this peer to peer
 
 dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/glossary.html
 
+(Please keep your browser open and this site!)
+
+Or, use [this link](http://68.3.184.237:4567/glossary.html). Note: this is run on my own server and not guaranteed to always be up.
+
 Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/glossary.html).
 
 ## TODO:
