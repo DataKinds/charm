@@ -546,15 +546,15 @@ native_functions:
                   - type: float
                     desc: The floating point value to convert
               pushes:
-                  - type: int/float
+                  - type: int
                     desc: The integer representation
     - category: Stack Creation and Destruction
       functions:
         - createstack:
               desc: Creates a new named stack to work with.
               note:
-                  - This function does not switch to the specified stack. Use <pre class="code">switchstack</pre> for that.
-                  - The default stack is 20,000 functions long and named <pre class="code">0</pre>.
+                  - This function does not switch to the specified stack. Use <span class="code">switchstack</span> for that.
+                  - The default stack is 20,000 functions long and named <span class="code">0</span>.
               source: |
                  void PredefinedFunctions::createStack(Runner* r) {
                  	//name of the stack
@@ -580,7 +580,7 @@ native_functions:
         - switchstack:
               desc: Switches to a named stack.
               note:
-                  - The default stack is named <pre class="code">0</pre>.
+                  - The default stack is named <span class="code">0</span>.
               source: |
                   void PredefinedFunctions::switchStack(Runner* r) {
                   	CharmFunction f1 = r->getCurrentStack()->pop();
@@ -606,7 +606,7 @@ native_functions:
         - setref:
               desc: Sets the value of a global reference.
               note:
-                  - Though this is not enforced, it's canonical to use <pre class="code">" &lt;description&gt;&lt;function&gt;ref "</pre> as the reference name.
+                  - Though this is not enforced, it's canonical to use <span class="code">" &lt;description&gt;&lt;function&gt;ref "</span> as the reference name.
               source: |
                   void PredefinedFunctions::setRef(Runner* r) {
                   	//the value of the reference
@@ -646,3 +646,86 @@ prelude_functions:
               pushes:
                   - type: any
                     desc: The value to print
+    - category: Stack Manipulation
+      functions:
+        - flip:
+              desc: Flips two elements on the stack.
+              source: |
+                 flip := 0 1 swap
+              pops:
+                  - type: any
+                    desc: One value to flip
+                  - type: any
+                    desc: The other value to flip
+              pushes:
+                  - type: any
+                    desc: One value to flip
+                  - type: any
+                    desc: The other value to flip
+        - swapnth:
+              desc: Swap the top value with the value at an index on the stack.
+              note:
+                  - This function is magic-ish. It doesn't push another top value, but it replaces the previous one.
+              source: |
+                  swapnth := dup 1 + swap
+              pops:
+                  - type: int
+                    desc: The stack index to swap the top value to
+              pushes:
+        - copyfrom:
+              desc: Copy a value from an index on the stack.
+              note:
+                  - Unlike swap, this does not move any values from their place in the stack.
+              source: |
+                  copyfrom := " copyfromref " flip setref 0 " copyfromref " getref swap dup 1 " copyfromref " getref 1 + swap
+              pops:
+                  - type: int
+                    desc: The stack index to copy from
+              pushes:
+                  - type: any
+                    desc: The value copied from the stack
+        - pushto:
+              desc: Push a value to an index on the stack.
+              source: |
+                  _pushto_args := 0 flip
+                  _pushto_cond := print flip print flip dup 2 copyfrom -
+                  _pushto_inc  := flip 1 + flip
+                  _pushto      := [ _pushto_cond ] [ 1 copyfrom 2 + swapnth _pushto_inc _pushto ] [ pop pop ] ifthen
+                  pushto       := _pushto_args _pushto
+              pops:
+                  - type: any
+                    desc: The object to push
+                  - type: int
+                    desc: The stack index to push the object to
+              pushes:
+        - stack:
+              desc: Duplicates a value multiple times.
+              source: |
+                  stack := [ 1 - dup ] [ flip dup 0 2 swap stack ] [ pop ] ifthen
+              pops:
+                  - type: any
+                    desc: The object to duplicate
+                  - type: int
+                    desc: The amount of times to duplicate
+              pushes:
+                  - type: ...
+                    desc: All of the duplicated objects
+    - category: List Manipulation
+      functions:
+        - repeat:
+              desc: Repeats a list a certain number of times.
+              note:
+                  - Using this as <span class="code"> [ &ltfunction&gt; ] flip repeat i</span> works as something akin to a for-loop construct!
+              source: |
+                 _repeat_args := flip dup 0 2 swap 1 -
+                 _repeat_iter := 0 2 swap dup 0 2 swap concat flip 2 0 swap 1 -
+                 _repeat      :=  [ dup ] [ _repeat_iter _repeat ] [ pop flip pop ] ifthen
+                 repeat       := _repeat_args _repeat
+              pops:
+                  - type: list/string
+                    desc: List or string to repeat
+                  - type: int
+                    desc: Number of times to repeat
+              pushes:
+                  - type: list/string
+                    desc: Repeated list or string
