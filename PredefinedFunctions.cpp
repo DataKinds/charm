@@ -52,7 +52,7 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, Fu
 	if (functionName == "i") PredefinedFunctions::i(r);
 	if (functionName == "ifthen") PredefinedFunctions::ifthen(r, context);
 	//BOOLEAN OPS
-	if (functionName == "nor") PredefinedFunctions::nor(r); //you can make all logic out of this
+	if (functionName == "xor") PredefinedFunctions::exor(r); //you can make all logic out of this
 	//TYPE INSPECIFIC MATH
 	if (functionName == "abs") PredefinedFunctions::abs(r);
 	//INTEGER OPS
@@ -333,7 +333,7 @@ void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
 
 
 
-void PredefinedFunctions::nor(Runner* r) {
+void PredefinedFunctions::exor(Runner* r) {
 	CharmFunction f1 = r->getCurrentStack()->pop();
 	CharmFunction f2 = r->getCurrentStack()->pop();
 	if (Stack::isInt(f1) && Stack::isInt(f2)) {
@@ -342,7 +342,7 @@ void PredefinedFunctions::nor(Runner* r) {
 		CharmNumber outNum;
 		outNum.whichType = INTEGER_VALUE;
 		//cancer incoming
-		outNum.integerValue = ((f1.numberValue.integerValue > 0) || (f2.numberValue.integerValue > 0));
+		outNum.integerValue = ((f1.numberValue.integerValue > 0) ^ (f2.numberValue.integerValue > 0));
 		//no more cancer
 		out.numberValue = outNum;
 		r->getCurrentStack()->push(out);

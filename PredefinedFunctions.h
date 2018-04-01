@@ -31,7 +31,7 @@ public:
 	static inline void i(Runner* r);
 	static inline void ifthen(Runner* r, FunctionDefinition* context);
 	//BOOLEAN OPS
-	static inline void nor(Runner* r);
+	static inline void exor(Runner* r);
 	//TYPE INSPECIFIC MATH
 	static inline void abs(Runner* r);
 	//INTEGER OPS
