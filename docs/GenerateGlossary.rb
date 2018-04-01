@@ -1,4 +1,5 @@
 require "yaml"
+require "cgi"
 
 def generateArgument(a, si)
     out = ""
@@ -7,10 +8,28 @@ def generateArgument(a, si)
     return out
 end
 
+def generateQuickUsage(f)
+    name = f.keys.first
+    out = ""
+    if !f[name]["pops"].nil?
+        f[name]["pops"].each do |a|
+            out << "<i>#{a["type"]}</i> "
+        end
+    end
+    out << name << " "
+    if !f[name]["pushes"].nil?
+        out << "        => "
+        f[name]["pushes"].each do |a|
+            out << "<i>#{a["type"]}</i> "
+        end
+    end
+    return out
+end
+
 def generateFunction(f)
     name = f.keys.first
     out = ""
-    out << "<h3>#{name}</h3>"
+    out << "<h3 class=\"function\">#{name}</h3>"
     out << "<h4>Description</h4>"
     out << "<div class=\"info\">#{f[name]["desc"]}</div>"
     if !f[name]["note"].nil?
@@ -18,6 +37,8 @@ def generateFunction(f)
             out << "<div class=\"info\">NOTE: #{n}</div>"
         end
     end
+    out << "<h4>Quick Usage View</h4>"
+    out << "<div class=\"code\">#{generateQuickUsage(f)}</div>"
     if !f[name]["pops"].nil?
         out << "<div><h4>Pops</h4><dl class=\"info\">"
         f[name]["pops"].each_with_index do |a, i|
@@ -33,11 +54,11 @@ def generateFunction(f)
         out << "</dl></div>"
     end
     out << %Q~
-<div class="codeContainer">
-    <button class="codeButton">
+<div class="code-container">
+    <button class="code-button">
         Source (click to open/close)
     </button>
-    <pre class="code">#{f[name]["source"]}</pre>
+    <pre class="code code-drawer">#{CGI::escapeHTML(f[name]["source"])}</pre>
 </div>~
     return out
 end
@@ -54,6 +75,7 @@ end
 glossary = YAML.load_file("Glossary.yaml")
 
 puts %Q~
+<meta charset="utf-8">
 <html>
     <head>
         <title>
@@ -62,7 +84,7 @@ puts %Q~
         <script type="text/javascript">
             function codeClick(e) {
                 var elem = e.target;
-                var codePre = elem.parentElement.getElementsByClassName("code")[0];
+                var codePre = elem.parentElement.getElementsByClassName("code-drawer")[0];
                 if (codePre.classList.contains("code-open")) {
                     codePre.classList.remove("code-open");
                     //codePre.style.height = "0";
@@ -73,7 +95,7 @@ puts %Q~
                 }
             }
             function init() {
-                var codes = document.getElementsByClassName("codeButton");
+                var codes = document.getElementsByClassName("code-button");
                 for (let code of codes) {
                     code.onclick = function (e) { codeClick(e); };
                 }
@@ -93,6 +115,15 @@ puts %Q~
                 box-shadow: 0 0 100px black;
                 background-color: #fff;
             }
+            h2 {
+                border-bottom: 2px solid #000;
+            }
+            h3 {
+                border-bottom: 1px solid #000;
+            }
+            h3.function {
+                border-bottom: 1px dotted #000;
+            }
             .info {
                 padding-left: 2em;
                 margin-top: 0.5em;
@@ -101,6 +132,11 @@ puts %Q~
             .code {
                 overflow-y: hidden;
                 background-color: #ccc;
+                font-family: monospace;
+                padding: 1em;
+                white-space: pre;
+            }
+            .code-drawer {
                 height: 0;
                 padding: 0;
                 margin: 0;
@@ -108,7 +144,6 @@ puts %Q~
                 transition: padding 0.5s cubic-bezier(0, 1, 0, 1);
                 transition: margin 0.5s cubic-bezier(0, 1, 0, 1);
             }
-
             .code-open {
                 padding: 1em;
                 margin-top: 0.75em;
