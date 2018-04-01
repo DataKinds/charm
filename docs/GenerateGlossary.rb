@@ -116,6 +116,7 @@ puts %Q~
         <style type="text/css">
             html {
                 background-color: #ddd;
+                font-family: sans-serif;
             }
             body {
                 width: 80%;
