@@ -16,10 +16,10 @@ copyfrom := " copyfromref " flip setref 0 " copyfromref " getref swap dup 1 " co
 
 " <object> <stack index> pushto " pop
 _pushto_args := 0 flip
-_pushto_cond := dup 2 copyfrom -
+_pushto_cond := print flip print flip dup 2 copyfrom -
 _pushto_inc  := flip 1 + flip
-" FIXME " pop
-pushto       := [ _pushto_cond ] [ 1 copyfrom 2 + swapnth _pushto_inc ] [ pop pop ] ifthen
+_pushto      := [ _pushto_cond ] [ 1 copyfrom 2 + swapnth _pushto_inc _pushto ] [ pop pop ] ifthen
+pushto       := _pushto_args _pushto
 
 " <object> <number of copies> stack " pop
 stack := [ 1 - dup ] [ flip dup 0 2 swap stack ] [ pop ] ifthen
