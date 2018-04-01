@@ -52,11 +52,15 @@ To build with debug mode enabled (warning: very verbose!), use `make DEBUG=true`
 
 Use the [Beaker Browser](https://beakerbrowser.com/) to access this peer to peer link:
 
-dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/glossary.html
+dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/
 
-(Please keep your browser open and this site!)
+OR
 
-Or, use [this link](http://68.3.184.237:4567/glossary.html). Note: this is run on my own server and not guaranteed to always be up.
+dat://charm-glossary-aearnus.hashbase.io/
+
+(Please keep your browser open and support this site!)
+
+Or, use [this link](https://charm-glossary-aearnus.hashbase.io/). Note: this is run on https://hashbase.io/ and I can't guarantee it's veracity.
 
 Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/glossary.html).
 
