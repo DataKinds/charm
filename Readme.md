@@ -6,7 +6,7 @@ This is based off of Forth and Joy.
 
 `[ 1 2 ] [ 3 4 ] i 0 2 swap i pp pp pp pp newline  => 2134`
 
-Example REPL session:
+Example REPL session (with inlining disabled for readability's sake):
 
 ```
 tyler@nasa:~/scripts/charm$ ./charm
@@ -16,17 +16,18 @@ Looking for Prelude.charm...
 Prelude.charm loaded.
 
 Charm$ addOneToN := " n " getref 1 + " n " flip setref
-Charm$ " n " 0 setref
-Charm$ addOneToN
-Charm$ " n " getref print
+Charm$ printN := " n " getref print pop
+Charm$ printN
+0
+Charm$ addOneToN printN
 1
-Charm$ [ addOneToN ] dup dup dup dup dup dup
-Charm$ concat concat concat concat concat
+Charm$ [ addOneToN ] 10 repeat
 Charm$ print
-[ addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN ]
+[ addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN ]
 Charm$ i
-Charm$ " n " getref print
-7
+Charm$ printN
+11
+
 ```
 
 ## DEPENDENCIES:
