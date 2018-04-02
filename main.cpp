@@ -1,3 +1,4 @@
+
 #include <string>
 #include <stdexcept>
 #include <fstream>
@@ -14,28 +15,50 @@
 int main(int argc, char const *argv[]) {
 	Parser parser = Parser();
 	Runner runner = Runner();
+
+	//detect if the user passed in a file
+	bool fileLoaded = false;
+	std::string fileName;
+	if (argc > 1) {
+	  fileLoaded = true;
+	  fileName = argv[1];
+	}
 	//first, we print fun info and load the prelude
-	printf("Charm Interpreter v%s\n", "0.0.1");
-	printf("Made by @Aearnus\n");
-	printf("Looking for Prelude.charm...\n");
+	if (!fileLoaded) {
+	  printf("Charm Interpreter v%s\n", "0.0.1");
+	  printf("Made by @Aearnus\n");
+	  printf("Looking for Prelude.charm...\n");
+	}
 	std::stringstream preludeFile;
 	try {
 		std::ifstream fd("Prelude.charm");
 		std::string line;
 		while (std::getline(fd, line)) {
-			preludeFile << line << "\n";
-			printf("%s\n", line.c_str());
+		  runner.run(parser.lex(line));
+		  if (!fileLoaded) {
+		    printf("%s\n", line.c_str());
+		  }
 		}
 		//load up the Prelude.charm file
 		runner.run(parser.lex(preludeFile.str()));
-		printf("Prelude.charm loaded.\n\n");
+		if (!fileLoaded) {
+		  printf("Prelude.charm loaded.\n\n");
+		}
 	} catch (std::exception &e) {
 		printf("Prelude.charm nonexistant or unopenable.\n");
 		printf("Error: %s\n\n", e.what());
 	}
 
-	//begin the interactive loop
-	while (true) {
+	//if theres a file to run, load it and run it
+	if (fileLoaded) {
+	  std::string line;
+	  std::ifstream inFile(fileName);
+	  while (std::getline(inFile, line)) {
+	    runner.run(parser.lex(line));
+	  }
+	}
+	//begin the interactive loop if there isnt a file to run
+	while (true && (!fileLoaded)) {
 		std::string codeInput(readline("Charm$ "));
 		add_history(codeInput.c_str());
 		std::vector<CharmFunction> parsedProgram = parser.lex(codeInput);
@@ -48,7 +71,7 @@ int main(int argc, char const *argv[]) {
 			runner.run(parsedProgram);
 		} catch (const std::runtime_error& e) {
 			printf("ERRROR: %s\n", e.what());
-			return -1;
+			//return -1;
 		}
 		ONLYDEBUG printf("MODIFIED STACK AREA: %i\n", runner.getCurrentStack()->getModifiedStackArea());
 		ONLYDEBUG printf("THE STACK (just the types): ");
