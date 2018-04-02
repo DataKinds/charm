@@ -85,4 +85,13 @@ Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/index.html
 
 ## SUPPORT OR DONATE
 
+### Todo list
+
+- C FFI & linkage
+- Imports from other files
+- A proper interpreter, not just a REPL
+- Possible LLVM codegen?
+
+### Links
+
 [Open an issue](https://github.com/Aearnus/charm/issues/new) or [DM me on Twitter](https://twitter.com/aearnus).
