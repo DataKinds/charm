@@ -1,10 +1,12 @@
-# Charm - a stack based functional language
+# Charm
 
-This is based off of Forth and Joy.
+**Charm** is an experimental stack based functional language. It implements functions as a first class data structure, able to be manipulated with ease, using generally applicable tools and functions.
+
+Charm is based off of Forth and Joy.
 
 `" hello " " world " concat p                      => hello world`
 
-`[ 1 2 ] [ 3 4 ] i 0 2 swap i pp pp pp pp newline  => 2134`
+`[ 1 2 ] [ 3 4 ] i 0 2 swap i [ pp ] 4 repeat i newline  => 2134`
 
 Example REPL session (with inlining disabled for readability's sake):
 
@@ -29,20 +31,51 @@ Charm$ printN
 11
 ```
 
-## DEPENDENCIES:
+## Quick Links
 
+- https://esolangs.org/wiki/Charm
+- https://charm-glossary-aearnus.hashbase.io/
+- https://github.com/Aearnus/charm/blob/master/Prelude.charm.cpp
+
+## Dependencies
+
+- GCC
 - libreadline and related development packages (`libreadline-dev on apt-based systems`)
+- A willingness to think outside of the box
 
-## COMPILATION:
+## Compilation
 
+For a full, optimized release binary (recommended), build with
 ```
 make release
-./charm-release
 ```
+This will produce a binary named `charm-release`.
+
+For a basic, unoptimized binary with debug symbols, build with
+```
+make
+```
+This will produce a binary named `charm`.
 
 To build with debug mode enabled (warning: very verbose!), use `make DEBUG=true`.
 
-## ABOUT CHARM
+## [FULL FUNCTION GLOSSARY](dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/glossary.html)
+
+Use the [Beaker Browser](https://beakerbrowser.com/) to access this peer to peer link:
+
+dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/
+
+OR
+
+dat://charm-glossary-aearnus.hashbase.io/
+
+(Please keep your browser open and support this site!)
+
+Or, use [this link](https://charm-glossary-aearnus.hashbase.io/). Note: this is run on https://hashbase.io/ and I can't guarantee it's veracity.
+
+Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/index.html).
+
+## About Charm
 
 ### Basic syntax and implementation
 
@@ -67,21 +100,6 @@ Tail-call optimization is necessary for this language, as there are no other way
 
 (If you can think of any other cases or a more general case, please open an issue!). These optimizations should allow for looping code that does not smash the calling stack and significant speedups. If there are any cases where these optimizations seem to be causing incorrect side effects, please create an issue or get into contact with me.
 
-## [FULL FUNCTION GLOSSARY](dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/glossary.html)
-
-Use the [Beaker Browser](https://beakerbrowser.com/) to access this peer to peer link:
-
-dat://f6365c0b3fb82a732d125dc091b2dfc3518f39bbe8f0acdbf8956128ddd6b078/
-
-OR
-
-dat://charm-glossary-aearnus.hashbase.io/
-
-(Please keep your browser open and support this site!)
-
-Or, use [this link](https://charm-glossary-aearnus.hashbase.io/). Note: this is run on https://hashbase.io/ and I can't guarantee it's veracity.
-
-Or, use [this file](https://github.com/Aearnus/charm/blob/master/docs/index.html).
 
 ## SUPPORT OR DONATE
 
