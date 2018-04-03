@@ -8,6 +8,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+//sorry! this is just the easiest thing to do
+#include "Prelude.charm.cpp"
+
 #include "Parser.h"
 #include "Runner.h"
 #include "Debug.h"
@@ -27,25 +30,15 @@ int main(int argc, char const *argv[]) {
 	if (!fileLoaded) {
 	  printf("Charm Interpreter v%s\n", "0.0.1");
 	  printf("Made by @Aearnus\n");
-	  printf("Looking for Prelude.charm...\n");
 	}
-	std::stringstream preludeFile;
 	try {
-		std::ifstream fd("Prelude.charm");
-		std::string line;
-		while (std::getline(fd, line)) {
-		  runner.run(parser.lex(line));
-		  if (!fileLoaded) {
-		    printf("%s\n", line.c_str());
-		  }
-		}
 		//load up the Prelude.charm file
-		runner.run(parser.lex(preludeFile.str()));
+		runner.run(parser.lex(prelude));
 		if (!fileLoaded) {
 		  printf("Prelude.charm loaded.\n\n");
 		}
 	} catch (std::exception &e) {
-		printf("Prelude.charm nonexistant or unopenable.\n");
+		printf("Prelude.charm nonexistant or unopenable. This shouldn't happen!\n");
 		printf("Error: %s\n\n", e.what());
 	}
 

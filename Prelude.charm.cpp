@@ -1,3 +1,7 @@
+#include <string>
+
+std::string prelude = R"~(
+
 " OUTPUT FUNCTIONS " pop
 " ================ " pop
 
@@ -51,3 +55,5 @@ repeat       := _repeat_args _repeat
 _map_args := [ ] flip
 _map_iter := dup
 map       := dup
+
+)~";
