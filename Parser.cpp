@@ -4,6 +4,7 @@
 #include "Parser.h"
 #include "ParserTypes.h"
 #include "Debug.h"
+#include "FunctionAnalyzer.h"
 
 Parser::Parser() {
 }
@@ -63,40 +64,18 @@ CharmFunctionType Parser::recognizeFunction(std::string s) {
 	return DEFINED_FUNCTION;
 }
 
-bool Parser::_analyzeIsFunctionInlineable(std::string fName, CharmFunction f) {
-	//if the function calls itself, it's recursive and not inlineable
-	bool recursive = false;
-	for (unsigned long long fIndex = 0; fIndex < f.literalFunctions.size(); fIndex++) {
-		if (f.literalFunctions[fIndex].functionType == LIST_FUNCTION) {
-			recursive = recursive || (!_analyzeIsFunctionInlineable(fName, f.literalFunctions[fIndex]));
-		} else {
-			recursive = recursive || (fName == f.literalFunctions[fIndex].functionName);
-		}
-		if (recursive) {
-			break;
-		}
-	}
-	return !recursive;
-}
-bool Parser::analyzeIsFunctionInlineable(CharmFunction f) {
-	return (Parser::_analyzeIsFunctionInlineable(f.functionName, f));
-}
-bool Parser::analyzeIsFunctionTailCallRecursive(CharmFunction f) {
-	//this is only static, basic tail call recursion analysis.
-	//this only catches functions of form `f := <code> f`
-	//and sends this flag off to Runner.cpp::handleDefinedFunctions()
-	//the rest of the tail call recursion code happens within PredefinedFunctions.cpp::ifthen
-	//over there, the usual case is caught, with code of the form `f := [ <cond> ] [ <code> f] [ <code> f ] ifthen`
-	return (f.functionName == f.literalFunctions.back().functionName);
-}
-void Parser::analyzeDefinition(CharmFunction *f) {
+CharmFunctionDefinitionInfo Parser::analyzeDefinition(CharmFunction f) {
+	CharmFunctionDefinitionInfo out;
+	//create an analyzer
+	FunctionAnalyzer fA(f);
 	//first, we fill in the info and see if the function is not recursive/inlineable
-	f->definitionInfo.inlineable = Parser::analyzeIsFunctionInlineable(*f);
+	out.inlineable = fA.isInlinable();
 	//then we fill in the inlineDefinitions deque, for parsing future DEFINED_FUNCTIONs
-	if (f->definitionInfo.inlineable) {
-		inlineDefinitions.push_back(*f);
+	if (out.inlineable) {
+		inlineDefinitions.push_back(f);
 	}
-	f->definitionInfo.tailCallRecursive = Parser::analyzeIsFunctionTailCallRecursive(*f);
+	out.tailCallRecursive = fA.isTailCallRecursive();
+	return out;
 }
 
 CharmFunction Parser::parseDefinition(std::vector<std::string> line) {
@@ -106,9 +85,7 @@ CharmFunction Parser::parseDefinition(std::vector<std::string> line) {
 	//take all the tokens after the :=, parse them, and make them the literalFunctions
 	CharmFunction currentFunction;
 	currentFunction.functionType = FUNCTION_DEFINITION;
-	CharmFunctionDefinitionInfo functionInfo;
-	functionInfo.inlineable = true;
-	functionInfo.tailCallRecursive = false;
+	CharmFunctionDefinitionInfo functionInfo = Parser::analyzeDefinition(currentFunction);
 	currentFunction.definitionInfo = functionInfo;
 	unsigned long long equalsIndex = 0;
 	while (Parser::recognizeFunction(line[equalsIndex]) != FUNCTION_DEFINITION) {
@@ -135,7 +112,6 @@ CharmFunction Parser::parseDefinition(std::vector<std::string> line) {
 		//we outta here!
 	}
 
-	Parser::analyzeDefinition(&currentFunction);
 	ONLYDEBUG printf("IS %s INLINEABLE? %s\n", currentFunction.functionName.c_str(), currentFunction.definitionInfo.inlineable ? "Yes" : "No");
 	ONLYDEBUG printf("IS %s TAIL CALL RECURSIVE? %s\n", currentFunction.functionName.c_str(), currentFunction.definitionInfo.tailCallRecursive ? "Yes" : "No");
 	return currentFunction;

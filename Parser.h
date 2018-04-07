@@ -10,10 +10,7 @@ private:
 	bool isLineFunctionDefinition(std::vector<std::string> line);
 	CharmFunctionType recognizeFunction(std::string s);
 
-	bool _analyzeIsFunctionInlineable(std::string fName, CharmFunction f);
-	bool analyzeIsFunctionInlineable(CharmFunction f);
-	bool analyzeIsFunctionTailCallRecursive(CharmFunction f);
-	void analyzeDefinition(CharmFunction *f);
+	CharmFunctionDefinitionInfo analyzeDefinition(CharmFunction f);
 
 	std::deque<CharmFunction> inlineDefinitions;
 

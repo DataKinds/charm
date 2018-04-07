@@ -1,4 +1,4 @@
-FILES = main.cpp Parser.cpp Runner.cpp Stack.cpp PredefinedFunctions.cpp
+FILES = main.cpp Parser.cpp Runner.cpp Stack.cpp PredefinedFunctions.cpp FunctionAnalyzer.cpp
 LIBS = -lreadline
 CFLAGS =
 
