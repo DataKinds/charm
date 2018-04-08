@@ -1,6 +1,8 @@
 #include "Stack.h"
 #include "ParserTypes.h"
 
+#include <algorithm>
+
 CharmFunction Stack::zeroF() {
 	CharmFunction zeroFunction;
 	CharmNumber zeroNumber;
@@ -41,31 +43,11 @@ Stack::Stack(unsigned long long size, CharmFunction name) {
     Stack::name = name;
 }
 
-void Stack::updateModifiedStackArea() {
-	//go from the front of the stack to the back
-	//then set the modifiedStackArea accordingly
-	for (unsigned int stackIndex = 0; stackIndex < stack.size(); stackIndex++) {
-		//do all the checks to make sure it's unchanged
-		if (isInt(Stack::stack[stackIndex])) {
-			if (Stack::stack[stackIndex].numberValue.integerValue == 0) {
-				//the stack cell is unchanged, keep going
-				//also i hate how i have to make all these calls in order
-				//looks freakin disgusting, but there's some unknown behavior
-				//if i dont (accessing an uninitialized value in a struct)
-			} else {
-				Stack::modifiedStackArea = stack.size() - stackIndex;
-				break;
-			}
-		} else {
-			Stack::modifiedStackArea = stack.size() - stackIndex;
-			break;
-		}
-	}
-}
 
 unsigned int Stack::getModifiedStackArea() {
     return Stack::modifiedStackArea;
 }
+
 
 CharmFunction Stack::pop() {
 	//ensure that the stack never changes size
@@ -87,9 +69,13 @@ void Stack::push(CharmFunction f) {
 }
 
 void Stack::swap(unsigned long long n1, unsigned long long n2) {
-	CharmFunction tempFromN1 = Stack::stack.at(Stack::stack.size() - n1 - 1);
+	/*CharmFunction tempFromN1 = Stack::stack.at(Stack::stack.size() - n1 - 1);
 	CharmFunction tempFromN2 = Stack::stack.at(Stack::stack.size() - n2 - 1);
 	Stack::stack[Stack::stack.size() - n1 - 1] = tempFromN2;
 	Stack::stack[Stack::stack.size() - n2 - 1] = tempFromN1;
 	Stack::updateModifiedStackArea();
+	*/
+	std::iter_swap(Stack::stack.end() - n1 - 1, Stack::stack.end() - n2 - 1);
+	if (n1 + 1 > Stack::modifiedStackArea) Stack::modifiedStackArea = n1;
+	if (n2 + 1 > Stack::modifiedStackArea) Stack::modifiedStackArea = n2;
 }

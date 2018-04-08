@@ -9,7 +9,7 @@
 #endif
 
 #ifndef CHARM_LIST_TYPE
-	#define CHARM_LIST_TYPE std::deque<CharmFunction>
+	#define CHARM_LIST_TYPE std::vector<CharmFunction>
 #endif
 
 enum CharmFunctionType {
