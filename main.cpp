@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <stdexcept>
 #include <fstream>
@@ -20,7 +21,7 @@
 
 const std::string VERSION = "0.0.1";
 
-template<std::vector<std::string>* arg, std::string_view* flag, std::function<void()>* f>
+template<std::vector<std::string>* arg, std::string* flag, std::function<void()>* f>
 struct CommandLineLambda {
 	//returns whether or not the argument was called
 	static inline bool runArg() {
@@ -33,7 +34,7 @@ struct CommandLineLambda {
 	}
 };
 
-template<std::vector<std::string>* arg, std::string_view* flag, std::optional<std::string>* var>
+template<std::vector<std::string>* arg, std::string* flag, std::optional<std::string>* var>
 struct CommandLineOptional {
 	//returns the success of parsing the argument
 	static inline bool runArg() {
@@ -43,7 +44,7 @@ struct CommandLineOptional {
 				iter == std::prev(arg->end()) ||
 				std::next(iter)->front() == '-'
 			) {
-				printf("No argument supplied to %s\n", "-a");
+				std::cout << "No argument supplied to " << flag << std::endl;
 				return false;
 			} else {
 				//if the argument is properly formed
@@ -64,7 +65,7 @@ int main(int argc, char const *argv[]) {
 	static std::vector<std::string> args;
 	args.assign(argv + 1, argv + argc);
 
-	static std::string_view helpFlag("-h");
+	static std::string helpFlag("-h");
 	static std::function<void()> helpF = []() {
 		printf("Charm Interpreter v%s\n", VERSION.c_str());
 		puts("By @Aearnus");
@@ -83,7 +84,7 @@ int main(int argc, char const *argv[]) {
 		return 0;
 	}
 
-	static std::string_view versionFlag("-v");
+	static std::string versionFlag("-v");
 	static std::function<void()> versionF = []() {
 		printf("charm version %s, built on %s at %s.\n", VERSION.c_str(), __DATE__, __TIME__);
 	};
@@ -93,14 +94,14 @@ int main(int argc, char const *argv[]) {
 	}
 
 	static std::optional<std::string> analyzeFunctionOpt;
-	static std::string_view analyzeFunctionFlag("-a");
+	static std::string analyzeFunctionFlag("-a");
 	CommandLineOptional<&args, &analyzeFunctionFlag, &analyzeFunctionOpt> analyzeFunctionArg;
 	if (!analyzeFunctionArg.runArg()) {
 		return -1;
 	}
 
 	static std::optional<std::string> interactiveFileOpt;
-	static std::string_view interactiveFileFlag("-f");
+	static std::string interactiveFileFlag("-f");
 	CommandLineOptional<&args, &interactiveFileFlag, &interactiveFileOpt> interactiveFileArg;
 	if (!interactiveFileArg.runArg()) {
 		return -1;
@@ -108,7 +109,7 @@ int main(int argc, char const *argv[]) {
 
 	//parse input file
 	std::optional<std::string> optFileName;
-	if (args.size() > 1) {
+	if (args.size() > 0) {
 		optFileName = args.back();
 	}
 
@@ -123,10 +124,16 @@ int main(int argc, char const *argv[]) {
 			printf("Error: %s\n\n", e.what());
 			return -1;
 		}
-		std::string line;
-		std::ifstream inFile(*optFileName);
-		while (std::getline(inFile, line)) {
-			runner.run(parser.lex(line));
+		try {
+			std::string line;
+			std::ifstream inFile(*optFileName);
+			while (std::getline(inFile, line)) {
+				runner.run(parser.lex(line));
+			}
+		} catch (std::exception &e) {
+			printf("%s nonexistant or unopenable.\n", (*optFileName).c_str());
+			printf("Error: %s\n", e.what());
+			return -1;
 		}
   	} else {
 		printf("Charm Interpreter v%s\n", VERSION.c_str());
