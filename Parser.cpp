@@ -218,9 +218,9 @@ CharmFunction Parser::parseListFunction(std::vector<std::string> *line, unsigned
 }
 
 
-std::vector<CharmFunction> Parser::lex(const std::string charmInput) {
+CHARM_LIST_TYPE Parser::lex(const std::string charmInput) {
 	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
-	std::vector<CharmFunction> out;
+	CHARM_LIST_TYPE out;
 	//first split the string on newlines
 	std::vector<std::string> newlineSplitString = Parser::splitString(charmInput, '\n');
 	std::vector<std::vector<std::string>> tokenizedString;

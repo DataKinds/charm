@@ -2,6 +2,15 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <deque>
+
+#ifndef CHARM_STACK_TYPE
+	#define CHARM_STACK_TYPE std::deque<CharmFunction>
+#endif
+
+#ifndef CHARM_LIST_TYPE
+	#define CHARM_LIST_TYPE std::deque<CharmFunction>
+#endif
 
 enum CharmFunctionType {
 	FUNCTION_DEFINITION, //not a function, gets removed upon running
@@ -42,7 +51,7 @@ struct CharmFunction {
 	//ONLY USED WITH NUMBER_FUNCTION
 	CharmNumber numberValue;
 	//ONLY USED WITH LIST_FUNCTION AND FUNCTION_DEFINITION
-	std::vector<CharmFunction> literalFunctions;
+	CHARM_LIST_TYPE literalFunctions;
 	//ONLY USED WITH DEFINED_FUNCTION AND FUNCTION_DEFINITION
 	std::string functionName;
 	//ONLY USED WITH FUNCTION_DEFINITION
@@ -141,5 +150,5 @@ inline bool operator==(const CharmFunction& lhs, const CharmFunction& rhs){
 //ALL DEFINITIONS ARE CONSTANTS
 struct CharmDefinition {
 	std::string constantName;
-	std::vector<CharmFunction> definition;
+	CHARM_LIST_TYPE definition;
 };

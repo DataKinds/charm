@@ -5,7 +5,7 @@
 
 struct FunctionDefinition {
 	std::string functionName;
-	std::vector<CharmFunction> functionBody;
+	CHARM_LIST_TYPE functionBody;
 	CharmFunctionDefinitionInfo definitionInfo;
 };
 
@@ -45,6 +45,6 @@ public:
 	CharmFunction getReference(CharmFunction key);
 	void setReference(CharmFunction key, CharmFunction value);
 
-	void runWithDefinitionContext(std::vector<CharmFunction> parsedProgram, FunctionDefinition* context);
-	void run(std::vector<CharmFunction> parsedProgram);
+	void runWithDefinitionContext(CHARM_LIST_TYPE parsedProgram, FunctionDefinition* context);
+	void run(CHARM_LIST_TYPE parsedProgram);
 };

@@ -167,7 +167,7 @@ int main(int argc, char const *argv[]) {
 		while (true) {
 			std::string codeInput(readline("Charm$ "));
 			add_history(codeInput.c_str());
-			std::vector<CharmFunction> parsedProgram = parser.lex(codeInput);
+			CHARM_LIST_TYPE parsedProgram = parser.lex(codeInput);
 			ONLYDEBUG printf("TOKEN TYPES: ");
 			for (auto currentFunction : parsedProgram) {
 				ONLYDEBUG printf("%i ", currentFunction.functionType);
@@ -181,7 +181,7 @@ int main(int argc, char const *argv[]) {
 			}
 			ONLYDEBUG printf("MODIFIED STACK AREA: %i\n", runner.getCurrentStack()->getModifiedStackArea());
 			ONLYDEBUG printf("THE STACK (just the types): ");
-			std::deque<CharmFunction> postStack = runner.getCurrentStack()->stack;
+			CHARM_STACK_TYPE postStack = runner.getCurrentStack()->stack;
 			for (unsigned int stackIndex = runner.getCurrentStack()->getModifiedStackArea(); stackIndex > 0; stackIndex--) {
 				ONLYDEBUG printf("%i ", postStack.at(postStack.size() - stackIndex).functionType);
 			}

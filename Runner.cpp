@@ -123,7 +123,7 @@ void Runner::handleDefinedFunctions(CharmFunction f, FunctionDefinition* context
 				if (fD.definitionInfo.tailCallRecursive) {
 					//if it is, drop the last call to itself and just run it in a loop
 					//TODO: exiting a tail-call loop?
-					std::vector<CharmFunction> functionBodyCopy = fD.functionBody;
+					CHARM_LIST_TYPE functionBodyCopy = fD.functionBody;
 					functionBodyCopy.pop_back();
 					while (1) {
 						Runner::run(functionBodyCopy);
@@ -140,7 +140,7 @@ void Runner::handleDefinedFunctions(CharmFunction f, FunctionDefinition* context
 	}
 }
 
-void Runner::runWithDefinitionContext(std::vector<CharmFunction> parsedProgram, FunctionDefinition* context) {
+void Runner::runWithDefinitionContext(CHARM_LIST_TYPE parsedProgram, FunctionDefinition* context) {
 	for (CharmFunction currentFunction : parsedProgram) {
 		//alright, now we get into the running portion
 		if (currentFunction.functionType == NUMBER_FUNCTION) {
@@ -178,6 +178,6 @@ void Runner::runWithDefinitionContext(std::vector<CharmFunction> parsedProgram, 
 	ONLYDEBUG puts("EXITING RUNNER::RUN");
 }
 
-void Runner::run(std::vector<CharmFunction> parsedProgram) {
+void Runner::run(CHARM_LIST_TYPE parsedProgram) {
 	Runner::runWithDefinitionContext(parsedProgram, nullptr);
 }

@@ -22,5 +22,5 @@ private:
 
 public:
 	Parser();
-	std::vector<CharmFunction> lex(std::string charmInput);
+	CHARM_LIST_TYPE lex(std::string charmInput);
 };

@@ -10,7 +10,7 @@ private:
 public:
     Stack(unsigned long long size, CharmFunction name);
     //the stack is automatically initialized to MAX_INT zero ints
-    std::deque<CharmFunction> stack;
+    CHARM_STACK_TYPE stack;
     //check to see if the stack name is equal
     //to some CharmFunction passed in. this is so
     //runner can properly select its current stack
