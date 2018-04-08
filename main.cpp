@@ -135,7 +135,7 @@ int main(int argc, char const *argv[]) {
 		try {
 			//load up the Prelude.charm file
 			runner.run(parser.lex(prelude));
-			printf("Prelude.charm loaded.\n\n");
+			printf("Prelude.charm loaded.\n");
 		} catch (std::exception &e) {
 			printf("Prelude.charm nonexistant or unopenable. This shouldn't ever happen! Please report it to the charm devs.\n");
 			printf("Error: %s\n\n", e.what());
@@ -149,9 +149,10 @@ int main(int argc, char const *argv[]) {
 				while (std::getline(interactiveFile, line)) {
 					runner.run(parser.lex(line));
 				}
+				printf("%s loaded.\n", (*interactiveFileOpt).c_str());
 			}
 		} catch (std::exception &e) {
-			printf("%s nonexistant or unopenable.", (*interactiveFileOpt).c_str());
+			printf("%s nonexistant or unopenable.\n", (*interactiveFileOpt).c_str());
 			printf("Error: %s\n", e.what());
 			return -1;
 		}
