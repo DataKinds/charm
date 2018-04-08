@@ -9,6 +9,14 @@ p := dup pp
 print := p newline
 pn := [ print pop ] flip repeat i
 
+" DEBUGGING " pop
+" ========= " pop
+
+" <stack depth> printstack " pop
+_printstack_args := " printstackref " flip setref
+_printstack_correction := " printstackref " getref rotate
+printstack := _printstack_args [ print " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
+
 " STACK MANIPULATION " pop
 " ================== " pop
 
@@ -25,6 +33,9 @@ _pushto_cond := dup 2 copyfrom -
 _pushto_inc  := flip 1 + flip
 _pushto      := [ _pushto_cond ] [ 1 copyfrom 2 + swapnth _pushto_inc _pushto ] [ pop pop ] ifthen
 pushto       := _pushto_args _pushto
+
+" <stack depth> " pop
+rotate := pushto
 
 " <object> <number of copies> stack " pop
 stack := [ 1 - dup ] [ flip dup 0 2 swap stack ] [ pop ] ifthen

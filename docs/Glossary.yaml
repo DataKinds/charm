@@ -646,6 +646,18 @@ prelude_functions:
               pushes:
                   - type: any
                     desc: The value to print
+    - category: Debugging Functions
+      functions:
+        - printstack:
+              desc: Prints the stack to a certain depth.
+              source: |
+                 _printstack_args := " printstackref " flip setref
+                 _printstack_correction := " printstackref " getref rotate
+                 printstack := _printstack_args [ print " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
+              pops:
+                  - type: int
+                    desc: The depth to print up until
+              pushes:
     - category: Stack Manipulation
       functions:
         - flip:
@@ -686,6 +698,8 @@ prelude_functions:
                     desc: The value copied from the stack
         - pushto:
               desc: Push a value to an index on the stack.
+              note:
+                  - This function is SLOW! Don't use it unless you absolutely understand it -- it can turn a relatively fast function from O(n) to O(n^2) just like it did to <a href="#printstack-id">printstack</a>.
               source: |
                   _pushto_args := 0 flip
                   _pushto_cond := print flip print flip dup 2 copyfrom -
@@ -697,6 +711,16 @@ prelude_functions:
                     desc: The object to push
                   - type: int
                     desc: The stack index to push the object to
+              pushes:
+        - rotate:
+              desc: Rotate values up through the stack, down to a certain depth.
+              note:
+                  - See <a href="#pushto-id">pushto</a>.
+              source: |
+                  rotate := pushto
+              pops:
+                  - type: int
+                    desc: The depth of rotation
               pushes:
         - stack:
               desc: Duplicates a value multiple times.
