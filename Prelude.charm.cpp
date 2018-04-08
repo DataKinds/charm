@@ -53,7 +53,7 @@ repeat       := _repeat_args _repeat
 " [ list ] [ function ] map " pop
 " FIXME " pop
 _map_args := [ ] flip
-_map_iter := dup
-map       := dup
+_map_iter := [ ]
+map       := [ ]
 
 )~";
