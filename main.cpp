@@ -1,4 +1,3 @@
-
 #include <string>
 #include <stdexcept>
 #include <fstream>
@@ -47,7 +46,9 @@ struct CommandLineOptional {
 				printf("No argument supplied to %s\n", "-a");
 				return false;
 			} else {
+				//if the argument is properly formed
 				(*var) = *(std::next(iter));
+				arg->erase(iter, std::next(iter));
 			}
 		}
 		return true;
@@ -75,6 +76,7 @@ int main(int argc, char const *argv[]) {
 		puts("    -h: Print this help message.");
 		puts("    -v: Print the version.");
 		puts("    -a <function name>: Analyze a function from the input file and print out information about it.");
+		puts("    -f <file path>: Load up a file to be used interactively in the REPL.");
 	};
 	CommandLineLambda<&args, &helpFlag, &helpF> helpArg;
 	if (helpArg.runArg()) {
@@ -97,6 +99,13 @@ int main(int argc, char const *argv[]) {
 		return -1;
 	}
 
+	static std::optional<std::string> interactiveFileOpt;
+	static std::string_view interactiveFileFlag("-f");
+	CommandLineOptional<&args, &interactiveFileFlag, &interactiveFileOpt> interactiveFileArg;
+	if (!interactiveFileArg.runArg()) {
+		return -1;
+	}
+
 	//parse input file
 	std::optional<std::string> optFileName;
 	if (args.size() > 1) {
@@ -112,6 +121,7 @@ int main(int argc, char const *argv[]) {
 		} catch (std::exception &e) {
 			printf("Prelude.charm nonexistant or unopenable. This shouldn't ever happen! Please report it to the charm devs.\n");
 			printf("Error: %s\n\n", e.what());
+			return -1;
 		}
 		std::string line;
 		std::ifstream inFile(*optFileName);
@@ -129,6 +139,21 @@ int main(int argc, char const *argv[]) {
 		} catch (std::exception &e) {
 			printf("Prelude.charm nonexistant or unopenable. This shouldn't ever happen! Please report it to the charm devs.\n");
 			printf("Error: %s\n\n", e.what());
+			return -1;
+		}
+		try {
+			//if one was supplied, load up an extra interactive file
+			if (interactiveFileOpt) {
+				std::string line;
+				std::ifstream interactiveFile(*interactiveFileOpt);
+				while (std::getline(interactiveFile, line)) {
+					runner.run(parser.lex(line));
+				}
+			}
+		} catch (std::exception &e) {
+			printf("%s nonexistant or unopenable.", (*interactiveFileOpt).c_str());
+			printf("Error: %s\n", e.what());
+			return -1;
 		}
 		//begin the interactive loop if there isnt a file to run
 		while (true) {
