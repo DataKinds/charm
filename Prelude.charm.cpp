@@ -83,6 +83,6 @@ _map_iter    := flip 1 split flip " mapfuncref " getref i 1 2 swap concat
 _map_cond    := flip len 1 2 swap
 _map_cleanup := flip pop
 _map         := [ _map_cond ] [ _map_iter _map ] [ _map_cleanup ] ifthen
-map          := _map_args _map_iter
+map          := _map_args _map
 
 )~";
