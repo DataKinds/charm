@@ -34,6 +34,19 @@ native_functions:
                   }
               pops:
               pushes:
+        - getline:
+              desc: Gets a line from standard input.
+              source: |
+                  void PredefinedFunctions::getline(Runner* r) {
+                  	CharmFunction input;
+                  	input.functionType = STRING_FUNCTION;
+                  	std::getline(std::cin, input.stringValue);
+                  	r->getCurrentStack()->push(input);
+                  }
+              pops:
+              pushes:
+                  - type: string
+                    desc: The line from standard input
     - category: Stack Manipulations
       functions:
         - dup:

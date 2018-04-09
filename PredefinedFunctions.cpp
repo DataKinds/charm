@@ -1,5 +1,6 @@
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include "PredefinedFunctions.h"
 #include "ParserTypes.h"
@@ -8,7 +9,7 @@
 
 const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//INPUT / OUTPUT
-	"pp", "newline",
+	"pp", "newline", "getline",
 	//STACK MANIPULATIONS
 	"dup", "pop", "swap",
 	//TRAVERSABLE (STRING/LIST) MANIPULATIONS
@@ -39,6 +40,7 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, Fu
 	//INPUT / OUTPUT
 	if (functionName == "pp") PredefinedFunctions::p(r);
 	if (functionName == "newline") PredefinedFunctions::newline(r);
+	if (functionName == "getline") PredefinedFunctions::getline(r);
 	//STACK MANIPULATIONS
 	if (functionName == "dup") PredefinedFunctions::dup(r);
 	if (functionName == "pop") PredefinedFunctions::pop(r);
@@ -81,6 +83,13 @@ void PredefinedFunctions::print(CharmFunction f1) {
 
 void PredefinedFunctions::newline(Runner* r) {
 	printf("\n");
+}
+
+void PredefinedFunctions::getline(Runner* r) {
+	CharmFunction input;
+	input.functionType = STRING_FUNCTION;
+	std::getline(std::cin, input.stringValue);
+	r->getCurrentStack()->push(input);
 }
 
 void PredefinedFunctions::dup(Runner* r) {

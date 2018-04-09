@@ -18,6 +18,7 @@ public:
 	static inline void print(CharmFunction f1);
 	static inline void p(Runner* r);
 	static inline void newline(Runner* r);
+	static inline void getline(Runner* r);
 	//STACK MANIPULATIONS
 	static inline void dup(Runner* r);
 	static inline void pop(Runner* r);

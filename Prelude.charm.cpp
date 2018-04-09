@@ -13,9 +13,9 @@ pn := [ print pop ] flip repeat i
 " ========= " pop
 
 " <stack depth> printstack " pop
-_printstack_args := " printstackref " flip setref
+_printstack_args       := " printstackref " flip setref
 _printstack_correction := " printstackref " getref rotate
-printstack := _printstack_args [ print " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
+printstack             := _printstack_args [ print " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
 
 " STACK MANIPULATION " pop
 " ================== " pop
