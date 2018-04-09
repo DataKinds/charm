@@ -298,10 +298,11 @@ void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
 		(falsy.functionType == LIST_FUNCTION)) {
 			//first, we run checks to set the tail call bools
 			if (context != nullptr) {
-				if (truthy.literalFunctions.back().functionName == context->functionName) {
+				std::string defName = context->functionName;
+				if (truthy.literalFunctions.size() > 0 && truthy.literalFunctions.back().functionName == defName) {
 					truthyTailCall = true;
 				}
-				if (falsy.literalFunctions.back().functionName == context->functionName) {
+				if (falsy.literalFunctions.size() > 0 && falsy.literalFunctions.back().functionName == defName) {
 					falsyTailCall = true;
 				}
 				//now, if we _DO_ have a tail call, modify truthy/falsy and enter a loop instead
