@@ -1,0 +1,3 @@
+_fib_iter := dup 2 copyfrom +
+fib := 1 [ _fib_iter print ] 500 repeat i
+fib
