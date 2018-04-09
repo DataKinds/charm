@@ -1,4 +1,5 @@
 #include <string>
+#include "Prelude.charm.h"
 
 std::string prelude = R"~(
 

@@ -12,8 +12,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-//sorry! this is just the easiest thing to do
-#include "Prelude.charm.cpp"
+#include "Prelude.charm.h"
 
 #include "Parser.h"
 #include "Runner.h"
