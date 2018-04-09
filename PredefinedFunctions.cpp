@@ -216,7 +216,7 @@ void PredefinedFunctions::split(Runner* r) {
 	CharmFunction highOut;
 	if (f1.functionType == NUMBER_FUNCTION && f1.numberValue.whichType == INTEGER_VALUE) {
 		//bounds checking
-		if (f1.numberValue.integerValue < 0 || f1.numberValue.integerValue > f2.literalFunctions.size()) {
+		if (f1.numberValue.integerValue < 0 || (unsigned long long)f1.numberValue.integerValue > f2.literalFunctions.size()) {
 			runtime_die("Out of bounds error on the number passed to `split`.");
 		}
 		if (f2.functionType == LIST_FUNCTION) {
