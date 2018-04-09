@@ -282,6 +282,24 @@ native_functions:
                   - type: list
                     desc: The list to be unquoted and run
               pushes:
+        - q:
+              desc: Similar to Lisp's `quote`, boxes the top of the stack.
+              note:
+                  - This is the inverse of i, so `<value> q i` is the same as `<value>`
+              source: |
+                  void PredefinedFunctions::q(Runner* r) {
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	CharmFunction list;
+                  	list.functionType = LIST_FUNCTION;
+                  	list.literalFunctions.push_back(f1);
+                  	r->getCurrentStack()->push(list);
+                  }
+              pops:
+                  - type: any
+                    desc: The value to be boxed
+                  - type: list
+                    desc: The boxed value
+              pushes:
         - ifthen:
               desc: Branching operator; runs the first block then decides whether or not to run the second or third based off of whether the top of the stack is > 0 or <= 0.
               note:

@@ -30,6 +30,7 @@ public:
 	static inline void split(Runner* r);
 	//CONTROL FLOW
 	static inline void i(Runner* r);
+	static inline void q(Runner* r);
 	static inline void ifthen(Runner* r, FunctionDefinition* context);
 	//BOOLEAN OPS
 	static inline void exor(Runner* r);

@@ -20,7 +20,7 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//TODO
 	"tocharlist", "fromcharlist",
 	//CONTROL FLOW
-	"i", "ifthen",
+	"i", "q", "ifthen",
 	//BOOLEAN OPS - TRUE: >=1, FALSE: <1 - INTEGER ONLY
 	"xor",
 	//TYPE INSPECIFIC MATH
@@ -51,6 +51,7 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, Fu
 	if (functionName == "split") PredefinedFunctions::split(r);
 	//CONTROL FLOW
 	if (functionName == "i") PredefinedFunctions::i(r);
+	if (functionName == "q") PredefinedFunctions::q(r);
 	if (functionName == "ifthen") PredefinedFunctions::ifthen(r, context);
 	//BOOLEAN OPS
 	if (functionName == "xor") PredefinedFunctions::exor(r); //you can make all logic out of this
@@ -247,6 +248,14 @@ void PredefinedFunctions::i(Runner* r) {
 	} else {
 		runtime_die("Non list passed to `i`.");
 	}
+}
+
+void PredefinedFunctions::q(Runner* r) {
+	CharmFunction f1 = r->getCurrentStack()->pop();
+	CharmFunction list;
+	list.functionType = LIST_FUNCTION;
+	list.literalFunctions.push_back(f1);
+	r->getCurrentStack()->push(list);
 }
 
 void PredefinedFunctions::ifthen(Runner* r, FunctionDefinition *context) {
