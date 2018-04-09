@@ -801,3 +801,23 @@ prelude_functions:
               pushes:
                   - type: list/string
                     desc: Repeated list or string
+        - map:
+              desc: Applies a function to every element in a list.
+              note:
+                  - The function passed to <span class="code">map</span> must pop exactly 1 boxed value and must push exactly 1 list. If not, it will break the internal workings of <span class="code">map</span> and you will get strange, arcane error messages!
+                  - A good example of a proper <span class="code">map</span> call is <span class="code">[ 1 2 3 ] [ i 1 + q ] map</span>. Note how the value is unquoted (<span class="code">i</span>) and quoted again (<span class="code">q</span>) afterwards.
+              source: |
+                 _map_args    := " mapfuncref " flip setref [ ]
+                 _map_iter    := flip 1 split flip " mapfuncref " getref i 1 2 swap concat
+                 _map_cond    := flip len 1 2 swap
+                 _map_cleanup := flip pop
+                 _map         := [ _map_cond ] [ _map_iter _map ] [ _map_cleanup ] ifthen
+                 map          := _map_args _map_iter
+              pops:
+                  - type: list
+                    desc: List to map over
+                  - type: function(list -> list)
+                    desc: Function to apply to every element in the list
+              pushes:
+                  - type: list
+                    desc: Mapped list

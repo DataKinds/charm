@@ -62,12 +62,11 @@ _repeat      :=  [ dup ] [ _repeat_iter _repeat ] [ pop flip pop ] ifthen
 repeat       := _repeat_args _repeat
 
 " [ list ] [ function ] map " pop
-" FIXME " pop
 _map_args    := " mapfuncref " flip setref [ ]
-_map_modify_ :=
-_map_iter    := [ ]
+_map_iter    := flip 1 split flip " mapfuncref " getref i 1 2 swap concat
 _map_cond    := flip len 1 2 swap
-_map         := [ _map_cond ] [ _map_iter _map ] [ ] ifthen
-
+_map_cleanup := flip pop
+_map         := [ _map_cond ] [ _map_iter _map ] [ _map_cleanup ] ifthen
+map          := _map_args _map_iter
 
 )~";
