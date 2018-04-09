@@ -5,9 +5,7 @@ std::string prelude = R"~(
 " OUTPUT FUNCTIONS " pop
 " ================ " pop
 
-p := dup pp
-print := p newline
-pn := [ print pop ] flip repeat i
+put := dup p newline
 
 " DEBUGGING " pop
 " ========= " pop
@@ -16,6 +14,8 @@ pn := [ print pop ] flip repeat i
 _printstack_args       := " printstackref " flip setref
 _printstack_correction := " printstackref " getref rotate
 printstack             := _printstack_args [ print " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
+
+stepthrough :=
 
 " STACK MANIPULATION " pop
 " ================== " pop

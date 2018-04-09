@@ -12,7 +12,7 @@ example_function:
 native_functions:
     - category: Input / Output
       functions:
-        - pp:
+        - p:
               desc: Prints the function off the top of the stack.
               source: |
                   void PredefinedFunctions::p(Runner* r) {
@@ -687,20 +687,10 @@ native_functions:
 prelude_functions:
     - category: Output Functions
       functions:
-        - p:
-              desc: Prints without popping.
+        - put:
+              desc: Prints without popping, adding a newline.
               source: |
-                 p := dup pp
-              pops:
-                  - type: any
-                    desc: The value to print
-              pushes:
-                  - type: any
-                    desc: The value to print
-        - print:
-              desc: Prints without popping then prints a newline
-              source: |
-                  print := p newline
+                 put := dup p newline
               pops:
                   - type: any
                     desc: The value to print

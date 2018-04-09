@@ -13,7 +13,7 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//STACK MANIPULATIONS
 	"dup", "pop", "swap",
 	//TRAVERSABLE (STRING/LIST) MANIPULATIONS
-	"len", "at", "insert", "concat", "split",
+	"len", "at", "insert", "concat", "split", "tostring",
 	//LIST MANIPULATIONS
 	//TODO
 	"zipwith",
@@ -38,7 +38,7 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, FunctionDefinition* context) {
 	//INPUT / OUTPUT
-	if (functionName == "pp") PredefinedFunctions::p(r);
+	if (functionName == "p") PredefinedFunctions::p(r);
 	if (functionName == "newline") PredefinedFunctions::newline(r);
 	if (functionName == "getline") PredefinedFunctions::getline(r);
 	//STACK MANIPULATIONS
@@ -51,6 +51,7 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, Fu
 	if (functionName == "insert") PredefinedFunctions::insert(r);
 	if (functionName == "concat") PredefinedFunctions::concat(r);
 	if (functionName == "split") PredefinedFunctions::split(r);
+	if (functionName == "tostring") PredefinedFunctions::toString(r);
 	//CONTROL FLOW
 	if (functionName == "i") PredefinedFunctions::i(r);
 	if (functionName == "q") PredefinedFunctions::q(r);
@@ -247,6 +248,14 @@ void PredefinedFunctions::split(Runner* r) {
 	}
 	r->getCurrentStack()->push(lowOut);
 	r->getCurrentStack()->push(highOut);
+}
+
+void PredefinedFunctions::toString(Runner* r) {
+	CharmFunction f1 = r->getCurrentStack()->pop();
+	CharmFunction out;
+	out.functionType = STRING_FUNCTION;
+	out.stringValue = charmFunctionToString(f1);
+	r->getCurrentStack()->push(out);
 }
 
 void PredefinedFunctions::i(Runner* r) {
