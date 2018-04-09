@@ -35,3 +35,6 @@ Prelude.charm.o:
 
 clean:
 	rm $(OBJECT_FILES)
+reload-prelude:
+	rm Prelude.charm.o
+	make
