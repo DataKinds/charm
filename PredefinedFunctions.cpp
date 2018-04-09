@@ -12,7 +12,7 @@ const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
 	//STACK MANIPULATIONS
 	"dup", "pop", "swap",
 	//TRAVERSABLE (STRING/LIST) MANIPULATIONS
-	"len", "at", "insert", "concat",
+	"len", "at", "insert", "concat", "split",
 	//LIST MANIPULATIONS
 	//TODO
 	"zipwith",
@@ -48,6 +48,7 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, Fu
 	if (functionName == "at") PredefinedFunctions::at(r);
 	if (functionName == "insert") PredefinedFunctions::insert(r);
 	if (functionName == "concat") PredefinedFunctions::concat(r);
+	if (functionName == "split") PredefinedFunctions::split(r);
 	//CONTROL FLOW
 	if (functionName == "i") PredefinedFunctions::i(r);
 	if (functionName == "ifthen") PredefinedFunctions::ifthen(r, context);
@@ -204,6 +205,38 @@ void PredefinedFunctions::concat(Runner* r) {
 		runtime_die("Unmatching types passed to `concat`.");
 	}
 	r->getCurrentStack()->push(f2);
+}
+
+void PredefinedFunctions::split(Runner* r) {
+	//get split index
+	CharmFunction f1 = r->getCurrentStack()->pop();
+	//get list/string to split
+	CharmFunction f2 = r->getCurrentStack()->pop();
+	CharmFunction lowOut;
+	CharmFunction highOut;
+	if (f1.functionType == NUMBER_FUNCTION && f1.numberValue.whichType == INTEGER_VALUE) {
+		//bounds checking
+		if (f1.numberValue.integerValue < 0 || f1.numberValue.integerValue > f2.literalFunctions.size()) {
+			runtime_die("Out of bounds error on the number passed to `split`.");
+		}
+		if (f2.functionType == LIST_FUNCTION) {
+			lowOut.functionType = LIST_FUNCTION;
+			lowOut.literalFunctions.assign(f2.literalFunctions.begin(), f2.literalFunctions.begin() + f1.numberValue.integerValue);
+			highOut.functionType = LIST_FUNCTION;
+			highOut.literalFunctions.assign(f2.literalFunctions.begin() + f1.numberValue.integerValue, f2.literalFunctions.end());
+		} else if (f2.functionType == STRING_FUNCTION) {
+			lowOut.functionType = STRING_FUNCTION;
+			lowOut.stringValue.assign(f2.stringValue.begin(), f2.stringValue.begin() + f1.numberValue.integerValue);
+			highOut.functionType = STRING_FUNCTION;
+			highOut.stringValue.assign(f2.stringValue.begin() + f1.numberValue.integerValue, f2.stringValue.end());
+		} else {
+			runtime_die("Non list/string passed to `split`.");
+		}
+	} else {
+		runtime_die("Non integer passed to `split`.");
+	}
+	r->getCurrentStack()->push(lowOut);
+	r->getCurrentStack()->push(highOut);
 }
 
 void PredefinedFunctions::i(Runner* r) {

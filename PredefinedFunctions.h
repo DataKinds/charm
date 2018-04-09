@@ -27,6 +27,7 @@ public:
 	static inline void at(Runner* r);
 	static inline void insert(Runner* r);
 	static inline void concat(Runner* r);
+	static inline void split(Runner* r);
 	//CONTROL FLOW
 	static inline void i(Runner* r);
 	static inline void ifthen(Runner* r, FunctionDefinition* context);

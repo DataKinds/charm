@@ -234,6 +234,36 @@ native_functions:
               pushes:
                   - type: list/string
                     desc: The concatenated list or string
+        - split:
+              desc: Split a list or string after a certain amount of elements.
+              note:
+                  - This function is the inverse of `concat`. That is, `[ list ] n split concat` is equal to `[ list ]`.
+              source: |
+                 void PredefinedFunctions::concat(Runner* r) {
+                 	//get first list
+                 	CharmFunction f1 = r->getCurrentStack()->pop();
+                 	//get second list (first in order of concatination)
+                 	CharmFunction f2 = r->getCurrentStack()->pop();
+                 	//make sure they're both lists or strings
+                 	if ((f1.functionType == LIST_FUNCTION) && (f2.functionType == LIST_FUNCTION)) {
+                 		f2.literalFunctions.insert(f2.literalFunctions.end(), f1.literalFunctions.begin(), f1.literalFunctions.end());
+                 	} else if ((f1.functionType == STRING_FUNCTION) && (f2.functionType == STRING_FUNCTION)) {
+                 		f2.stringValue = f2.stringValue + f1.stringValue;
+                 	} else {
+                 		runtime_die("Unmatching types passed to `concat`.");
+                 	}
+                 	r->getCurrentStack()->push(f2);
+                 }
+              pops:
+                  - type: list/string
+                    desc: The list or string to split
+                  - type: int
+                    desc: The amount of elements before the list or string is split
+              pushes:
+                  - type: list/string
+                    desc: The first part of the list or string
+                  - type: list/string
+                    desc: The rest of the list or string
     - category: Control Flow
       functions:
         - i:
