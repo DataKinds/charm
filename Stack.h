@@ -4,10 +4,10 @@
 
 class Stack {
 private:
-    CharmFunction name;
 	//says how much of the stack was changed, for printing n stuff
 	unsigned long long modifiedStackArea;
 public:
+    CharmFunction name;
     Stack(unsigned long long size, CharmFunction name);
     //the stack is automatically initialized to MAX_INT zero ints
     CHARM_STACK_TYPE stack;

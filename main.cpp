@@ -164,7 +164,9 @@ int main(int argc, char const *argv[]) {
 		}
 		//begin the interactive loop if there isnt a file to run
 		while (true) {
-			std::string codeInput(readline("Charm$ "));
+			std::stringstream prompt;
+			prompt << "Charm (Stack " << charmFunctionToString(runner.getCurrentStack()->name) << ")$ ";
+			std::string codeInput(readline(prompt.str().c_str()));
 			add_history(codeInput.c_str());
 			CHARM_LIST_TYPE parsedProgram = parser.lex(codeInput);
 			ONLYDEBUG printf("TOKEN TYPES: ");
