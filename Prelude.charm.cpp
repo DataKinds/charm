@@ -22,15 +22,27 @@ _printstack_args       := " printstackref " flip setref
 _printstack_correction := " printstackref " getref rotate
 printstack             := _printstack_args [ put " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
 
-" [ <arguments> ] [ <code> ] stepthrough " pop
+" pause " pop
+pause := " Press enter to continue... " p getline pop
+
+" [ <arguments> ] [ <code> ] <stack depth> stepthrough " pop
 20000 " stepthroughstack " createstack
-_stepthrough_stack_init&switch := " stepthroughstack " switchstack clearstack
-_stepthrough_pop_args   := " stepthroughcoderef " flip setref  " stepthroughargsref " flip setref
-_stepthrough_push_args  := " stepthroughargsref " getref i
-_stepthrough_init       := _stepthrough_pop_args _stepthrough_stack_init&switch _stepthrough_push_args " Initial stack: " p newline 10 printstack getline
-_stepthrough_print_info := " Running functions listed... " p newline " stepthroughcoderef " getref dup tostring p newline
-_stepthrough_iter       := _stepthrough_print_info " stepthroughheadref " flip setref " stepthroughstack " switchstack " stepthroughheadref " getref newline i 10 printstack 0 switchstack getline [ ]
-_stepthrough_map        := 0 switchstack " stepthroughcoderef " getref [ _stepthrough_iter ] map 0 switchstack
+
+_stepthrough_pop_args          := " stepthroughdepthref " flip setref " stepthroughcoderef " flip setref  " stepthroughargsref " flip setref
+_stepthrough_stack_init&switch := " stepthroughstack " switchstack clearstack " stepthroughargsref " getref i
+_stepthrough_init              := _stepthrough_pop_args _stepthrough_stack_init&switch " Initial stack: " p newline _stepthrough_print_stack pause newline
+
+_stepthrough_arg_depth := " stepthroughdepthref " getref
+_stepthrough_arg_code  := " stepthroughcoderef " getref
+
+_stepthrough_set_headref := " stepthroughheadref " flip setref
+_stepthrough_get_headref := " stepthroughheadref " getref
+
+_stepthrough_print_info  := " Running functions... " p newline _stepthrough_arg_code tostring p newline
+_stepthrough_print_stack := _stepthrough_arg_depth printstack
+
+_stepthrough_iter       := _stepthrough_print_info _stepthrough_set_headref " stepthroughstack " switchstack _stepthrough_get_headref i _stepthrough_print_stack 0 switchstack pause newline [ ]
+_stepthrough_map        := 0 switchstack _stepthrough_arg_code [ _stepthrough_iter ] map 0 switchstack
 stepthrough             := _stepthrough_init _stepthrough_map
 
 " STACK MANIPULATION " pop
