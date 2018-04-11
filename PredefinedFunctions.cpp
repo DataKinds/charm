@@ -128,9 +128,15 @@ PredefinedFunctions::PredefinedFunctions() {
 		if (Stack::isInt(f1)) {
 			CharmFunction out;
 			if (f2.functionType == LIST_FUNCTION) {
+				if (f2.literalFunctions.size() < 1) {
+					runtime_die("Empty list passed to `at`.");
+				}
 				out.functionType = LIST_FUNCTION;
 				out.literalFunctions = { f2.literalFunctions.at(f1.numberValue.integerValue % f2.literalFunctions.size()) };
 			} else if (f2.functionType == STRING_FUNCTION) {
+				if (f2.stringValue.size() < 1) {
+					runtime_die("Empty string passed to `at`.");
+				}
 				out.functionType = STRING_FUNCTION;
 				out.stringValue = f2.stringValue[f1.numberValue.integerValue % f2.stringValue.size()];
 			} else {
