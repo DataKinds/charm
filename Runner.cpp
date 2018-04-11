@@ -126,7 +126,7 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 				}
 				//ooh. the only time we use this call!
 				context->fD = &fD;
-				Runner::runWithDefinitionContext(fD.functionBody, context);
+				Runner::runWithContext(fD.functionBody, context);
 			}
 		}
 		if (!functionFound) {
@@ -135,7 +135,7 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 	}
 }
 
-void Runner::runWithDefinitionContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context) {
+void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context) {
 	for (CharmFunction currentFunction : parsedProgram) {
 		//alright, now we get into the running portion
 		if (currentFunction.functionType == NUMBER_FUNCTION) {
@@ -177,5 +177,5 @@ void Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWith
 	RunnerContext rC;
 	rC.fA = parsedProgramWithAnalyzer.second;
 	rC.fD = nullptr;
-	Runner::runWithDefinitionContext(parsedProgramWithAnalyzer.first, &rC);
+	Runner::runWithContext(parsedProgramWithAnalyzer.first, &rC);
 }

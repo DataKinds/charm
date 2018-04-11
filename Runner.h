@@ -50,6 +50,6 @@ public:
 	CharmFunction getReference(CharmFunction key);
 	void setReference(CharmFunction key, CharmFunction value);
 
-	void runWithDefinitionContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context);
+	void runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context);
 	void run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer);
 };

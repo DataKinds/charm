@@ -274,7 +274,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		//pop the top of the stack and run it
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (f1.functionType == LIST_FUNCTION) {
-			r->runWithDefinitionContext(f1.literalFunctions, context);
+			r->runWithContext(f1.literalFunctions, context);
 		} else {
 			runtime_die("Non list passed to `i`.");
 		}
@@ -322,13 +322,13 @@ PredefinedFunctions::PredefinedFunctions() {
 						//remove the tail call
 						truthy.literalFunctions.pop_back();
 						while (1) {
-							r->runWithDefinitionContext(condFunction.literalFunctions, context);
+							r->runWithContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
 								if (cond.numberValue.integerValue > 0) {
-									r->runWithDefinitionContext(truthy.literalFunctions, context);
+									r->runWithContext(truthy.literalFunctions, context);
 								} else {
-									r->runWithDefinitionContext(falsy.literalFunctions, context);
+									r->runWithContext(falsy.literalFunctions, context);
 									//end this function immediately once the tail call loop ends
 									ONLYDEBUG printf("DISENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
 									return;
@@ -343,16 +343,16 @@ PredefinedFunctions::PredefinedFunctions() {
 						//remove the tail call
 						falsy.literalFunctions.pop_back();
 						while (1) {
-							r->runWithDefinitionContext(condFunction.literalFunctions, context);
+							r->runWithContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
 								if (cond.numberValue.integerValue > 0) {
-									r->runWithDefinitionContext(truthy.literalFunctions, context);
+									r->runWithContext(truthy.literalFunctions, context);
 									//end this function immediately once the tail call loop ends
 									ONLYDEBUG printf("DISENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
 									return;
 								} else {
-									r->runWithDefinitionContext(falsy.literalFunctions, context);
+									r->runWithContext(falsy.literalFunctions, context);
 								}
 							} else {
 								runtime_die("`ifthen` condition returned non integer.");
@@ -372,9 +372,9 @@ PredefinedFunctions::PredefinedFunctions() {
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
 								if (cond.numberValue.integerValue > 0) {
-									r->runWithDefinitionContext(truthy.literalFunctions, context);
+									r->runWithContext(truthy.literalFunctions, context);
 								} else {
-									r->runWithDefinitionContext(falsy.literalFunctions, context);
+									r->runWithContext(falsy.literalFunctions, context);
 								}
 							} else {
 								runtime_die("`ifthen` condition returned non integer.");
@@ -385,14 +385,14 @@ PredefinedFunctions::PredefinedFunctions() {
 					ONLYDEBUG printf("DISENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
 				}
 				//but if not (or context was nullptr), continue execution as normal
-				r->runWithDefinitionContext(condFunction.literalFunctions, context);
+				r->runWithContext(condFunction.literalFunctions, context);
 				//now we check the top of the stack to see if it's truthy or falsy
 				CharmFunction cond = r->getCurrentStack()->pop();
 				if (Stack::isInt(cond)) {
 					if (cond.numberValue.integerValue > 0) {
-						r->runWithDefinitionContext(truthy.literalFunctions, context);
+						r->runWithContext(truthy.literalFunctions, context);
 					} else {
-						r->runWithDefinitionContext(falsy.literalFunctions, context);
+						r->runWithContext(falsy.literalFunctions, context);
 					}
 				} else {
 					runtime_die("`ifthen` condition returned non integer.");
