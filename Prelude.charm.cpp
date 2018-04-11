@@ -23,7 +23,7 @@ _printstack_correction := " printstackref " getref rotate
 printstack             := _printstack_args [ put " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
 
 " pause " pop
-pause := " Press enter to continue... " p getline pop
+pause := " Press return to continue... " p getline pop
 
 " [ <arguments> ] [ <code> ] <stack depth> stepthrough " pop
 20000 " stepthroughstack " createstack

@@ -3,6 +3,9 @@
 #include "ParserTypes.h"
 #include "Stack.h"
 
+//in PredefinedFunctions.h
+class PredefinedFunctions;
+
 struct FunctionDefinition {
 	std::string functionName;
 	CHARM_LIST_TYPE functionBody;
@@ -32,6 +35,8 @@ private:
 	std::vector<Stack> stacks;
 	//and the list of all of our references
 	std::vector<Reference> references;
+	//a private instance of PredefinedFunctions
+	PredefinedFunctions* pF;
 public:
 	Runner();
 	std::vector<FunctionDefinition> getFunctionDefinitions();

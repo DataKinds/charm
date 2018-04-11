@@ -3,6 +3,7 @@
 #include <sstream>
 #include <vector>
 #include <deque>
+#include <variant>
 
 #ifndef CHARM_STACK_TYPE
 	#define CHARM_STACK_TYPE std::deque<CharmFunction>

@@ -27,6 +27,7 @@ Runner::Runner() {
 	CharmFunction zero = Stack::zeroF();
 	currentStackName = zero;
 	stacks.push_back(Stack(MAX_STACK, zero));
+	pF = new PredefinedFunctions();
 }
 
 bool Runner::doesStackExist(CharmFunction name) {
@@ -98,18 +99,12 @@ void Runner::handleDefinedFunctions(CharmFunction f, FunctionDefinition* context
 	//first, make sure that the function we're trying to run exists in the PredefinedFunctions
 	//table. if it doesn't - assume it's defined in Charm and run through the
 	//functionDefinitions table.
-	bool isPredefinedFunction = false;
-	for (auto predefinedFunctionName : PredefinedFunctions::cppFunctionNames) {
-		if (predefinedFunctionName == f.functionName) {
-			isPredefinedFunction = true;
-			break;
-		}
-	}
+	bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
 	if (isPredefinedFunction) {
 		//run the predefined function!
 		//(note: the function context AKA the definition we are running code from
 		//is passed in for tail call optimization in PredefinedFunctions.cpp::ifthen())
-		PredefinedFunctions::functionLookup(f.functionName, this, context);
+		pF->functionLookup(f.functionName, this, context);
 	} else {
 		//alright, now we get down and dirty
 		//look through the functionDefinitions table for a function with

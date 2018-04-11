@@ -1,9 +1,21 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <any>
+#include <unordered_map>
+#include <functional>
 
-#include "Runner.h"
 #include "ParserTypes.h"
+
+
+//In Runner.h
+class Runner;
+class FunctionDefinition;
+
+struct BuiltinFunction {
+	std::variant<std::function<void(Runner*)>, std::function<void(Runner*, FunctionDefinition*)>> f;
+	bool takesContext;
+};
 
 class PredefinedFunctions {
 private:
@@ -12,8 +24,11 @@ private:
 	//b) an int
 	static bool isInt(CharmFunction f);
 public:
-	static const std::vector<std::string> cppFunctionNames;
-	static void functionLookup(std::string functionName, Runner* r, FunctionDefinition* context);
+	std::unordered_map<std::string, BuiltinFunction> cppFunctionNames;
+	PredefinedFunctions();
+	void functionLookup(std::string functionName, Runner* r, FunctionDefinition* context);
+	void addBuiltinFunction(std::string n, std::function<void(Runner*, FunctionDefinition*)> f);
+	void addBuiltinFunction(std::string n, std::function<void(Runner*)> f);
 	//INPUT / OUTPUT
 	static inline void print(CharmFunction f1);
 	static inline void p(Runner* r);

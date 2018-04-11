@@ -1,77 +1,85 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <variant>
+#include <unordered_map>
+#include <functional>
 
 #include "PredefinedFunctions.h"
 #include "ParserTypes.h"
 #include "Error.h"
 #include "Debug.h"
+#include "Runner.h"
 
-const std::vector<std::string> PredefinedFunctions::cppFunctionNames = {
-	//INPUT / OUTPUT
-	"p", "newline", "getline",
-	//STACK MANIPULATIONS
-	"dup", "pop", "swap",
-	//TRAVERSABLE (STRING/LIST) MANIPULATIONS
-	"len", "at", "insert", "concat", "split", "tostring",
-	//LIST MANIPULATIONS
-	//TODO
-	"zipwith",
+
+void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*)> f) {
+	BuiltinFunction bf;
+	bf.f = f; bf.takesContext = false;
+	cppFunctionNames[n] = bf;
+}
+void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*, FunctionDefinition*)> f) {
+	BuiltinFunction bf;
+	bf.f = f; bf.takesContext = true;
+	cppFunctionNames[n] = bf;
+}
+/*
+static std::unordered_map<std::string, BuiltinFunction> PredefinedFunctions::cppFunctionNames = {
+	//TODO FUNCTIONS
+	//INPUT/OUTPUT
+	"putstring",
 	//STRING MANIPULATIONS
-	//TODO
 	"tocharlist", "fromcharlist",
-	//CONTROL FLOW
-	"i", "q", "ifthen",
-	//BOOLEAN OPS - TRUE: >=1, FALSE: <1 - INTEGER ONLY
-	"xor",
-	//TYPE INSPECIFIC MATH
-	"abs",
-	//INTEGER OPS
-	"+", "-", "/", "*", "%", "toint",
-	//FLOAT OPS
-	"+f", "-f", "/f", "*f", "tofloat",
-	//STACK CREATION/DESTRUCTION
-	"createstack", "switchstack",
-	//REF GETTING/SETTING
-	"getref", "setref"
+	//METAPROGRAMMING
+	"inline"
 };
-
+*/
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, FunctionDefinition* context) {
+	auto f = cppFunctionNames.at(functionName);
+	if (f.takesContext) {
+		auto castF = std::get<std::function<void(Runner*, FunctionDefinition*)>>(f.f);
+		castF(r, context);
+	} else {
+		auto castF = std::get<std::function<void(Runner*)>>(f.f);
+		castF(r);
+	}
+}
+
+PredefinedFunctions::PredefinedFunctions() {
 	//INPUT / OUTPUT
-	if (functionName == "p") PredefinedFunctions::p(r);
-	if (functionName == "newline") PredefinedFunctions::newline(r);
-	if (functionName == "getline") PredefinedFunctions::getline(r);
+	addBuiltinFunction("p", PredefinedFunctions::p);
+	addBuiltinFunction("newline", PredefinedFunctions::newline);
+	addBuiltinFunction("getline", PredefinedFunctions::getline);
 	//STACK MANIPULATIONS
-	if (functionName == "dup") PredefinedFunctions::dup(r);
-	if (functionName == "pop") PredefinedFunctions::pop(r);
-	if (functionName == "swap") PredefinedFunctions::swap(r);
+	addBuiltinFunction("dup", PredefinedFunctions::dup);
+	addBuiltinFunction("pop", PredefinedFunctions::pop);
+	addBuiltinFunction("swap", PredefinedFunctions::swap);
 	//TRAVERSABLE (STRING / LIST) MANIPULATIONS
-	if (functionName == "len") PredefinedFunctions::len(r);
-	if (functionName == "at") PredefinedFunctions::at(r);
-	if (functionName == "insert") PredefinedFunctions::insert(r);
-	if (functionName == "concat") PredefinedFunctions::concat(r);
-	if (functionName == "split") PredefinedFunctions::split(r);
-	if (functionName == "tostring") PredefinedFunctions::toString(r);
+	addBuiltinFunction("len", PredefinedFunctions::len);
+	addBuiltinFunction("at", PredefinedFunctions::at);
+	addBuiltinFunction("insert", PredefinedFunctions::insert);
+	addBuiltinFunction("concat", PredefinedFunctions::concat);
+	addBuiltinFunction("split", PredefinedFunctions::split);
+	addBuiltinFunction("tostring", PredefinedFunctions::toString);
 	//CONTROL FLOW
-	if (functionName == "i") PredefinedFunctions::i(r);
-	if (functionName == "q") PredefinedFunctions::q(r);
-	if (functionName == "ifthen") PredefinedFunctions::ifthen(r, context);
+	addBuiltinFunction("i", PredefinedFunctions::i);
+	addBuiltinFunction("q", PredefinedFunctions::q);
+	addBuiltinFunction("ifthen", PredefinedFunctions::ifthen);
 	//BOOLEAN OPS
-	if (functionName == "xor") PredefinedFunctions::exor(r); //you can make all logic out of this
+	addBuiltinFunction("xor", PredefinedFunctions::exor);
 	//TYPE INSPECIFIC MATH
-	if (functionName == "abs") PredefinedFunctions::abs(r);
+	addBuiltinFunction("abs", PredefinedFunctions::abs);
 	//INTEGER OPS
-	if (functionName == "+") PredefinedFunctions::plusI(r);
-	if (functionName == "-") PredefinedFunctions::minusI(r);
-	if (functionName == "/") PredefinedFunctions::divI(r);
-	if (functionName == "*") PredefinedFunctions::timesI(r);
-	if (functionName == "toint") PredefinedFunctions::toInt(r);
+	addBuiltinFunction("+", PredefinedFunctions::plusI);
+	addBuiltinFunction("-", PredefinedFunctions::minusI);
+	addBuiltinFunction("/", PredefinedFunctions::divI);
+	addBuiltinFunction("*", PredefinedFunctions::timesI);
+	addBuiltinFunction("toint", PredefinedFunctions::toInt);
 	//STACK CREATION/DESTRUCTION
-	if (functionName == "createstack") PredefinedFunctions::createStack(r);
-	if (functionName == "switchstack") PredefinedFunctions::switchStack(r);
+	addBuiltinFunction("createstack", PredefinedFunctions::createStack);
+	addBuiltinFunction("switchstack", PredefinedFunctions::switchStack);
 	//REF GETTING/SETTING
-	if (functionName == "getref") PredefinedFunctions::getRef(r);
-	if (functionName == "setref") PredefinedFunctions::setRef(r);
+	addBuiltinFunction("getref", PredefinedFunctions::getRef);
+	addBuiltinFunction("setref", PredefinedFunctions::setRef);
 }
 
 void PredefinedFunctions::p(Runner* r) {
