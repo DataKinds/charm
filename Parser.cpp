@@ -66,15 +66,13 @@ CharmFunctionType Parser::recognizeFunction(std::string s) {
 
 CharmFunctionDefinitionInfo Parser::analyzeDefinition(CharmFunction f) {
 	CharmFunctionDefinitionInfo out;
-	//create an analyzer
-	FunctionAnalyzer fA(f);
 	//first, we fill in the info and see if the function is not recursive/inlineable
-	out.inlineable = fA.isInlinable();
+	out.inlineable = fA.isInlinable(f);
 	//then we fill in the inlineDefinitions deque, for parsing future DEFINED_FUNCTIONs
 	if (out.inlineable) {
-		inlineDefinitions.push_back(f);
+		fA.addToInlineDefinitions(f);
 	}
-	out.tailCallRecursive = fA.isTailCallRecursive();
+	out.tailCallRecursive = fA.isTailCallRecursive(f);
 	return out;
 }
 
@@ -85,8 +83,6 @@ CharmFunction Parser::parseDefinition(std::vector<std::string> line) {
 	//take all the tokens after the :=, parse them, and make them the literalFunctions
 	CharmFunction currentFunction;
 	currentFunction.functionType = FUNCTION_DEFINITION;
-	CharmFunctionDefinitionInfo functionInfo = Parser::analyzeDefinition(currentFunction);
-	currentFunction.definitionInfo = functionInfo;
 	unsigned long long equalsIndex = 0;
 	while (Parser::recognizeFunction(line[equalsIndex]) != FUNCTION_DEFINITION) {
 		equalsIndex++;
@@ -112,6 +108,9 @@ CharmFunction Parser::parseDefinition(std::vector<std::string> line) {
 		//we outta here!
 	}
 
+	//then, we analyze the function before returning it
+	CharmFunctionDefinitionInfo functionInfo = Parser::analyzeDefinition(currentFunction);
+	currentFunction.definitionInfo = functionInfo;
 	ONLYDEBUG printf("IS %s INLINEABLE? %s\n", currentFunction.functionName.c_str(), currentFunction.definitionInfo.inlineable ? "Yes" : "No");
 	ONLYDEBUG printf("IS %s TAIL CALL RECURSIVE? %s\n", currentFunction.functionName.c_str(), currentFunction.definitionInfo.tailCallRecursive ? "Yes" : "No");
 	return currentFunction;
@@ -244,30 +243,10 @@ CHARM_LIST_TYPE Parser::lex(const std::string charmInput) {
 					currentFunction = Parser::parseDefinedFunction(tokenizedString[lineNum][tokenNum]);
 					//if we're doing inline optimizations, do them here:
 					if (OPTIMIZE_INLINE) {
-						bool couldInline = false;
-						//search through the inline definitions that have been parsed to see if this function is inlineable
-						for (CharmFunction possibleInlineF : inlineDefinitions) {
-							if (currentFunction.functionName == possibleInlineF.functionName) {
-								ONLYDEBUG printf("PERFORMING INLINE REPLACEMENT FOR %s\n    %s -> ", currentFunction.functionName.c_str(), currentFunction.functionName.c_str());
-								for (unsigned long long inlineIndex = 0; inlineIndex < possibleInlineF.literalFunctions.size(); inlineIndex++) {
-									out.push_back(possibleInlineF.literalFunctions[inlineIndex]);
-									ONLYDEBUG printf("%s ", charmFunctionToString(possibleInlineF.literalFunctions[inlineIndex]).c_str());
-								}
-								ONLYDEBUG printf("\n");
-								if (DEBUGMODE) {
-									printf("AFTER INLINE OPTIMIZATION, OUT NOW LOOKS LIKE THIS:\n     ");
-									for (CharmFunction f : out) {
-										printf("%s ", charmFunctionToString(f).c_str());
-									}
-									printf("\n");
-								}
-								//break out of the inline function search once a matching func was found
-								couldInline = true;
-								break;
-							}
-						}
-						if (couldInline) {
-							//skip over the function's own out.push_back
+						ONLYDEBUG puts("WE ARE DOING INLINE DEFINITIONS");
+						if (fA.doInline(out, currentFunction)) {
+							//if the function was able to be inline optimized, skip the final push_back
+							//this means that we don't push a duplicate currentFunction
 							continue;
 						}
 					}

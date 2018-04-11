@@ -1,6 +1,10 @@
+#pragma once
+
 #include <vector>
 #include <deque>
+
 #include "ParserTypes.h"
+#include "FunctionAnalyzer.h"
 
 class Parser {
 private:
@@ -12,7 +16,7 @@ private:
 
 	CharmFunctionDefinitionInfo analyzeDefinition(CharmFunction f);
 
-	std::deque<CharmFunction> inlineDefinitions;
+	FunctionAnalyzer fA;
 
 	CharmFunction parseDefinition(std::vector<std::string> line);
 	CharmFunction parseDefinedFunction(std::string tok);

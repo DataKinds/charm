@@ -136,8 +136,7 @@ inline bool operator==(const CharmFunction& lhs, const CharmFunction& rhs){
 			break;
 
 			case FUNCTION_DEFINITION:
-			//should never happen
-			return false;
+			return (lhs.functionName == rhs.functionName);
 			break;
 		}
 	} else {
