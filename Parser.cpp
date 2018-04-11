@@ -204,7 +204,7 @@ CharmFunction Parser::parseListFunction(std::vector<std::string> *line, unsigned
 		ss << token << " ";
 	}
 	//finally, we can put the inside of the [ ] into the out
-	out.literalFunctions = Parser::lex(ss.str()).first;
+	out.literalFunctions = Parser::lexAskToInline(ss.str(), false).first;
 	ONLYDEBUG printf("CONTINUING PARSING AT TOKEN NUM %llu, WHICH IS %s\n", (*tokenNum), (*line)[*tokenNum].c_str());
 	//NOTE: this is after hours of debugging, I've deemed this necessary
 	//tl;dr version: the call to `erase` a few lines above mutates the vector
@@ -216,8 +216,7 @@ CharmFunction Parser::parseListFunction(std::vector<std::string> *line, unsigned
 	return out;
 }
 
-
-std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string charmInput) {
+std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lexAskToInline(const std::string charmInput, bool willInline) {
 	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
 	CHARM_LIST_TYPE out;
 	//first split the string on newlines
@@ -242,7 +241,7 @@ std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string char
 					//deal with DEFINED_FUNCTION first, easiest to deal with
 					currentFunction = Parser::parseDefinedFunction(tokenizedString[lineNum][tokenNum]);
 					//if we're doing inline optimizations, do them here:
-					if (OPTIMIZE_INLINE) {
+					if (OPTIMIZE_INLINE && willInline) {
 						ONLYDEBUG puts("WE ARE DOING INLINE DEFINITIONS");
 						if (fA.doInline(out, currentFunction)) {
 							//if the function was able to be inline optimized, skip the final push_back
@@ -274,4 +273,7 @@ std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string char
 	//wow, we're finally done with this abomination of a function
 	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> outPair(out, &fA);
 	return outPair;
+}
+std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string charmInput) {
+	return Parser::lexAskToInline(charmInput, true);
 }

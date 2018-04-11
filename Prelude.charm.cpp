@@ -30,7 +30,7 @@ pause := " Press return to continue... " p getline pop
 
 _stepthrough_pop_args          := " stepthroughdepthref " flip setref " stepthroughcoderef " flip setref  " stepthroughargsref " flip setref
 _stepthrough_stack_init&switch := " stepthroughstack " switchstack clearstack " stepthroughargsref " getref i
-_stepthrough_init              := _stepthrough_pop_args _stepthrough_stack_init&switch " Initial stack: " p newline _stepthrough_print_stack pause newline
+_stepthrough_init              := _stepthrough_pop_args _stepthrough_stack_init&switch " Initial stack: " pstring newline _stepthrough_print_stack pause newline
 
 _stepthrough_arg_depth := " stepthroughdepthref " getref
 _stepthrough_arg_code  := " stepthroughcoderef " getref
