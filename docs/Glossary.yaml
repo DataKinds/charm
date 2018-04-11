@@ -292,6 +292,81 @@ native_functions:
                     desc: The first part of the list or string
                   - type: list/string
                     desc: The rest of the list or string
+    - category: String Manipulation
+      functions:
+        - tostring:
+              desc: Convert a function into a parseable string.
+              note:
+                  - This function essentially turns a function into a string that can be plopped back into the interpreter. This may cause unexpected functionality, such as <span class="code">" hello " tostring</span> shooting back <span class="code">" " hello " " </span>.
+              source: |
+                addBuiltinFunction("tostring", [](Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction out;
+                	out.functionType = STRING_FUNCTION;
+                	out.stringValue = charmFunctionToString(f1);
+                	r->getCurrentStack()->push(out);
+                });
+              pops:
+                  - type: any
+                    desc: The function to convert to a string
+              pushes:
+                  - type: string
+                    desc: The converted, parseable function
+        - char:
+              desc: Convert an integer to its corresponding character.
+              source: |
+                addBuiltinFunction("char", [](Runner* r) {
+                    CharmFunction f1 = r->getCurrentStack()->pop();
+                    if (f1.functionType == NUMBER_FUNCTION) {
+                        if (f1.numberValue.whichType == INTEGER_VALUE) {
+                            if (f1.numberValue.integerValue < 0) {
+                                runtime_die("Negative integer passed to `char`.");
+                            } else {
+                                CharmFunction out;
+                                out.functionType = STRING_FUNCTION;
+                                out.stringValue = std::string(1, static_cast<char>(f1.numberValue.integerValue));
+                                r->getCurrentStack()->push(out);
+                            }
+                        } else {
+                            runtime_die("Non integer passed to `char`.");
+                        }
+                    } else {
+                        runtime_die("Non number passed to `char`.");
+                    }
+                });
+              pops:
+                  - type: int
+                    desc: The integer to convert to a character
+              pushes:
+                  - type: string
+                    desc: A string containing the converted character
+        - ord:
+              desc: Convert a character to its corresponding integer.
+              source: |
+                addBuiltinFunction("ord", [](Runner* r) {
+                    CharmFunction f1 = r->getCurrentStack()->pop();
+                    if (f1.functionType == STRING_FUNCTION) {
+                        if (f1.stringValue.size() > 0) {
+                            CharmFunction out;
+                            CharmNumber n;
+                            n.whichType = INTEGER_VALUE;
+                            n.integerValue = static_cast<long long>(f1.stringValue[0]);
+                            out.functionType = NUMBER_FUNCTION;
+                            out.numberValue = n;
+                            r->getCurrentStack()->push(out);
+                        } else {
+                            runtime_die("Empty string passed to `ord`.");
+                        }
+                    } else {
+                        runtime_die("Non string passed to `ord`.");
+                    }
+                });
+              pops:
+                  - type: string
+                    desc: The string containing a first character to convert to an integer
+              pushes:
+                  - type: int
+                    desc: An integer representing the first character in the input string
     - category: Control Flow
       functions:
         - i:

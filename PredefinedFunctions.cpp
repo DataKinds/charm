@@ -25,8 +25,6 @@ void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(R
 /*
 static std::unordered_map<std::string, BuiltinFunction> PredefinedFunctions::cppFunctionNames = {
 	//TODO FUNCTIONS
-	//INPUT/OUTPUT
-	"putstring",
 	//STRING MANIPULATIONS
 	"tocharlist", "fromcharlist",
 	//METAPROGRAMMING
@@ -45,7 +43,9 @@ void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, Fu
 }
 
 PredefinedFunctions::PredefinedFunctions() {
-	//INPUT / OUTPUT
+	/*************************************
+	INPUT / OUTPUT
+	*************************************/
 	addBuiltinFunction("p", [](Runner* r) {
 		printf("%s", charmFunctionToString(r->getCurrentStack()->pop()).c_str());
 	});
@@ -66,7 +66,9 @@ PredefinedFunctions::PredefinedFunctions() {
 		std::getline(std::cin, input.stringValue);
 		r->getCurrentStack()->push(input);
 	});
-	//STACK MANIPULATIONS
+	/*************************************
+	STACK MANIPULATIONS
+	*************************************/
 	addBuiltinFunction("dup", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		r->getCurrentStack()->push(f1);
@@ -91,7 +93,9 @@ PredefinedFunctions::PredefinedFunctions() {
 			runtime_die("Non integer passed to `swap`.");
 		}
 	});
-	//TRAVERSABLE (STRING / LIST) MANIPULATIONS
+	/*************************************
+	TRAVERSABLE (STRING / LIST) MANIPULATIONS
+	*************************************/
 	addBuiltinFunction("len", [](Runner* r) {
 		//list to check length of
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -216,6 +220,9 @@ PredefinedFunctions::PredefinedFunctions() {
 		r->getCurrentStack()->push(lowOut);
 		r->getCurrentStack()->push(highOut);
 	});
+	/*************************************
+	STRING MANIPULATION
+	*************************************/
 	addBuiltinFunction("tostring", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		CharmFunction out;
@@ -223,7 +230,46 @@ PredefinedFunctions::PredefinedFunctions() {
 		out.stringValue = charmFunctionToString(f1);
 		r->getCurrentStack()->push(out);
 	});
-	//CONTROL FLOW
+	addBuiltinFunction("char", [](Runner* r) {
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		if (f1.functionType == NUMBER_FUNCTION) {
+			if (f1.numberValue.whichType == INTEGER_VALUE) {
+				if (f1.numberValue.integerValue < 0) {
+					runtime_die("Negative integer passed to `char`.");
+				} else {
+					CharmFunction out;
+					out.functionType = STRING_FUNCTION;
+					out.stringValue = std::string(1, static_cast<char>(f1.numberValue.integerValue));
+					r->getCurrentStack()->push(out);
+				}
+			} else {
+				runtime_die("Non integer passed to `char`.");
+			}
+		} else {
+			runtime_die("Non number passed to `char`.");
+		}
+	});
+	addBuiltinFunction("ord", [](Runner* r) {
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		if (f1.functionType == STRING_FUNCTION) {
+			if (f1.stringValue.size() > 0) {
+				CharmFunction out;
+				CharmNumber n;
+				n.whichType = INTEGER_VALUE;
+				n.integerValue = static_cast<long long>(f1.stringValue[0]);
+				out.functionType = NUMBER_FUNCTION;
+				out.numberValue = n;
+				r->getCurrentStack()->push(out);
+			} else {
+				runtime_die("Empty string passed to `ord`.");
+			}
+		} else {
+			runtime_die("Non string passed to `ord`.");
+		}
+	});
+	/*************************************
+	CONTROL FLOW
+	*************************************/
 	addBuiltinFunction("i", [](Runner* r) {
 		//pop the top of the stack and run it
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -355,7 +401,13 @@ PredefinedFunctions::PredefinedFunctions() {
 				runtime_die("Non list passed to `ifthen`.");
 			}
 	});
-	//BOOLEAN OPS
+	addBuiltinFunction("inline", [](Runner* r) {
+		//TODO
+		puts("STUB");
+	});
+	/*************************************
+	BOOLEAN OPS
+	*************************************/
 	addBuiltinFunction("xor", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		CharmFunction f2 = r->getCurrentStack()->pop();
@@ -373,7 +425,9 @@ PredefinedFunctions::PredefinedFunctions() {
 			runtime_die("Non integer passed to logic function.");
 		}
 	});
-	//TYPE INSPECIFIC MATH
+	/*************************************
+	TYPE INSPECIFIC MATH
+	*************************************/
 	addBuiltinFunction("abs", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (Stack::isInt(f1)) {
@@ -386,7 +440,9 @@ PredefinedFunctions::PredefinedFunctions() {
 			runtime_die("Non number passed to `abs`.");
 		}
 	});
-	//INTEGER OPS
+	/*************************************
+	INTEGER OPS
+	*************************************/
 	addBuiltinFunction("+", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		CharmFunction f2 = r->getCurrentStack()->pop();
@@ -442,7 +498,9 @@ PredefinedFunctions::PredefinedFunctions() {
 			runtime_die("Non number passed to `toInt`.");
 		}
 	});
-	//STACK CREATION/DESTRUCTION
+	/*************************************
+	STACK CREATION/DESTRUCTION
+	*************************************/
 	addBuiltinFunction("createstack", [](Runner* r) {
 		//name of the stack
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -462,7 +520,9 @@ PredefinedFunctions::PredefinedFunctions() {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		r->switchCurrentStack(f1);
 	});
-	//REF GETTING/SETTING
+	/*************************************
+	REF GETTING/SETTING
+	*************************************/
 	addBuiltinFunction("getref", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		r->getCurrentStack()->push(r->getReference(f1));
