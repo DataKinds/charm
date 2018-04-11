@@ -49,6 +49,14 @@ PredefinedFunctions::PredefinedFunctions() {
 	addBuiltinFunction("p", [](Runner* r) {
 		printf("%s", charmFunctionToString(r->getCurrentStack()->pop()).c_str());
 	});
+	addBuiltinFunction("pstring", [](Runner* r) {
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		if (f1.functionType == STRING_FUNCTION) {
+			printf("%s", f1.stringValue.c_str());
+		} else {
+			runtime_die("Non string passed to `pstring`.");
+		}
+	});
 	addBuiltinFunction("newline", [](Runner* r) {
 		printf("\n");
 	});

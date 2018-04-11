@@ -26,6 +26,21 @@ native_functions:
                   - type: any
                     desc: The function that will be printed
               pushes:
+        - pstring:
+              desc: Prints a string off the top of the stack.
+              source: |
+                addBuiltinFunction("pstring", [](Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	if (f1.functionType == STRING_FUNCTION) {
+                		printf("%s", f1.stringValue.c_str());
+                	} else {
+                		runtime_die("Non string passed to `pstring`.");
+                	}
+                });
+              pops:
+                  - type: string
+                    desc: The string that will be printed
+              pushes:
         - newline:
               desc: Prints a newline.
               source: |
