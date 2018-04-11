@@ -4,9 +4,9 @@
 
 Charm is based off of Forth and Joy.
 
-`" hello " " world " concat p                      => hello world`
+`" hello " " world " concat put                      => hello world`
 
-`[ 1 2 ] [ 3 4 ] i 0 2 swap i [ pp ] 4 repeat i newline  => 2134`
+`[ 1 2 ] [ 3 4 ] i 0 2 swap i [ p ] 4 repeat i newline  => 2134`
 
 Example REPL session (with inlining disabled for readability's sake):
 
@@ -24,7 +24,7 @@ Charm$ printN
 Charm$ addOneToN printN
 1
 Charm$ [ addOneToN ] 10 repeat
-Charm$ print
+Charm$ put
 [ addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN ]
 Charm$ i
 Charm$ printN
@@ -47,15 +47,15 @@ Charm$ printN
 
 For a full, optimized release binary (recommended), build with
 ```
-make release
-```
-This will produce a binary named `charm-release`.
-
-For a basic, unoptimized binary with debug symbols, build with
-```
 make
 ```
 This will produce a binary named `charm`.
+
+For a basic, unoptimized binary with debug symbols, build with
+```
+make debug
+```
+This will produce a binary named `charm-debug`.
 
 To build with debug mode enabled (warning: very verbose!), use `make DEBUG=true`.
 
@@ -107,7 +107,6 @@ Tail-call optimization is necessary for this language, as there are no other way
 
 - C FFI & linkage
 - Imports from other files
-- A proper interpreter, not just a REPL
 - Possible LLVM codegen?
 
 ### Links
