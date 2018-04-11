@@ -198,8 +198,6 @@ CharmFunction Parser::parseListFunction(std::vector<std::string> *line, unsigned
 		   if (listDepth <= 0) {
 			   break;
 		   }
-		   //don't push the ] to the string to recursively parse
-		   continue;
 		}
 		ss << token << " ";
 	}
