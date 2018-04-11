@@ -152,3 +152,11 @@ struct CharmDefinition {
 	std::string constantName;
 	CHARM_LIST_TYPE definition;
 };
+
+class FunctionDefinition;
+class FunctionAnalyzer;
+//USED IN RUNNER.CPP AND PREDEFINEDFUNCTIONS.CPP
+struct RunnerContext {
+	FunctionDefinition* fD;
+	FunctionAnalyzer* fA;
+};

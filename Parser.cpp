@@ -103,7 +103,7 @@ CharmFunction Parser::parseDefinition(std::vector<std::string> line) {
 		ONLYDEBUG printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
 		ONLYDEBUG printf("FUNCTION BODY IS %s\n", ss.str().c_str());
 		//DIRTY HACK ALERT
-		currentFunction.literalFunctions = Parser::lex(ss.str());
+		currentFunction.literalFunctions = Parser::lex(ss.str()).first;
 		//END DIRTY HACK
 		//we outta here!
 	}
@@ -204,7 +204,7 @@ CharmFunction Parser::parseListFunction(std::vector<std::string> *line, unsigned
 		ss << token << " ";
 	}
 	//finally, we can put the inside of the [ ] into the out
-	out.literalFunctions = Parser::lex(ss.str());
+	out.literalFunctions = Parser::lex(ss.str()).first;
 	ONLYDEBUG printf("CONTINUING PARSING AT TOKEN NUM %llu, WHICH IS %s\n", (*tokenNum), (*line)[*tokenNum].c_str());
 	//NOTE: this is after hours of debugging, I've deemed this necessary
 	//tl;dr version: the call to `erase` a few lines above mutates the vector
@@ -217,7 +217,7 @@ CharmFunction Parser::parseListFunction(std::vector<std::string> *line, unsigned
 }
 
 
-CHARM_LIST_TYPE Parser::lex(const std::string charmInput) {
+std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string charmInput) {
 	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
 	CHARM_LIST_TYPE out;
 	//first split the string on newlines
@@ -272,5 +272,6 @@ CHARM_LIST_TYPE Parser::lex(const std::string charmInput) {
 		}
 	}
 	//wow, we're finally done with this abomination of a function
-	return out;
+	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> outPair(out, &fA);
+	return outPair;
 }

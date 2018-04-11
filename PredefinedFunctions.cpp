@@ -17,7 +17,7 @@ void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(R
 	bf.f = f; bf.takesContext = false;
 	cppFunctionNames[n] = bf;
 }
-void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*, FunctionDefinition*)> f) {
+void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext*)> f) {
 	BuiltinFunction bf;
 	bf.f = f; bf.takesContext = true;
 	cppFunctionNames[n] = bf;
@@ -31,10 +31,10 @@ static std::unordered_map<std::string, BuiltinFunction> PredefinedFunctions::cpp
 	"inline"
 };
 */
-void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, FunctionDefinition* context) {
+void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, RunnerContext* context) {
 	auto f = cppFunctionNames.at(functionName);
 	if (f.takesContext) {
-		auto castF = std::get<std::function<void(Runner*, FunctionDefinition*)>>(f.f);
+		auto castF = std::get<std::function<void(Runner*, RunnerContext*)>>(f.f);
 		castF(r, context);
 	} else {
 		auto castF = std::get<std::function<void(Runner*)>>(f.f);
@@ -270,11 +270,11 @@ PredefinedFunctions::PredefinedFunctions() {
 	/*************************************
 	CONTROL FLOW
 	*************************************/
-	addBuiltinFunction("i", [](Runner* r) {
+	addBuiltinFunction("i", [](Runner* r, RunnerContext* context) {
 		//pop the top of the stack and run it
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (f1.functionType == LIST_FUNCTION) {
-			r->run(f1.literalFunctions);
+			r->runWithDefinitionContext(f1.literalFunctions, context);
 		} else {
 			runtime_die("Non list passed to `i`.");
 		}
@@ -286,7 +286,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		list.literalFunctions.push_back(f1);
 		r->getCurrentStack()->push(list);
 	});
-	addBuiltinFunction("ifthen", [](Runner* r, FunctionDefinition* context) {
+	addBuiltinFunction("ifthen", [](Runner* r, RunnerContext* context) {
 		//the arguments to this function are a little different...
 		//ifthen performs very basic tail-call optimization on its two sections (truthy/falsy)
 		//if truthy (or falsy) end with the function itself (found through fD.functionName), then
@@ -307,8 +307,8 @@ PredefinedFunctions::PredefinedFunctions() {
 			(truthy.functionType == LIST_FUNCTION) &&
 			(falsy.functionType == LIST_FUNCTION)) {
 				//first, we run checks to set the tail call bools
-				if (context != nullptr) {
-					std::string defName = context->functionName;
+				if (context->fD != nullptr) {
+					std::string defName = context->fD->functionName;
 					if (truthy.literalFunctions.size() > 0 && truthy.literalFunctions.back().functionName == defName) {
 						truthyTailCall = true;
 					}
@@ -322,13 +322,13 @@ PredefinedFunctions::PredefinedFunctions() {
 						//remove the tail call
 						truthy.literalFunctions.pop_back();
 						while (1) {
-							r->run(condFunction.literalFunctions);
+							r->runWithDefinitionContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
 								if (cond.numberValue.integerValue > 0) {
-									r->run(truthy.literalFunctions);
+									r->runWithDefinitionContext(truthy.literalFunctions, context);
 								} else {
-									r->run(falsy.literalFunctions);
+									r->runWithDefinitionContext(falsy.literalFunctions, context);
 									//end this function immediately once the tail call loop ends
 									ONLYDEBUG printf("DISENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
 									return;
@@ -343,16 +343,16 @@ PredefinedFunctions::PredefinedFunctions() {
 						//remove the tail call
 						falsy.literalFunctions.pop_back();
 						while (1) {
-							r->run(condFunction.literalFunctions);
+							r->runWithDefinitionContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
 								if (cond.numberValue.integerValue > 0) {
-									r->run(truthy.literalFunctions);
+									r->runWithDefinitionContext(truthy.literalFunctions, context);
 									//end this function immediately once the tail call loop ends
 									ONLYDEBUG printf("DISENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
 									return;
 								} else {
-									r->run(falsy.literalFunctions);
+									r->runWithDefinitionContext(falsy.literalFunctions, context);
 								}
 							} else {
 								runtime_die("`ifthen` condition returned non integer.");
@@ -372,9 +372,9 @@ PredefinedFunctions::PredefinedFunctions() {
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
 								if (cond.numberValue.integerValue > 0) {
-									r->run(truthy.literalFunctions);
+									r->runWithDefinitionContext(truthy.literalFunctions, context);
 								} else {
-									r->run(falsy.literalFunctions);
+									r->runWithDefinitionContext(falsy.literalFunctions, context);
 								}
 							} else {
 								runtime_die("`ifthen` condition returned non integer.");
@@ -385,14 +385,14 @@ PredefinedFunctions::PredefinedFunctions() {
 					ONLYDEBUG printf("DISENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
 				}
 				//but if not (or context was nullptr), continue execution as normal
-				r->run(condFunction.literalFunctions);
+				r->runWithDefinitionContext(condFunction.literalFunctions, context);
 				//now we check the top of the stack to see if it's truthy or falsy
 				CharmFunction cond = r->getCurrentStack()->pop();
 				if (Stack::isInt(cond)) {
 					if (cond.numberValue.integerValue > 0) {
-						r->run(truthy.literalFunctions);
+						r->runWithDefinitionContext(truthy.literalFunctions, context);
 					} else {
-						r->run(falsy.literalFunctions);
+						r->runWithDefinitionContext(falsy.literalFunctions, context);
 					}
 				} else {
 					runtime_die("`ifthen` condition returned non integer.");
@@ -401,7 +401,7 @@ PredefinedFunctions::PredefinedFunctions() {
 				runtime_die("Non list passed to `ifthen`.");
 			}
 	});
-	addBuiltinFunction("inline", [](Runner* r) {
+	addBuiltinFunction("inline", [](Runner* r, RunnerContext* context) {
 		//TODO
 		puts("STUB");
 	});

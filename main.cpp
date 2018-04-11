@@ -168,9 +168,9 @@ int main(int argc, char const *argv[]) {
 			prompt << "Charm (Stack " << charmFunctionToString(runner.getCurrentStack()->name) << ")$ ";
 			std::string codeInput(readline(prompt.str().c_str()));
 			add_history(codeInput.c_str());
-			CHARM_LIST_TYPE parsedProgram = parser.lex(codeInput);
+			auto parsedProgram = parser.lex(codeInput);
 			ONLYDEBUG printf("TOKEN TYPES: ");
-			for (auto currentFunction : parsedProgram) {
+			for (auto currentFunction : parsedProgram.first) {
 				ONLYDEBUG printf("%i ", currentFunction.functionType);
 			}
 			ONLYDEBUG printf("\n");

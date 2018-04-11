@@ -26,5 +26,5 @@ private:
 
 public:
 	Parser();
-	CHARM_LIST_TYPE lex(std::string charmInput);
+	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lex(std::string charmInput);
 };

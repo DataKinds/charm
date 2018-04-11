@@ -91,7 +91,7 @@ std::vector<FunctionDefinition> Runner::getFunctionDefinitions() {
 	return Runner::functionDefinitions;
 }
 
-void Runner::handleDefinedFunctions(CharmFunction f, FunctionDefinition* context) {
+void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 	//PredefinedFunctions.h holds all the functions written in C++
 	//other than that, if these functions aren't built in, they are run through
 	//the functionDefinitions table.
@@ -121,12 +121,12 @@ void Runner::handleDefinedFunctions(CharmFunction f, FunctionDefinition* context
 					CHARM_LIST_TYPE functionBodyCopy = fD.functionBody;
 					functionBodyCopy.pop_back();
 					while (1) {
-						Runner::run(functionBodyCopy);
+						Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(functionBodyCopy, context->fA));
 					}
 				}
 				//ooh. the only time we use this call!
-				FunctionDefinition fDCopy = fD;
-				Runner::runWithDefinitionContext(fD.functionBody, &fDCopy);
+				context->fD = &fD;
+				Runner::runWithDefinitionContext(fD.functionBody, context);
 			}
 		}
 		if (!functionFound) {
@@ -135,7 +135,7 @@ void Runner::handleDefinedFunctions(CharmFunction f, FunctionDefinition* context
 	}
 }
 
-void Runner::runWithDefinitionContext(CHARM_LIST_TYPE parsedProgram, FunctionDefinition* context) {
+void Runner::runWithDefinitionContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context) {
 	for (CharmFunction currentFunction : parsedProgram) {
 		//alright, now we get into the running portion
 		if (currentFunction.functionType == NUMBER_FUNCTION) {
@@ -173,6 +173,9 @@ void Runner::runWithDefinitionContext(CHARM_LIST_TYPE parsedProgram, FunctionDef
 	ONLYDEBUG puts("EXITING RUNNER::RUN");
 }
 
-void Runner::run(CHARM_LIST_TYPE parsedProgram) {
-	Runner::runWithDefinitionContext(parsedProgram, nullptr);
+void Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer) {
+	RunnerContext rC;
+	rC.fA = parsedProgramWithAnalyzer.second;
+	rC.fD = nullptr;
+	Runner::runWithDefinitionContext(parsedProgramWithAnalyzer.first, &rC);
 }
