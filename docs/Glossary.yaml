@@ -532,6 +532,32 @@ native_functions:
                   - type: list
                     desc: Falsy (<= 0) block
               pushes:
+        - inline:
+              desc: Shows the result of an inlining optimization on a function.
+              source: |
+                void PredefinedFunctions::exor(Runner* r) {
+                  	CharmFunction f1 = r->getCurrentStack()->pop();
+                  	CharmFunction f2 = r->getCurrentStack()->pop();
+                  	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                  		CharmFunction out;
+                  		out.functionType = NUMBER_FUNCTION;
+                  		CharmNumber outNum;
+                  		outNum.whichType = INTEGER_VALUE;
+                  		//cancer incoming
+                  		outNum.integerValue = ((f1.numberValue.integerValue > 0) ^ (f2.numberValue.integerValue > 0));
+                  		//no more cancer
+                  		out.numberValue = outNum;
+                  		r->getCurrentStack()->push(out);
+                  	} else {
+                  		runtime_die("Non integer passed to logic function.");
+                  	}
+                }
+              pops:
+                  - type: list
+                    desc: The function to inline
+              pushes:
+                  - type: list
+                    desc: The completed inline optimization
     - category: Boolean Operations
       functions:
         - xor:

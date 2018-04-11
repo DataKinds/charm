@@ -402,8 +402,15 @@ PredefinedFunctions::PredefinedFunctions() {
 			}
 	});
 	addBuiltinFunction("inline", [](Runner* r, RunnerContext* context) {
-		//TODO
-		puts("STUB");
+		//the boxed function to take in
+		CharmFunction f1 = r->getCurrentStack().pop();
+		if (f1.functionType == LIST_FUNCTION) {
+			for (CharmFunction f : f1.literalFunctions) {
+				context->fA->doInline(f1.literalFunctions, f);
+			}
+		} else {
+			runtime_die("Non list passed to `inline`.");
+		}
 	});
 	/*************************************
 	BOOLEAN OPS
