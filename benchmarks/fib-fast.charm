@@ -3,4 +3,4 @@ _fib_get_arg   := " index " getref
 _fib_sub_index := _fib_get_arg 1 - _fib_args
 _fib           := [ _fib_sub_index _fib_get_arg ] [ dup 2 copyfrom + print _fib ] [ ] ifthen
 fib            := _fib_args 1 _fib
-500 fib
+20 fib

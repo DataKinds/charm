@@ -1,6 +1,6 @@
 pa = 0
 a = 1
-500.times do |n|
+20.times do |n|
     puts a
     b = pa + a
     pa = a

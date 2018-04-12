@@ -62,6 +62,68 @@ native_functions:
               pushes:
                   - type: string
                     desc: The line from standard input
+    - category: Debugging Functions
+      functions:
+        - type:
+              desc: Pushes the type of the function to the stack.
+              source: |
+                addBuiltinFunction("type", [](Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction out;
+                	out.functionType = STRING_FUNCTION;
+                	switch (f1.functionType) {
+                		case LIST_FUNCTION:
+                		out.stringValue = "LIST_FUNCTION";
+                		break;
+
+                		case NUMBER_FUNCTION:
+                		out.stringValue = "NUMBER_FUNCTION"
+                		break;
+
+                		case STRING_FUNCTION:
+                		out.stringValue = "STRING_FUNCTION"
+                		break;
+
+                		case DEFINED_FUNCTION:
+                		out.stringValue = "DEFINED_FUNCTION"
+                		break;
+
+                		case FUNCTION_DEFINITION:
+                		out.stringValue = "FUNCTION_DEFINITION"
+                		break;
+                	}
+                	r->getCurrentStack()->push(out);
+                });
+              pops:
+                  - type: any
+                    desc: The function to find the type of
+              pushes:
+                  - type: any
+                    desc: The input function
+                  - type: string
+                    desc: The type of the input function
+    - category: Comparisons
+      functions:
+        - eq:
+              desc: Compares the equality of the top two functions on the stack.
+              source: |
+                addBuiltinFunction("eq", [](Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	CharmFunction out;
+                	out.functionType = NUMBER_FUNCTION;
+                	out.numberValue.whichType = INTEGER_VALUE;
+                	out.numberValue.integerValue = f1 == f2 ? 1 : 0;
+                	r->getCurrentStack()->push(out);
+                });
+              pops:
+                  - type: any
+                    desc: The first function to check equality of
+                  - type: any
+                    desc: The second function to check equality of
+              pushes:
+                  - type: int
+                    desc: 1 if equal, 0 if not
     - category: Stack Manipulations
       functions:
         - dup:
@@ -542,10 +604,10 @@ native_functions:
                 		CharmFunction out;
                 		out.functionType = LIST_FUNCTION;
                 		for (CharmFunction f : f1.literalFunctions) {
-                			if (f.functionType == DEFINED_FUNCTION && f.definitionInfo.inlineable) {
-                				context->fA->doInline(out.literalFunctions, f);
-                			} else {
-                				out.literalFunctions.push_back(f);
+                			if (f.functionType == DEFINED_FUNCTION) {
+                				if (!context->fA->doInline(out.literalFunctions, f)) {
+                					out.literalFunctions.push_back(f);
+                				}
                 			}
                 		}
                 		r->getCurrentStack()->push(out);
@@ -832,7 +894,7 @@ prelude_functions:
         - pause:
               desc: Require the user to hit return to continue execution.
               source: |
-                 pause := " Press return to continue... " p getline pop
+                 pause := " Press return to continue... " pstring getline pop
               pops:
               pushes:
         - printstack:
@@ -953,17 +1015,72 @@ prelude_functions:
               pushes:
                   - type: ...
                     desc: All of the duplicated objects
+    - category: String Manipulation
+      functions:
+        - substring:
+              desc: Gets a substring of a string.
+              source: |
+                 _substring_args     := " " 3 pushto
+                 _substring_distance := dup 2 copyfrom - 1 -
+                 _substring_iter     := 0 2 swap 1 copyfrom at 1 4 swap concat 0 3 swap 0 2 swap flip succ flip
+                 _substring          := [ _substring_distance succ ] [ _substring_iter _substring ] [ pop pop flip ] ifthen
+                 substring           := _substring_args _substring
+              pops:
+                  - type: string
+                    desc: Stirng to get a substring of
+                  - type: int
+                    desc: Starting index of substring
+                  - type: int
+                    desc: Ending index of substring
+              pushes:
+                  - type: string
+                    desc: Original string
+                  - type: string
+                    desc: Cut string
+        - space:
+              desc: Pushes a space to the top of the stack.
+              note:
+                  - Due to the intracacies of the parser, <span class="code">"   "</span> simply pushes an empty string to the stack.
+              source: |
+                space := 32 char
+              pops:
+              pushes:
+                  - type: string
+                    desc: Space character
     - category: List Manipulation
       functions:
+        - cut:
+              desc: Gets a sublist of a list.
+              note:
+                  - Just like <span class="code">at</span>, accessing an element out of bounds causes this function to repeat the list.
+              source: |
+                 _cut_args     := [ ] 3 pushto
+                 _cut_distance := dup 2 copyfrom - 1 -
+                 _cut_iter     := 0 2 swap 1 copyfrom at 1 4 swap concat 0 3 swap 0 2 swap flip succ flip
+                 _cut          := [ _cut_distance succ ] [ _cut_iter _cut ] [ pop pop flip ] ifthen
+                 cut           := _cut_args _cut
+              pops:
+                  - type: list
+                    desc: List to cut
+                  - type: int
+                    desc: Starting index of sublist
+                  - type: int
+                    desc: Ending index of sublist
+              pushes:
+                  - type: list
+                    desc: Cut list
+                  - type: list
+                    desc: Original list
         - repeat:
               desc: Repeats a list a certain number of times.
               note:
                   - Using this as <span class="code"> [ &ltfunction&gt; ] flip repeat i</span> works as something akin to a for-loop construct!
               source: |
-                 _repeat_args := flip dup 0 2 swap 1 -
+                 _repeat_args := flip type " repeattyperef " flip setref dup 0 2 swap 1 -
                  _repeat_iter := 0 2 swap dup 0 2 swap concat flip 2 0 swap 1 -
-                 _repeat      :=  [ dup ] [ _repeat_iter _repeat ] [ pop flip pop ] ifthen
-                 repeat       := _repeat_args _repeat
+                 _repeat_zero := [ " repeattyperef " getref " LIST_FUNCTION " eq ] [ [ ] ] [ " " ] ifthen
+                 _repeat      := [ dup ] [ _repeat_iter _repeat ] [ pop flip pop ] ifthen
+                 repeat       := _repeat_args [ dup ] [ _repeat ] [ pop pop pop _repeat_zero ] ifthen
               pops:
                   - type: list/string
                     desc: List or string to repeat
