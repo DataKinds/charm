@@ -1,14 +1,14 @@
-# Charm
+[Charm Logo](https://raw.githubusercontent.com/Aearnus/charm/master/imgs/Charm.png)
 
-**Charm** is an experimental stack based functional language. It implements functions as a first class data structure, able to be manipulated with ease, using generally applicable tools and functions.
+Chat with us at https://discord.gg/GHWVDG!
 
-Charm is based off of Forth and Joy.
+**Charm** is an experimental stack based functional language based off of Forth and Joy. It implements functions as a first class data structure, able to be manipulated with ease, using generally applicable tools and functions.
 
 `" hello " " world " concat put                      => hello world`
 
 `[ 1 2 ] [ 3 4 ] i 0 2 swap i [ p ] 4 repeat i newline  => 2134`
 
-Example REPL session (with inlining disabled for readability's sake):
+Example REPL session:
 
 ```
 tyler@nasa:~/scripts/charm$ ./charm
@@ -33,13 +33,13 @@ Charm$ printN
 
 ## Quick Links
 
-- https://esolangs.org/wiki/Charm
-- https://charm-glossary-aearnus.hashbase.io/
-- https://github.com/Aearnus/charm/blob/master/Prelude.charm.cpp
+- Esolangs Wiki: https://esolangs.org/wiki/Charm
+- Charm Glossary: https://charm-glossary-aearnus.hashbase.io/
+- Charm Prelude: https://github.com/Aearnus/charm/blob/master/Prelude.charm.cpp
 
 ## Dependencies
 
-- GCC
+- GCC (>7)
 - libreadline and related development packages (`libreadline-dev on apt-based systems`)
 - A willingness to think outside of the box
 
