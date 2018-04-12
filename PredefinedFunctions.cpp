@@ -68,6 +68,49 @@ PredefinedFunctions::PredefinedFunctions() {
 		r->getCurrentStack()->push(input);
 	});
 	/*************************************
+	DEBUGGING FUNCTIONS
+	*************************************/
+	addBuiltinFunction("type", [](Runner* r) {
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		CharmFunction out;
+		out.functionType = STRING_FUNCTION;
+		switch (f1.functionType) {
+			case LIST_FUNCTION:
+			out.stringValue = "LIST_FUNCTION";
+			break;
+
+			case NUMBER_FUNCTION:
+			out.stringValue = "NUMBER_FUNCTION";
+			break;
+
+			case STRING_FUNCTION:
+			out.stringValue = "STRING_FUNCTION";
+			break;
+
+			case DEFINED_FUNCTION:
+			out.stringValue = "DEFINED_FUNCTION";
+			break;
+
+			case FUNCTION_DEFINITION:
+			out.stringValue = "FUNCTION_DEFINITION";
+			break;
+		}
+		r->getCurrentStack()->push(f1);
+		r->getCurrentStack()->push(out);
+	});
+	/*************************************
+	COMPARISONS
+	*************************************/
+	addBuiltinFunction("eq", [](Runner* r) {
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		CharmFunction f2 = r->getCurrentStack()->pop();
+		CharmFunction out;
+		out.functionType = NUMBER_FUNCTION;
+		out.numberValue.whichType = INTEGER_VALUE;
+		out.numberValue.integerValue = f1 == f2 ? 1 : 0;
+		r->getCurrentStack()->push(out);
+	});
+	/*************************************
 	STACK MANIPULATIONS
 	*************************************/
 	addBuiltinFunction("dup", [](Runner* r) {
