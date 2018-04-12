@@ -4,6 +4,7 @@
 #include <variant>
 #include <unordered_map>
 #include <functional>
+#include <utility>
 
 #include "PredefinedFunctions.h"
 #include "ParserTypes.h"
@@ -324,7 +325,8 @@ PredefinedFunctions::PredefinedFunctions() {
 		//pop the top of the stack and run it
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (f1.functionType == LIST_FUNCTION) {
-			r->runWithContext(f1.literalFunctions, context);
+			//when we run with `i`, remove the context (we can't tail call from an `i`)
+			r->run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(f1.literalFunctions, context->fA));
 		} else {
 			runtime_die("Non list passed to `i`.");
 		}
@@ -462,6 +464,8 @@ PredefinedFunctions::PredefinedFunctions() {
 					if (!context->fA->doInline(out.literalFunctions, f)) {
 						out.literalFunctions.push_back(f);
 					}
+				} else {
+					out.literalFunctions.push_back(f);
 				}
 			}
 			r->getCurrentStack()->push(out);
