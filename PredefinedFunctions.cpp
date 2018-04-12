@@ -415,10 +415,10 @@ PredefinedFunctions::PredefinedFunctions() {
 			CharmFunction out;
 			out.functionType = LIST_FUNCTION;
 			for (CharmFunction f : f1.literalFunctions) {
-				if (f.functionType == DEFINED_FUNCTION && f.definitionInfo.inlineable) {
-					context->fA->doInline(out.literalFunctions, f);
-				} else {
-					out.literalFunctions.push_back(f);
+				if (f.functionType == DEFINED_FUNCTION) {
+					if (!context->fA->doInline(out.literalFunctions, f)) {
+						out.literalFunctions.push_back(f);
+					}
 				}
 			}
 			r->getCurrentStack()->push(out);
