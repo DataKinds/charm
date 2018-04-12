@@ -1,7 +1,7 @@
 ![Charm Logo](https://raw.githubusercontent.com/Aearnus/charm/master/imgs/Charm.png)
 
 <p align="center">
-   Chat with us at
+   Chat with us at <br>
    <a href="https://discord.gg/GHWVDG">
       <img src="https://raw.githubusercontent.com/Aearnus/charm/master/imgs/Discord.png">
    </a>
