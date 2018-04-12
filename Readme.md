@@ -21,16 +21,16 @@ Looking for Prelude.charm...
 Prelude.charm loaded.
 
 Charm$ addOneToN := " n " getref 1 + " n " flip setref
-Charm$ printN := " n " getref print pop
-Charm$ printN
+Charm$ putN := " n " getref put pop
+Charm$ putN
 0
-Charm$ addOneToN printN
+Charm$ addOneToN putN
 1
 Charm$ [ addOneToN ] 10 repeat
 Charm$ put
 [ addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN addOneToN ]
 Charm$ i
-Charm$ printN
+Charm$ putN
 11
 ```
 
