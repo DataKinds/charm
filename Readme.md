@@ -1,4 +1,4 @@
-[Charm Logo](https://raw.githubusercontent.com/Aearnus/charm/master/imgs/Charm.png)
+![Charm Logo](https://raw.githubusercontent.com/Aearnus/charm/master/imgs/Charm.png)
 
 Chat with us at https://discord.gg/GHWVDG!
 
