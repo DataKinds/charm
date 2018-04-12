@@ -598,26 +598,26 @@ native_functions:
         - inline:
               desc: Shows the result of an inlining optimization on a function.
               source: |
-                	addBuiltinFunction("inline", [](Runner* r, RunnerContext* context) {
-                		//the boxed function to take in
-                		CharmFunction f1 = r->getCurrentStack()->pop();
-                		if (f1.functionType == LIST_FUNCTION) {
-                			CharmFunction out;
-                			out.functionType = LIST_FUNCTION;
-                			for (CharmFunction f : f1.literalFunctions) {
-                				if (f.functionType == DEFINED_FUNCTION) {
-                					if (!context->fA->doInline(out.literalFunctions, f)) {
-                						out.literalFunctions.push_back(f);
-                					}
-                				} else {
+                addBuiltinFunction("inline", [](Runner* r, RunnerContext* context) {
+                	//the boxed function to take in
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	if (f1.functionType == LIST_FUNCTION) {
+                		CharmFunction out;
+                		out.functionType = LIST_FUNCTION;
+                		for (CharmFunction f : f1.literalFunctions) {
+                			if (f.functionType == DEFINED_FUNCTION) {
+                				if (!context->fA->doInline(out.literalFunctions, f)) {
                 					out.literalFunctions.push_back(f);
                 				}
+                			} else {
+                				out.literalFunctions.push_back(f);
                 			}
-                			r->getCurrentStack()->push(out);
-                		} else {
-                			runtime_die("Non list passed to `inline`.");
                 		}
-                	});
+                		r->getCurrentStack()->push(out);
+                	} else {
+                		runtime_die("Non list passed to `inline`.");
+                	}
+                });
               pops:
                   - type: list
                     desc: The function to inline
