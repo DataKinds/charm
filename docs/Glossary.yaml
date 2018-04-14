@@ -918,9 +918,10 @@ prelude_functions:
               source: |
                 20000 " stepthroughstack " createstack
 
-                _stepthrough_pop_args          := " stepthroughdepthref " flip setref " stepthroughcoderef " flip setref  " stepthroughargsref " flip setref
+                _stepthrough_pop_args          := " stepthroughdepthref " flip setref   inline " stepthroughcoderef " flip setref   " stepthroughargsref " flip setref
                 _stepthrough_stack_init&switch := " stepthroughstack " switchstack clearstack " stepthroughargsref " getref i
-                _stepthrough_init              := _stepthrough_pop_args _stepthrough_stack_init&switch " Initial stack: " p newline _stepthrough_print_stack pause newline
+                _stepthrough_init_cursor       := " stepthroughcursor " 0 setref
+                _stepthrough_init              := _stepthrough_pop_args _stepthrough_init_cursor _stepthrough_stack_init&switch " Initial stack: " pstring newline _stepthrough_print_stack pause newline
 
                 _stepthrough_arg_depth := " stepthroughdepthref " getref
                 _stepthrough_arg_code  := " stepthroughcoderef " getref
@@ -928,12 +929,20 @@ prelude_functions:
                 _stepthrough_set_headref := " stepthroughheadref " flip setref
                 _stepthrough_get_headref := " stepthroughheadref " getref
 
-                _stepthrough_print_info  := " Running functions... " p newline _stepthrough_arg_code tostring p newline
-                _stepthrough_print_stack := _stepthrough_arg_depth printstack
+                _stepthrough_func_string_len     := tostring len 4 -
+                _stepthrough_move_cursor_int     := " stepthroughcursor " getref + " stepthroughcursor " flip setref
+                _stepthrough_move_cursor_len     := _stepthrough_func_string_len 1 + _stepthrough_move_cursor_int pop
+                _stepthrough_move_cursor_headref := _stepthrough_get_headref _stepthrough_move_cursor_len
 
-                _stepthrough_iter       := _stepthrough_print_info _stepthrough_set_headref " stepthroughstack " switchstack _stepthrough_get_headref i _stepthrough_print_stack 0 switchstack pause newline [ ]
+                _stepthrough_print_func   := tostring 2 flip len 2 - 1 2 swap substring flip pop pstring
+                _stepthrough_print_stack  := " Stack: " pstring newline _stepthrough_arg_depth printstack
+                _stepthrough_print_cursor := " " [ space concat ] " stepthroughcursor " getref repeat i " ^ " concat pstring newline
+                _stepthrough_print_info   := " Running functions... " pstring newline _stepthrough_arg_code _stepthrough_print_func newline
+
+                _stepthrough_iter       := _stepthrough_print_info _stepthrough_print_cursor _stepthrough_set_headref " stepthroughstack " switchstack _stepthrough_get_headref i _stepthrough_print_stack _stepthrough_move_cursor_headref 0 switchstack pause newline [ ]
                 _stepthrough_map        := 0 switchstack _stepthrough_arg_code [ _stepthrough_iter ] map 0 switchstack
                 stepthrough             := _stepthrough_init _stepthrough_map
+
               pops:
                   - type: list
                     desc: The list of arguments for the functions to step through
