@@ -13,6 +13,12 @@
 	#define CHARM_LIST_TYPE std::vector<CharmFunction>
 #endif
 
+struct CharmTypeSignature {
+	std::string functionName;
+	std::vector<std::string> pushes;
+	std::vector<std::string> pops;
+};
+
 enum CharmFunctionType {
 	FUNCTION_DEFINITION, //not a function, gets removed upon running
 						 //serves to create static function definitions

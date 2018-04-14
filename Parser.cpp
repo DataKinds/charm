@@ -65,6 +65,17 @@ bool Parser::isLineFunctionDefinition(std::string line) {
 	return false;
 }
 
+bool Parser::isLineTypeSignature(std::string line) {
+	std::stringstream lineS(line);
+	std::string f;
+	while (std::getline(lineS, f, ' ')) {
+		if (f == "::") {
+			return true;
+		}
+	}
+	return false;
+}
+
 CharmFunctionType Parser::recognizeFunction(std::string s) {
 	if (s == "[") return LIST_FUNCTION;
 	if (s == "\"") return STRING_FUNCTION;

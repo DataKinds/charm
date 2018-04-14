@@ -14,6 +14,7 @@ private:
 	bool isCharDigit(char c);
 	bool isStringNumber(std::string str);
 	bool isLineFunctionDefinition(std::string line);
+	bool isLineTypeSignature(std::string line);
 	CharmFunctionType recognizeFunction(std::string s);
 
 	CharmFunctionDefinitionInfo analyzeDefinition(CharmFunction f);
