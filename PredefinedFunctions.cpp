@@ -24,15 +24,6 @@ void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(R
 	bf.f = f; bf.takesContext = true;
 	cppFunctionNames[n] = bf;
 }
-/*
-static std::unordered_map<std::string, BuiltinFunction> PredefinedFunctions::cppFunctionNames = {
-	//TODO FUNCTIONS
-	//STRING MANIPULATIONS
-	"tocharlist", "fromcharlist",
-	//METAPROGRAMMING
-	"inline"
-};
-*/
 void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, RunnerContext* context) {
 	auto f = cppFunctionNames.at(functionName);
 	if (f.takesContext) {
@@ -112,7 +103,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		r->getCurrentStack()->push(out);
 	});
 	/*************************************
-	STACK MANIPULATIONS
+	ATIONS
 	*************************************/
 	addBuiltinFunction("dup", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -583,6 +574,10 @@ PredefinedFunctions::PredefinedFunctions() {
 		} else {
 			runtime_die("Non integer passed to `createStack`.");
 		}
+	});
+	addBuiltinFunction("getstack", [](Runner* r) {
+		//name of the stack
+		r->getCurrentStack()->push(r->getCurrentStack()->name);
 	});
 	addBuiltinFunction("switchstack", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
