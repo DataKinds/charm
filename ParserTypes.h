@@ -13,7 +13,6 @@
 	#define CHARM_LIST_TYPE std::vector<CharmFunction>
 #endif
 
-
 enum CharmTypes {
 	TYPESIG_ANY,
 	TYPESIG_LIST,
@@ -22,10 +21,13 @@ enum CharmTypes {
 	TYPESIG_INT,
 	TYPESIG_FLOAT
 };
-struct CharmTypeSignature {
-	std::string functionName;
+struct CharmTypeSignatureUnit {
 	std::vector<CharmTypes> pops;
 	std::vector<CharmTypes> pushes;
+};
+struct CharmTypeSignature {
+	std::string functionName;
+	std::vector<CharmTypeSignatureUnit> units;
 };
 
 enum CharmFunctionType {

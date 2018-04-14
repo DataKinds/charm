@@ -104,6 +104,9 @@ CharmTypeSignature Parser::parseTypeSignature(std::string line) {
 	typeSignature.functionName = line.substr(0, colonIndex);
 	Parser::rtrim(typeSignature.functionName);
 	Parser::ltrim(typeSignature.functionName);
+
+    ParseUnit:
+    CharmTypeSignatureUnit unit;
 	std::string typeStringRest = line.substr(colonIndex + 2);
     std::string typeStringToken;
 
@@ -115,7 +118,12 @@ CharmTypeSignature Parser::parseTypeSignature(std::string line) {
         if (typeStringToken == "->") {
             break;
         }
-        typeSignature.pops.push_back(Parser::tokenToType(typeStringToken));
+        if (typeStringToken == "|") {
+            //this is only valid after an entire type signature has been specified.
+            //thus, using it before a -> is invalid
+            runtime_die("Type alternative specified before completion of type");
+        }
+        unit.pops.push_back(Parser::tokenToType(typeStringToken));
     }
 
     //then, parse the pushed types
@@ -123,8 +131,14 @@ CharmTypeSignature Parser::parseTypeSignature(std::string line) {
         if (typeStringToken == "") {
             continue;
         }
-        typeSignature.pushes.push_back(Parser::tokenToType(typeStringToken));
+        if (typeStringToken == "|") {
+            Parser::advanceParse(typeStringToken, typeStringRest);
+            typeSignature.units.push_back(unit);
+            goto ParseUnit;
+        }
+        unit.pushes.push_back(Parser::tokenToType(typeStringToken));
     }
+    typeSignature.units.push_back(unit);
 	return typeSignature;
 }
 
