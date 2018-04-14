@@ -9,7 +9,7 @@ class FunctionAnalyzer {
 private:
     bool _isInlineable(std::string fName, CharmFunction f);
     std::unordered_map<std::string, CharmFunction> inlineDefinitions;
-
+    std::unordered_map<std::string, CharmTypeSignature> typeSignatures;
 public:
     FunctionAnalyzer();
 
