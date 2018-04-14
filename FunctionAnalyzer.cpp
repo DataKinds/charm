@@ -8,6 +8,10 @@
 FunctionAnalyzer::FunctionAnalyzer() {
 }
 
+void FunctionAnalyzer::addTypeSignature(CharmTypeSignature t) {
+    typeSignatures[t.functionName] = t;
+}
+
 void FunctionAnalyzer::addToInlineDefinitions(CharmFunction f) {
     if (f.functionType == FUNCTION_DEFINITION) {
         ONLYDEBUG printf("Adding %s to the inlineDefinitions\n", f.functionName.c_str());

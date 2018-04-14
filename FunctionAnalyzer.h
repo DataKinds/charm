@@ -18,4 +18,7 @@ public:
 
     void addToInlineDefinitions(CharmFunction f);
     bool doInline(CHARM_LIST_TYPE& out, CharmFunction currentFunction);
+
+    void addTypeSignature(CharmTypeSignature t);
+    bool checkTypeSignature(CharmFunction f, CHARM_LIST_TYPE definition);
 };
