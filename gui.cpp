@@ -54,8 +54,11 @@ static void update_stack_win() {
 
 		wmove(stack_win, i, STACK_LEFT_MARGIN);
 		wclrtoeol(stack_win);
-		// TODO: handle long lines of input
-		mvwprintw(stack_win, i, STACK_LEFT_MARGIN, "%s", charmFunctionToString(runner->getCurrentStack()->stack[stack_index]).c_str());
+
+		if (stack_index >= 0 && stack_index < (int) runner->getCurrentStack()->stack.size()) {
+			// TODO: handle long lines of input
+			mvwprintw(stack_win, i, STACK_LEFT_MARGIN, "%s", charmFunctionToString(runner->getCurrentStack()->stack[stack_index]).c_str());
+		}
 	}
 
 	wrefresh(stack_win);
