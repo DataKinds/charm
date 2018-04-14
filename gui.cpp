@@ -66,7 +66,7 @@ static void display_error(const char* what) {
 	mvwprintw(error_win, 2, 1, "%s", what);
 
 	touchwin(error_win); wrefresh(error_win);
-	wgetch(readline_win);
+	wgetch(error_win);
 	werase(error_win); delwin(error_win);
 	init_stack_win(); update_stack_win();
 
@@ -104,6 +104,14 @@ static void readline_callback_handler(char* line) {
 	update_stack_win();
 }
 
+static void set_prompt() {
+	std::string stack_name = charmFunctionToString(runner->getCurrentStack()->name);
+	std::string prompt = stack_name + "> ";
+	rl_set_prompt(prompt.c_str());
+
+	readline_redisplay();
+}
+
 static void exit_gui(int rc) {
 	endwin();
 	exit(rc);
@@ -118,6 +126,7 @@ void charm_gui_init(Parser _parser, Runner _runner) {
 	initscr();
 	raw(); // we want to capture all characters (but NOT via keypad; readline handles that for us)
 	noecho(); // headline handles echoing
+	nonl(); // so we can actually process ^L
 
     if (has_colors()) {
     	start_color();
@@ -141,10 +150,11 @@ void charm_gui_init(Parser _parser, Runner _runner) {
     rl_getc_function = readline_getc;
     rl_input_available_hook = readline_input_available;
     rl_redisplay_function = readline_redisplay;
-    rl_callback_handler_install("charm> ", readline_callback_handler);
+    rl_callback_handler_install("", readline_callback_handler);
 
     // do the main GUI loop
     while (true) {
+    	set_prompt();
     	int c = wgetch(readline_win);
 
     	if (c == CONTROL_C)
