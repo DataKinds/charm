@@ -15,6 +15,8 @@
 // constants
 #define CONTROL_C 3
 
+#define STACK_LEFT_MARGIN 4
+
 // global variables
 Parser* parser;
 Runner* runner;
@@ -24,6 +26,33 @@ static int last_char;
 static bool have_input;
 
 // private functions
+static void init_stack_win() {
+	int w, h;
+	getmaxyx(stack_win, h, w);
+
+	for (int i = 0; i < h; i++) {
+		mvwprintw(stack_win, i, 0, "%d:", i);
+	}
+}
+
+static void update_stack_win() {
+	int w, h;
+	getmaxyx(stack_win, h, w);
+
+	int depth = runner->getCurrentStack()->stack.size();
+
+	for (int i = 0; i < depth; i++) {
+		if (i >= h) break;
+		int stack_index = depth - i - 1;
+
+		wmove(stack_win, i, STACK_LEFT_MARGIN);
+		wclrtoeol(stack_win);
+		mvwprintw(stack_win, i, STACK_LEFT_MARGIN, "%s", charmFunctionToString(runner->getCurrentStack()->stack[stack_index]).c_str());
+	}
+
+	wrefresh(stack_win);
+}
+
 static int readline_getc(FILE* dummy) {
 	have_input = false;
 	return last_char;
@@ -46,7 +75,13 @@ static void readline_callback_handler(char* line) {
 	add_history(line);
 	werase(readline_win);
 
-	// TODO: handle execution here
+	try {
+		runner->run(parser->lex(std::string(line)));
+	} catch (const std::runtime_error& e) {
+		// TODO: handle errors
+	}
+
+	update_stack_win();
 }
 
 static void exit_gui(int rc) {
@@ -70,6 +105,8 @@ void charm_gui_init(Parser _parser, Runner _runner) {
     }
 
     stack_win = newwin(LINES-1, COLS, 0, 0);
+    init_stack_win(); update_stack_win();
+
     readline_win = newwin(1, COLS, LINES-1, 0);
 
     // initialize readline
