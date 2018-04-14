@@ -49,8 +49,7 @@ static void update_stack_win() {
 
 	int depth = runner->getCurrentStack()->stack.size();
 
-	for (int i = 0; i < depth; i++) {
-		if (i >= h) break;
+	for (int i = 0; i < h; i++) {
 		int stack_index = depth - (h-i-1) - 1;
 
 		wmove(stack_win, i, STACK_LEFT_MARGIN);
