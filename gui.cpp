@@ -38,6 +38,7 @@ static void init_stack_win() {
 
 	for (int i = 0; i < h; i++) {
 		mvwprintw(stack_win, i, 0, "%d:", h-i-1);
+		wclrtoeol(stack_win);
 	}
 }
 
@@ -209,6 +210,11 @@ void charm_gui_init(Parser _parser, Runner _runner) {
     		// ^C or EOF: quit
     		exit_gui(0);
     		break;
+    	case KEY_RESIZE:
+    		// we got a SIGWINCH; resize the GUI
+    		wresize(stack_win, LINES-1, COLS); mvwin(stack_win, 0, 0);
+    		wresize(readline_win, 1, COLS); mvwin(readline_win, LINES-1, 0);
+    		// no break on purpose, so we refresh the screen too
     	case CONTROL_L:
     		// ^L: refresh the screen
     		init_stack_win();
