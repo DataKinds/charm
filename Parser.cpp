@@ -6,6 +6,7 @@
 #include "ParserTypes.h"
 #include "Debug.h"
 #include "FunctionAnalyzer.h"
+#include "Error.h"
 
 
 //thank u https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
@@ -64,6 +65,69 @@ bool Parser::isLineFunctionDefinition(std::string line) {
 	}
 	return false;
 }
+
+bool Parser::isLineTypeSignature(std::string line) {
+	std::stringstream lineS(line);
+	std::string f;
+	while (std::getline(lineS, f, ' ')) {
+		if (f == "::") {
+			return true;
+		}
+	}
+	return false;
+}
+
+CharmTypes Parser::tokenToType(std::string token) {
+    if (token == "any") {
+        return TYPESIG_ANY;
+    } else if (token == "list") {
+        return TYPESIG_LIST;
+    } else if (token == "list/string") {
+        return TYPESIG_LISTSTRING;
+    } else if (token == "string") {
+        return TYPESIG_STRING;
+    } else if (token == "int") {
+        return TYPESIG_INT;
+    } else if (token == "float") {
+        return TYPESIG_FLOAT;
+    } else {
+        std::stringstream errorOut;
+        errorOut << "Unrecognized type: " << token << std::endl;
+        runtime_die(errorOut.str());
+    }
+}
+CharmTypeSignature Parser::parseTypeSignature(std::string line) {
+	CharmTypeSignature typeSignature;
+	//this is called only if Parser::isLineFunctionDefinition was true, so that guarentees that
+	//the string " := " is somewhere in this string
+	auto colonIndex = line.find("::");
+	typeSignature.functionName = line.substr(0, colonIndex);
+	Parser::rtrim(typeSignature.functionName);
+	Parser::ltrim(typeSignature.functionName);
+	std::string typeStringRest = line.substr(colonIndex + 2);
+    std::string typeStringToken;
+
+    //first, parse the popped types
+    while (Parser::advanceParse(typeStringToken, typeStringRest)) {
+        if (typeStringToken == "") {
+            continue;
+        }
+        if (typeStringToken == "->") {
+            break;
+        }
+        typeSignature.pops.push_back(Parser::tokenToType(typeStringToken));
+    }
+
+    //then, parse the pushed types
+    while (Parser::advanceParse(typeStringToken, typeStringRest)) {
+        if (typeStringToken == "") {
+            continue;
+        }
+        typeSignature.pushes.push_back(Parser::tokenToType(typeStringToken));
+    }
+	return typeSignature;
+}
+
 
 CharmFunctionType Parser::recognizeFunction(std::string s) {
 	if (s == "[") return LIST_FUNCTION;
@@ -261,7 +325,9 @@ std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lexAskToInline(const std::
 		if (isLineFunctionDefinition(line)) {
 			//deal with FUNCTION_DEFINITION
 			out.push_back(Parser::parseDefinition(line));
-		} else {
+		} else if (isLineTypeSignature(line)) {
+            fA.addTypeSignature(Parser::parseTypeSignature(line));
+        } else {
 			std::string rest = line;
 			std::string token;
 			while (Parser::advanceParse(token, rest)) {

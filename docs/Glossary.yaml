@@ -820,6 +820,17 @@ native_functions:
                   - type: any
                     desc: The name of the stack
               pushes:
+        - getstack:
+              desc: Gets the name of the current stack.
+              source: |
+                addBuiltinFunction("getstack", [](Runner* r) {
+                    //name of the stack
+                    r->getCurrentStack()->push(r->getCurrentStack()->name);
+                });
+              pops:
+              pushes:
+                  - type: any
+                    desc: The name of the current stack
         - switchstack:
               desc: Switches to a named stack.
               note:
