@@ -14,6 +14,7 @@
 
 // constants
 #define CONTROL_C 3
+#define CONTROL_L 12
 
 #define STACK_LEFT_MARGIN 4
 
@@ -157,11 +158,23 @@ void charm_gui_init(Parser _parser, Runner _runner) {
     	set_prompt();
     	int c = wgetch(readline_win);
 
-    	if (c == CONTROL_C)
+    	switch (c) {
+    	case -1:
+    	case CONTROL_C:
+    		// ^C or EOF: quit
     		exit_gui(0);
-
-    	last_char = c;
-    	have_input = true;
-    	rl_callback_read_char();
+    		break;
+    	case CONTROL_L:
+    		// ^L: refresh the screen
+    		init_stack_win();
+    		update_stack_win();
+    		readline_redisplay();
+    		break;
+    	default:
+    		// let readline handle it
+        	last_char = c;
+        	have_input = true;
+        	rl_callback_read_char();
+    	}
     }
 }
