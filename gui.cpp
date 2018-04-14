@@ -254,9 +254,11 @@ void charm_gui_init(Parser _parser, Runner _runner) {
     		// no break on purpose, so we refresh the screen too
     	case CONTROL_L:
     		// ^L: refresh the screen
+    		werase(stack_win); werase(readline_win);
     		init_stack_win();
     		update_stack_win();
     		readline_redisplay();
+    		wrefresh(stack_win); wrefresh(readline_win);
     		break;
     	default:
     		// let readline handle it
