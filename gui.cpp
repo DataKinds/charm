@@ -21,10 +21,15 @@
 // global variables
 Parser* parser;
 Runner* runner;
+
 static WINDOW* stack_win;
 static WINDOW* readline_win;
+
 static int last_char;
 static bool have_input;
+
+static bool had_output = false;
+static std::string accumulated_output;
 
 // private functions
 static void init_stack_win() {
@@ -98,6 +103,22 @@ static void readline_callback_handler(char* line) {
 
 	try {
 		runner->run(parser->lex(std::string(line)));
+
+		if (had_output) {
+			// display accumulated output
+			werase(stack_win);
+			mvwprintw(stack_win, 0, 0, "%s", accumulated_output.c_str());
+			wrefresh(stack_win);
+
+			werase(readline_win);
+			mvwprintw(readline_win, 0, 0, "Press any key to continue...");
+			wrefresh(readline_win);
+
+			wgetch(readline_win);
+			init_stack_win(); update_stack_win();
+
+			accumulated_output = ""; had_output = false;
+		}
 	} catch (const std::runtime_error& e) {
 		display_error(e.what());
 	}
@@ -119,6 +140,11 @@ static void exit_gui(int rc) {
 }
 
 // public interface
+void display_output(std::string output) {
+	had_output = true;
+	accumulated_output += output;
+}
+
 void charm_gui_init(Parser _parser, Runner _runner) {
 	parser = &_parser;
 	runner = &_runner;

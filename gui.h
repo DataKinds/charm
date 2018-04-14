@@ -11,6 +11,7 @@
 #include "Parser.h"
 #include "Runner.h"
 
-void charm_gui_init(Parser& parser, Runner& runner);
+void charm_gui_init(Parser parser, Runner runner);
+void display_output(std::string output);
 
 #endif /* GUI_H_ */
