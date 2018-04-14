@@ -8,22 +8,26 @@
 
 class Parser {
 private:
-	std::vector<std::string> splitString(const std::string s, char delim);
+	static inline void ltrim(std::string &s);
+	static inline void rtrim(std::string &s);
+
 	bool isCharDigit(char c);
 	bool isStringNumber(std::string str);
-	bool isLineFunctionDefinition(std::vector<std::string> line);
+	bool isLineFunctionDefinition(std::string line);
 	CharmFunctionType recognizeFunction(std::string s);
 
 	CharmFunctionDefinitionInfo analyzeDefinition(CharmFunction f);
 
 	FunctionAnalyzer fA;
 
-	CharmFunction parseDefinition(std::vector<std::string> line);
+	bool advanceParse(std::string& token, std::string& rest);
+	void delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline);
+
+	CharmFunction parseDefinition(std::string line);
 	CharmFunction parseDefinedFunction(std::string tok);
 	CharmFunction parseNumberFunction(std::string tok);
-	CharmFunction parseStringFunction(std::vector<std::string> *line, unsigned long long *tokenNum);
-	CharmFunction parseListFunction(std::vector<std::string> *line, unsigned long long *tokenNum);
-
+	CharmFunction parseStringFunction(std::string& token, std::string& rest);
+	CharmFunction parseListFunction(std::string& token, std::string& rest);
 public:
 	Parser();
 	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lex(const std::string charmInput);
