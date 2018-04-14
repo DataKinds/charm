@@ -19,6 +19,12 @@
 static void display_output(std::string output) {
 	std::cout << output;
 }
+
+static std::string get_input_line() {
+	std::string result;
+	std::getline(std::cin, result);
+	return result;
+}
 #endif
 
 void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*)> f) {
@@ -61,15 +67,10 @@ PredefinedFunctions::PredefinedFunctions() {
 		display_output("\n");
 	});
 	addBuiltinFunction("getline", [](Runner* r) {
-#ifdef CHARM_GUI
-		// TODO: what should we do here?
-		runtime_die("`getline` not implemented in GUI mode.");
-#else
 		CharmFunction input;
 		input.functionType = STRING_FUNCTION;
-		std::getline(std::cin, input.stringValue);
+		input.stringValue = get_input_line();
 		r->getCurrentStack()->push(input);
-#endif
 	});
 	/*************************************
 	DEBUGGING FUNCTIONS

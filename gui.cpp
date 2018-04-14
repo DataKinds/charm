@@ -126,6 +126,11 @@ static void readline_callback_handler(char* line) {
 	update_stack_win();
 }
 
+static char* get_input_line_result;
+static void get_input_line_callback_handler(char* line) {
+	get_input_line_result = line;
+}
+
 static void set_prompt() {
 	std::string stack_name = charmFunctionToString(runner->getCurrentStack()->name);
 	std::string prompt = stack_name + "> ";
@@ -143,6 +148,20 @@ static void exit_gui(int rc) {
 void display_output(std::string output) {
 	had_output = true;
 	accumulated_output += output;
+}
+
+std::string get_input_line() {
+	rl_callback_handler_install("GETLINE> ", get_input_line_callback_handler);
+	get_input_line_result = nullptr;
+
+	while (get_input_line_result == nullptr) {
+    	last_char = wgetch(readline_win);
+    	have_input = true;
+    	rl_callback_read_char();
+	}
+
+	rl_callback_handler_install("", readline_callback_handler);
+	return std::string(get_input_line_result);
 }
 
 void charm_gui_init(Parser _parser, Runner _runner) {

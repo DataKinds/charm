@@ -13,5 +13,6 @@
 
 void charm_gui_init(Parser parser, Runner runner);
 void display_output(std::string output);
+std::string get_input_line();
 
 #endif /* GUI_H_ */
