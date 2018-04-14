@@ -35,8 +35,6 @@ private:
 	std::vector<Stack> stacks;
 	//and the list of all of our references
 	std::vector<Reference> references;
-	//a private instance of PredefinedFunctions
-	PredefinedFunctions* pF;
 public:
 	Runner();
 	std::vector<FunctionDefinition> getFunctionDefinitions();
@@ -52,4 +50,7 @@ public:
 
 	void runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context);
 	void run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer);
+
+	// our list of predefined functions
+	PredefinedFunctions* pF;
 };

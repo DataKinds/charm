@@ -7,6 +7,7 @@
 
 #include "gui.h"
 #include "Debug.h"
+#include "PredefinedFunctions.h"
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -148,6 +149,39 @@ static void exit_gui(int rc) {
 	exit(rc);
 }
 
+static char* function_name_generator(const char* line, int state) {
+	// TODO: we currently only pick the first result we find. But multimatches break Curses.
+    if (state || strlen(line) == 0) return nullptr;
+
+    int len = strlen(line);
+
+    // match with functions defined in this runner
+    auto fds = runner->getFunctionDefinitions();
+	for (const auto& fd : fds) {
+		const char* name = fd.functionName.c_str();
+		if (strncmp(name, line, len) == 0) {
+			return strdup(name);
+		}
+	}
+
+	// match predefined functions
+	auto predefs = runner->pF->cppFunctionNames;
+    for (const auto& entry : predefs) {
+		const char* name = entry.first.c_str();
+		if (strncmp(name, line, len) == 0) {
+			return strdup(name);
+		}
+    }
+
+	// no matches; return null
+    return nullptr;
+}
+
+static char** function_name_completion(const char * line, int start, int end) {
+    rl_attempted_completion_over = 1;
+    return rl_completion_matches(line, function_name_generator);
+}
+
 // public interface
 void display_output(std::string output) {
 	had_output = true;
@@ -189,7 +223,6 @@ void charm_gui_init(Parser _parser, Runner _runner) {
     readline_win = newwin(1, COLS, LINES-1, 0);
 
     // initialize readline
-    rl_bind_key('\t', rl_insert); // to disable autocomplete (for now)
     rl_catch_signals = 0; // don't catch signals; Curses handles those
     rl_catch_sigwinch = 0;
     rl_deprep_term_function = NULL; // don't handle terminal i/o; Curses also handles that
@@ -200,6 +233,7 @@ void charm_gui_init(Parser _parser, Runner _runner) {
     rl_getc_function = readline_getc;
     rl_input_available_hook = readline_input_available;
     rl_redisplay_function = readline_redisplay;
+    rl_attempted_completion_function = function_name_completion;
     rl_callback_handler_install("", readline_callback_handler);
 
     // do the main GUI loop
