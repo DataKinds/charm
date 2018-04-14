@@ -47,6 +47,7 @@ static void update_stack_win() {
 
 		wmove(stack_win, i, STACK_LEFT_MARGIN);
 		wclrtoeol(stack_win);
+		// TODO: handle long lines of input
 		mvwprintw(stack_win, i, STACK_LEFT_MARGIN, "%s", charmFunctionToString(runner->getCurrentStack()->stack[stack_index]).c_str());
 	}
 
@@ -54,7 +55,6 @@ static void update_stack_win() {
 }
 
 static void display_error(const char* what) {
-	// TODO: the first time this function is called, the screen goes blank instead for some reason...
 	int curs = curs_set(0);
 
 	update_stack_win();
@@ -66,7 +66,7 @@ static void display_error(const char* what) {
 	mvwprintw(error_win, 2, 1, "%s", what);
 
 	touchwin(error_win); wrefresh(error_win);
-	getch();
+	wgetch(readline_win);
 	werase(error_win); delwin(error_win);
 	init_stack_win(); update_stack_win();
 
