@@ -31,7 +31,7 @@ static void init_stack_win() {
 	getmaxyx(stack_win, h, w);
 
 	for (int i = 0; i < h; i++) {
-		mvwprintw(stack_win, i, 0, "%d:", i);
+		mvwprintw(stack_win, i, 0, "%d:", h-i-1);
 	}
 }
 
@@ -43,7 +43,7 @@ static void update_stack_win() {
 
 	for (int i = 0; i < depth; i++) {
 		if (i >= h) break;
-		int stack_index = depth - i - 1;
+		int stack_index = depth - (h-i-1) - 1;
 
 		wmove(stack_win, i, STACK_LEFT_MARGIN);
 		wclrtoeol(stack_win);
