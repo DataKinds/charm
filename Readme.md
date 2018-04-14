@@ -2,7 +2,7 @@
 
 <p align="center">
    Chat with us at <br>
-   <a href="https://discord.gg/GHWVDG">
+   <a href="https://discord.gg/RQu5adW">
       <img src="https://raw.githubusercontent.com/Aearnus/charm/master/imgs/Discord.png">
    </a>
 </p>
