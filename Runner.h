@@ -6,6 +6,9 @@
 //in PredefinedFunctions.h
 class PredefinedFunctions;
 
+//in FFI.h
+class FFI;
+
 struct FunctionDefinition {
 	std::string functionName;
 	CHARM_LIST_TYPE functionBody;
@@ -40,8 +43,9 @@ public:
 	Runner();
 	std::vector<FunctionDefinition> getFunctionDefinitions();
 
-	//a private instance of PredefinedFunctions
+	//all of our instances
 	PredefinedFunctions* pF;
+	FFI* ffi;
 
 	const unsigned int MAX_STACK = 20000;
 	bool doesStackExist(CharmFunction name);

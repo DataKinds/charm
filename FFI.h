@@ -1,3 +1,5 @@
+#pragma once
+
 #include <unordered_map>
 #include <functional>
 
@@ -11,10 +13,10 @@ typedef void (*MutateFFI)(Runner*);
 
 class FFI {
 private:
-//    std::unordered_map<std::string, PureFFI> pureFFIFuncs;
-    std::unordered_map<std::string, MutateFFI> mutateFFIFuncs;
 public:
     FFI();
+    //    std::unordered_map<std::string, PureFFI> pureFFIFuncs;
+    std::unordered_map<std::string, MutateFFI> mutateFFIFuncs;
 
 //    void loadPureFFI(std::string charmName, std::string libPath, std::string sym);
     void loadMutateFFI(std::string charmName, std::string libPath, std::string sym);

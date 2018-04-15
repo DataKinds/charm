@@ -5,6 +5,7 @@
 #include "PredefinedFunctions.h"
 #include "Error.h"
 #include "Debug.h"
+#include "FFI.h"
 
 void Runner::addFunctionDefinition(FunctionDefinition fD) {
 	//first, check and make sure there's no other definition with
@@ -28,6 +29,7 @@ Runner::Runner() {
 	currentStackName = zero;
 	stacks.push_back(Stack(MAX_STACK, zero));
 	pF = new PredefinedFunctions();
+	ffi = new FFI();
 }
 
 bool Runner::doesStackExist(CharmFunction name) {
@@ -100,11 +102,14 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 	//table. if it doesn't - assume it's defined in Charm and run through the
 	//functionDefinitions table.
 	bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
+	bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
 	if (isPredefinedFunction) {
 		//run the predefined function!
 		//(note: the function context AKA the definition we are running code from
 		//is passed in for tail call optimization in PredefinedFunctions.cpp::ifthen())
 		pF->functionLookup(f.functionName, this, context);
+	} else if (isFFIFunction) {
+		ffi->runFFI(f.functionName, this);
 	} else {
 		//alright, now we get down and dirty
 		//look through the functionDefinitions table for a function with
