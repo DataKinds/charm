@@ -1,11 +1,11 @@
-OBJECT_FILES = main.o Parser.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o Prelude.charm.o
+OBJECT_FILES = main.o Parser.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o Prelude.charm.o FFI.o
 
 OUT_FILE ?= charm
 
 ifeq ($(GUI),)
-LDLIBS ?= -lreadline -lhistory
+LDLIBS ?= -lreadline -lhistory -ldl
 else
-LDLIBS ?= -lreadline -lhistory -lncurses
+LDLIBS ?= -lreadline -lhistory -lncurses -ldl
 CPPFLAGS += -DCHARM_GUI=1
 OBJECT_FILES += gui.o
 endif
@@ -39,6 +39,8 @@ Prelude.charm.o: Prelude.charm.cpp
 	$(CXX) -c -Wall -O3 --std=c++17 Prelude.charm.cpp
 gui.o: gui.cpp
 	$(DEFAULT_OBJECT_LINE) gui.cpp
+FFI.o: FFI.cpp
+	$(DEFAULT_OBJECT_LINE) FFI.cpp
 
 clean:
 	rm $(OBJECT_FILES)

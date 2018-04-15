@@ -17,6 +17,7 @@ struct Reference {
 	CharmFunction value;
 };
 
+extern "C"
 class Runner {
 private:
 	//alright, this is the nitty gritty
@@ -41,7 +42,7 @@ public:
 
 	//a private instance of PredefinedFunctions
 	PredefinedFunctions* pF;
-	
+
 	const unsigned int MAX_STACK = 20000;
 	bool doesStackExist(CharmFunction name);
 	Stack* getCurrentStack();
