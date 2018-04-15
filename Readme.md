@@ -48,7 +48,7 @@ Charm$ putN
 
 ## Compilation
 
-For a full, optimized release binary (recommended), build with
+Recommended build command:
 ```
 make
 ```
@@ -60,7 +60,11 @@ make debug
 ```
 This will produce a binary named `charm-debug`.
 
-To build with debug mode enabled (warning: very verbose!), use `make DEBUG=true`.
+### Compilation Options
+
+* `GUI=true`: Builds Charm with the ncurses based GUI by [Iconmaster](https://github.com/iconmaster5326). This is **highly** recommended, as it is immensely useful!
+
+* `DEBUG=true`: Builds Charm with verbose debug mode enabled.
 
 ## About Charm
 
