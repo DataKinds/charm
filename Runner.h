@@ -35,12 +35,13 @@ private:
 	std::vector<Stack> stacks;
 	//and the list of all of our references
 	std::vector<Reference> references;
-	//a private instance of PredefinedFunctions
-	PredefinedFunctions* pF;
 public:
 	Runner();
 	std::vector<FunctionDefinition> getFunctionDefinitions();
 
+	//a private instance of PredefinedFunctions
+	PredefinedFunctions* pF;
+	
 	const unsigned int MAX_STACK = 20000;
 	bool doesStackExist(CharmFunction name);
 	Stack* getCurrentStack();
