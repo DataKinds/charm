@@ -26,8 +26,6 @@ private:
 	//alright, this is the nitty gritty
 	//here is the table of function definitions:
 	std::vector<FunctionDefinition> functionDefinitions;
-	//and this is how you add them
-	void addFunctionDefinition(FunctionDefinition fD);
 
 	//handle the functions that we don't know about
 	//and / or handle built in functions
@@ -42,6 +40,8 @@ private:
 public:
 	Runner();
 	std::vector<FunctionDefinition> getFunctionDefinitions();
+	//and this is how you add them
+	void addFunctionDefinition(FunctionDefinition fD);
 
 	//all of our instances
 	PredefinedFunctions* pF;

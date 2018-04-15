@@ -102,6 +102,73 @@ native_functions:
                     desc: The input function
                   - type: string
                     desc: The type of the input function
+    - category: Function Definition
+      functions:
+        - def:
+              desc: Define a function without any special syntax.
+              source: |
+                addBuiltinFunction("def", [](Runner* r, RunnerContext* context) {
+                	//function body
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	//function name
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if (f2.functionType != STRING_FUNCTION) {
+                		runtime_die("Non string passed to `def`.");
+                	}
+                	if (f1.functionType != LIST_FUNCTION) {
+                		runtime_die("Non list passed to `def`.");
+                	}
+                	//a function with type FUNCTION_DEFINITION
+                	CharmFunction f;
+                	f.functionType = FUNCTION_DEFINITION;
+                	f.functionName = f2.stringValue;
+                	f.literalFunctions = f1.literalFunctions;
+
+                	FunctionDefinition fD;
+                	fD.functionName = f.functionName;
+                	fD.functionBody = f.literalFunctions;
+
+                	CharmFunctionDefinitionInfo defInfo;
+                	defInfo.inlineable = context->fA->isInlinable(f);
+                	if (defInfo.inlineable) {
+                		context->fA->addToInlineDefinitions(f);
+                	}
+                	defInfo.tailCallRecursive = context->fA->isInlinable(f);
+
+                	fD.definitionInfo = defInfo;
+                	r->addFunctionDefinition(fD);
+                });
+              pops:
+                  - type: string
+                    desc: The name of the function to define
+                  - type: list
+                    desc: The body of the function
+              pushes:
+        - ffi:
+              desc: Define a function through the Foreign Function Interface.
+              note:
+                  - There is only one type of function accepted, and that type is defined in <span class="code">FFI.h</span> as <span class="code">typedef void (*MutateFFI)(Runner*);</span>. Since <span class="code">Runner</span> uses C++ types inside of it, any functions from other languages must be called through a C++ compatibility layer.
+              source: |
+                addBuiltinFunction("ffi", [](Runner* r) {
+                	//library symbol
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	//library path
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	//charm function name
+                	CharmFunction f3 = r->getCurrentStack()->pop();
+                	if (f1.functionType != STRING_FUNCTION || f2.functionType != STRING_FUNCTION || f3.functionType != STRING_FUNCTION) {
+                		runtime_die("Non string passed to `ffi`.");
+                	}
+                	r->ffi->loadMutateFFI(f3.stringValue, f2.stringValue, f1.stringValue);
+                });
+              pops:
+                  - type: string
+                    desc: The name of the charm function to define
+                  - type: string
+                    desc: The path to the library
+                  - type: string
+                    desc: The name of the function symbol from the library
+              pushes:
     - category: Comparisons
       functions:
         - eq:

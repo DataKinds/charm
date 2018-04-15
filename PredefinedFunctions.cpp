@@ -12,6 +12,7 @@
 #include "Debug.h"
 #include "Runner.h"
 #include "FunctionAnalyzer.h"
+#include "FFI.h"
 
 #ifdef CHARM_GUI
 #include "gui.h"
@@ -104,6 +105,52 @@ PredefinedFunctions::PredefinedFunctions() {
 		r->getCurrentStack()->push(out);
 	});
 	/*************************************
+	FUNCTION DEFINITION
+	*************************************/
+	addBuiltinFunction("def", [](Runner* r, RunnerContext* context) {
+		//function body
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		//function name
+		CharmFunction f2 = r->getCurrentStack()->pop();
+		if (f2.functionType != STRING_FUNCTION) {
+			runtime_die("Non string passed to `def`.");
+		}
+		if (f1.functionType != LIST_FUNCTION) {
+			runtime_die("Non list passed to `def`.");
+		}
+		//a function with type FUNCTION_DEFINITION
+		CharmFunction f;
+		f.functionType = FUNCTION_DEFINITION;
+		f.functionName = f2.stringValue;
+		f.literalFunctions = f1.literalFunctions;
+
+		FunctionDefinition fD;
+		fD.functionName = f.functionName;
+		fD.functionBody = f.literalFunctions;
+
+		CharmFunctionDefinitionInfo defInfo;
+		defInfo.inlineable = context->fA->isInlinable(f);
+		if (defInfo.inlineable) {
+			context->fA->addToInlineDefinitions(f);
+		}
+		defInfo.tailCallRecursive = context->fA->isInlinable(f);
+
+		fD.definitionInfo = defInfo;
+		r->addFunctionDefinition(fD);
+	});
+	addBuiltinFunction("ffi", [](Runner* r) {
+		//library symbol
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		//library path
+		CharmFunction f2 = r->getCurrentStack()->pop();
+		//charm function name
+		CharmFunction f3 = r->getCurrentStack()->pop();
+		if (f1.functionType != STRING_FUNCTION || f2.functionType != STRING_FUNCTION || f3.functionType != STRING_FUNCTION) {
+			runtime_die("Non string passed to `ffi`.");
+		}
+		r->ffi->loadMutateFFI(f3.stringValue, f2.stringValue, f1.stringValue);
+	});
+	/*************************************
 	COMPARISONS
 	*************************************/
 	addBuiltinFunction("eq", [](Runner* r) {
@@ -116,7 +163,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		r->getCurrentStack()->push(out);
 	});
 	/*************************************
-	ATIONS
+	STACK MANIPULATIONS
 	*************************************/
 	addBuiltinFunction("dup", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
