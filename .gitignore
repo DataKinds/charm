@@ -1,6 +1,13 @@
+# c++ files
 *.o
+gmon.out
+
+# charm files
 charm
 charm-release
-gmon.out
 *.stats
 *.gch
+
+# eclipse files
+/.cproject
+/.project

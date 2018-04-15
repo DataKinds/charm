@@ -13,6 +13,19 @@
 #include "Runner.h"
 #include "FunctionAnalyzer.h"
 
+#ifdef CHARM_GUI
+#include "gui.h"
+#else
+static void display_output(std::string output) {
+	std::cout << output;
+}
+
+static std::string get_input_line() {
+	std::string result;
+	std::getline(std::cin, result);
+	return result;
+}
+#endif
 
 void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*)> f) {
 	BuiltinFunction bf;
@@ -40,23 +53,23 @@ PredefinedFunctions::PredefinedFunctions() {
 	INPUT / OUTPUT
 	*************************************/
 	addBuiltinFunction("p", [](Runner* r) {
-		printf("%s", charmFunctionToString(r->getCurrentStack()->pop()).c_str());
+		display_output(charmFunctionToString(r->getCurrentStack()->pop()));
 	});
 	addBuiltinFunction("pstring", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (f1.functionType == STRING_FUNCTION) {
-			printf("%s", f1.stringValue.c_str());
+			display_output(f1.stringValue);
 		} else {
 			runtime_die("Non string passed to `pstring`.");
 		}
 	});
 	addBuiltinFunction("newline", [](Runner* r) {
-		printf("\n");
+		display_output("\n");
 	});
 	addBuiltinFunction("getline", [](Runner* r) {
 		CharmFunction input;
 		input.functionType = STRING_FUNCTION;
-		std::getline(std::cin, input.stringValue);
+		input.stringValue = get_input_line();
 		r->getCurrentStack()->push(input);
 	});
 	/*************************************

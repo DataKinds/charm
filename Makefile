@@ -1,7 +1,14 @@
 OBJECT_FILES = main.o Parser.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o Prelude.charm.o
-LDLIBS ?= -lreadline -lhistory
 
 OUT_FILE ?= charm
+
+ifeq ($(GUI),)
+LDLIBS ?= -lreadline -lhistory
+else
+LDLIBS ?= -lreadline -lhistory -lncurses
+CPPFLAGS += -DCHARM_GUI=1
+OBJECT_FILES += gui.o
+endif
 
 # Compilation flags
 DEBUG ?= false
@@ -30,6 +37,8 @@ FunctionAnalyzer.o: FunctionAnalyzer.cpp
 	$(DEFAULT_OBJECT_LINE) FunctionAnalyzer.cpp
 Prelude.charm.o: Prelude.charm.cpp
 	$(CXX) -c -Wall -O3 --std=c++17 Prelude.charm.cpp
+gui.o: gui.cpp
+	$(DEFAULT_OBJECT_LINE) gui.cpp
 
 clean:
 	rm $(OBJECT_FILES)

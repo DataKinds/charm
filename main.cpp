@@ -9,8 +9,12 @@
 #include <string_view>
 #include <functional>
 
-#include <readline/readline.h>
-#include <readline/history.h>
+#ifdef CHARM_GUI
+	#include "gui.h"
+#else
+	#include <readline/readline.h>
+	#include <readline/history.h>
+#endif
 
 #include "Prelude.charm.h"
 
@@ -162,6 +166,10 @@ int main(int argc, char const *argv[]) {
 			printf("Error: %s\n", e.what());
 			return -1;
 		}
+#ifdef CHARM_GUI
+		// start up the GUI if there isn't a file to run
+		charm_gui_init(parser, runner);
+#else
 		//begin the interactive loop if there isnt a file to run
 		while (true) {
 			std::stringstream prompt;
@@ -190,6 +198,7 @@ int main(int argc, char const *argv[]) {
 			}
 			ONLYDEBUG printf("\n");
 		}
+#endif
 	}
 	return 0;
 }
