@@ -17,13 +17,15 @@ void FFI::loadMutateFFI(std::string charmName, std::string libPath, std::string 
     void* library = dlopen(libPath.c_str(), RTLD_NOW);
     if (library == nullptr) {
         std::ostringstream e;
-        e << "FFI: Couldn't find library `" << libPath << "`";
+        e << "FFI: Couldn't open library `" << libPath << "`" << std::endl;
+        e << dlerror();
         runtime_die(e.str());
     }
     void* func = dlsym(library, sym.c_str());
     if (func == nullptr) {
         std::ostringstream e;
-        e << "FFI: Couldn't find function `" << sym << "`";
+        e << "FFI: Couldn't find function `" << sym << "`" << std::endl;
+        e << dlerror();
         runtime_die(e.str());
     }
     ONLYDEBUG printf("ADDING FUNCTION %s TO mutateFFIFuncs\n", charmName.c_str());

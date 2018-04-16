@@ -23,9 +23,10 @@ release: $(OBJECT_FILES)
 install: release
 	cp charm /usr/bin/charm
 
-ffi-lib: $(LIB_OBJECT_FILES)
-	# TODO: add -fPIC to all the build commands??
+ffi-lib:
+	make ffi-build-objects CPPFLAGS=-fPIC
 	ar rvs libcharmffi.a $(LIB_OBJECT_FILES)
+ffi-build-objects: $(LIB_OBJECT_FILES)
 install-lib: ffi-lib
 	cp libcharmffi.a /usr/lib/
 	-mkdir /usr/include/charm
@@ -65,4 +66,4 @@ reload-prelude:
 	rm Prelude.charm.o
 	make
 
-.PHONY: release install ffi-lib install-lib clean reload-prelude
+.PHONY: release install ffi-lib install-lib clean reload-prelude ffi-build-objects

@@ -3,3 +3,4 @@
 #include "./PredefinedFunctions.h"
 #include "./Stack.h"
 #include "./FunctionAnalyzer.h"
+#include "./ParserTypes.h"
