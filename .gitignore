@@ -5,6 +5,7 @@ gmon.out
 # charm files
 charm
 charm-release
+libcharmffi.a
 *.stats
 *.gch
 

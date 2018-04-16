@@ -103,6 +103,7 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 	//functionDefinitions table.
 	bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
 	bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
+	ONLYDEBUG printf("isPredefinedFunction? %s. isFFIFunction? %s\n", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
 	if (isPredefinedFunction) {
 		//run the predefined function!
 		//(note: the function context AKA the definition we are running code from

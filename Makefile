@@ -1,4 +1,5 @@
-OBJECT_FILES = main.o Parser.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o Prelude.charm.o FFI.o
+LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o
+OBJECT_FILES = main.o Parser.o Prelude.charm.o $(LIB_OBJECT_FILES)
 
 OUT_FILE ?= charm
 
@@ -14,14 +15,15 @@ endif
 DEBUG ?= false
 OPTIMIZE_INLINE ?= true
 
-DEFAULT_EXECUTABLE_LINE = $(CXX) -Wall -g --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $(OUT_FILE)
-DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -g --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+DEFAULT_EXECUTABLE_LINE = $(CXX) -Wall -O3 --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $(OUT_FILE)
+DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
 
 release: $(OBJECT_FILES)
 	$(DEFAULT_EXECUTABLE_LINE) $(OBJECT_FILES) $(LDLIBS)
 
-debug: $(OBJECT_FILES)
-	$(CXX) -Wall -g --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CFLAGS) $(OBJECT_FILES) $(LDLIBS) -o charm-debug
+ffi-lib: $(LIB_OBJECT_FILES)
+	# TODO: add -fPIC to all the build commands??
+	ar rvs libcharmffi.a $(LIB_OBJECT_FILES)
 
 main.o: main.cpp
 	$(DEFAULT_OBJECT_LINE) main.cpp
@@ -48,4 +50,4 @@ reload-prelude:
 	rm Prelude.charm.o
 	make
 
-.PHONY: release debug clean reload-prelude
+.PHONY: release debug clean reload-prelude ffi-lib
