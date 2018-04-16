@@ -1,6 +1,4 @@
-#include "../../Runner.h"
-#include "../../FFI.h"
-
+#include "charm/CharmFFI.h"
 #include <iostream>
 
 extern "C"
