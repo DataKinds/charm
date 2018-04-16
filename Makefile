@@ -20,10 +20,22 @@ DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPT
 
 release: $(OBJECT_FILES)
 	$(DEFAULT_EXECUTABLE_LINE) $(OBJECT_FILES) $(LDLIBS)
+install: release
+	cp charm /usr/bin/charm
 
 ffi-lib: $(LIB_OBJECT_FILES)
 	# TODO: add -fPIC to all the build commands??
 	ar rvs libcharmffi.a $(LIB_OBJECT_FILES)
+install-lib: ffi-lib
+	cp libcharmffi.a /usr/lib/
+	-mkdir /usr/include/charm
+	cp ParserTypes.h /usr/include/charm/
+	cp Runner.h /usr/include/charm/
+	cp Stack.h /usr/include/charm/
+	cp PredefinedFunctions.h /usr/include/charm/
+	cp FunctionAnalyzer.h /usr/include/charm/
+	cp FFI.h /usr/include/charm/
+	cp CharmFFI.h /usr/include/charm/
 
 main.o: main.cpp
 	$(DEFAULT_OBJECT_LINE) main.cpp
@@ -45,9 +57,12 @@ FFI.o: FFI.cpp
 	$(DEFAULT_OBJECT_LINE) FFI.cpp
 
 clean:
-	rm $(OBJECT_FILES)
+	-rm $(OBJECT_FILES)
+	-rm gui.o
+	-rm libcharmffi.a
+
 reload-prelude:
 	rm Prelude.charm.o
 	make
 
-.PHONY: release debug clean reload-prelude ffi-lib
+.PHONY: release install clean reload-prelude ffi-lib
