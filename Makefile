@@ -65,4 +65,4 @@ reload-prelude:
 	rm Prelude.charm.o
 	make
 
-.PHONY: release install clean reload-prelude ffi-lib
+.PHONY: release install ffi-lib install-lib clean reload-prelude
