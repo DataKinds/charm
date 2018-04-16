@@ -48,17 +48,19 @@ Charm$ putN
 
 ## Compilation
 
-Recommended build command:
+Build and install Charm with:
 ```
 make
+sudo make install
 ```
-This will produce a binary named `charm`.
+This will produce a binary named `charm`, and copy it to `/usr/bin/charm`.
 
-For a basic, unoptimized binary with debug symbols, build with
+To install Charm development libraries (especially for the Charm FFI), build and install with:
 ```
-make debug
+make ffi-lib
+sudo make install-lib
 ```
-This will produce a binary named `charm-debug`.
+This will install `libcharmffi.a` to `/usr/lib/` and include headers to `/usr/include/charm/`. See `test/test-ffi/testLib.cpp` for an example of how to use the main include header, `charm/CharmFFI.h`.
 
 ### Compilation Options
 
