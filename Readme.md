@@ -112,9 +112,10 @@ Tail-call optimization is necessary for this language, as there are no other way
 
 ### Todo list
 
-- C FFI & linkage
+- ~~C FFI & linkage~~ Done!
 - Imports from other files
-- Possible LLVM codegen?
+- Type signatures
+- Possible C++ codegen?
 
 ### Other Links
 
