@@ -26,10 +26,10 @@ private:
 	bool advanceParse(std::string& token, std::string& rest);
 	void delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline);
 
-
 	CharmFunction parseDefinition(std::string line);
 	CharmFunction parseDefinedFunction(std::string tok);
 	CharmFunction parseNumberFunction(std::string tok);
+	std::string escapeString(std::string tok);
 	CharmFunction parseStringFunction(std::string& token, std::string& rest);
 	CharmFunction parseListFunction(std::string& token, std::string& rest);
 public:

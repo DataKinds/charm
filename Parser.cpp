@@ -58,10 +58,21 @@ bool Parser::isStringNumber(std::string str) {
 bool Parser::isLineFunctionDefinition(std::string line) {
 	std::stringstream lineS(line);
 	std::string f;
+    bool stringDepth = false;
+    int listDepth = 0;
 	while (std::getline(lineS, f, ' ')) {
-		if (Parser::recognizeFunction(f) == FUNCTION_DEFINITION) {
-			return true;
-		}
+        if (Parser::recognizeFunction(f) == LIST_FUNCTION) {
+            listDepth++;
+        } else if (f == "]") {
+            listDepth--;
+        } else if (Parser::recognizeFunction(f) == STRING_FUNCTION) {
+            stringDepth = !stringDepth;
+        }
+        if (listDepth == 0 && !stringDepth) {
+            if (Parser::recognizeFunction(f) == FUNCTION_DEFINITION) {
+                return true;
+            }
+        }
 	}
 	return false;
 }
@@ -69,10 +80,21 @@ bool Parser::isLineFunctionDefinition(std::string line) {
 bool Parser::isLineTypeSignature(std::string line) {
 	std::stringstream lineS(line);
 	std::string f;
+    bool stringDepth = false;
+    int listDepth = 0;
 	while (std::getline(lineS, f, ' ')) {
-		if (f == "::") {
-			return true;
-		}
+        if (Parser::recognizeFunction(f) == LIST_FUNCTION) {
+            listDepth++;
+        } else if (f == "]") {
+            listDepth--;
+        } else if (Parser::recognizeFunction(f) == STRING_FUNCTION) {
+            stringDepth = !stringDepth;
+        }
+        if (listDepth == 0 && !stringDepth) {
+            if (f == "::") {
+                return true;
+            }
+        }
 	}
 	return false;
 }
@@ -220,6 +242,29 @@ CharmFunction Parser::parseNumberFunction(std::string tok) {
 	return out;
 }
 
+std::string Parser::escapeString(std::string tok) {
+    for (auto c = tok.begin(); c != tok.end(); c++) {
+        //this will return "\ " unmodified
+        if (c == std::prev(tok.end())) {
+            break;
+        }
+        if (*c == '\\') {
+            auto i = c - tok.begin();
+            if (*std::next(c) == 'n') {
+                tok.replace(i, 2, "\n");
+            } else if (*std::next(c) == '\"') {
+                tok.replace(i, 2, "\"");
+            } else if (*std::next(c) == 't') {
+                tok.replace(i, 2, "\t");
+            } else if (*std::next(c) == '0') {
+                tok.replace(i, 2, "\0");
+            } else if (*std::next(c) == '\\') {
+                tok.replace(i, 2, "\\");
+            }
+        }
+    }
+    return tok;
+}
 CharmFunction Parser::parseStringFunction(std::string& token, std::string& rest) {
 	CharmFunction out;
 	out.functionType = STRING_FUNCTION;
@@ -229,7 +274,7 @@ CharmFunction Parser::parseStringFunction(std::string& token, std::string& rest)
         if (token == "\"") {
             break;
         }
-        outS << token << " ";
+        outS << Parser::escapeString(token) << " ";
     }
     out.stringValue = outS.str();
     //if our string is non-empty, there will be a final space pushed to it that
