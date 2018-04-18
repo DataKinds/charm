@@ -317,7 +317,7 @@ CharmFunction Parser::parseListFunction(std::string& token, std::string& rest) {
 		outS << token << " ";
 	}
 	//finally, we can put the inside of the [ ] into the out
-	out.literalFunctions = Parser::lexAskToInline(outS.str(), false).first;
+	out.literalFunctions = Parser::lex(outS.str(), false).first;
 	return out;
 }
 
@@ -372,7 +372,7 @@ bool Parser::advanceParse(std::string& token, std::string& rest) {
     return true;
 }
 
-std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lexAskToInline(const std::string charmInput, bool willInline) {
+std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string charmInput, bool willInline, const std::string ns) {
 	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
 	CHARM_LIST_TYPE out;
 
@@ -401,7 +401,4 @@ std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lexAskToInline(const std::
 	//wow, we're finally done with this abomination of a function
 	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> outPair(out, &fA);
 	return outPair;
-}
-std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string charmInput) {
-	return Parser::lexAskToInline(charmInput, true);
 }

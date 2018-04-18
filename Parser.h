@@ -34,6 +34,5 @@ private:
 	CharmFunction parseListFunction(std::string& token, std::string& rest);
 public:
 	Parser();
-	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lex(const std::string charmInput);
-	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lexAskToInline(const std::string charmInput, bool willInline);
+	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lex(const std::string charmInput, bool willInline = true, const std::string ns = "");
 };
