@@ -118,12 +118,12 @@ CharmTypes Parser::tokenToType(std::string token) {
         runtime_die(errorOut.str());
     }
 }
-CharmTypeSignature Parser::parseTypeSignature(std::string line) {
+CharmTypeSignature Parser::parseTypeSignature(std::string line, std::string ns) {
 	CharmTypeSignature typeSignature;
 	//this is called only if Parser::isLineFunctionDefinition was true, so that guarentees that
 	//the string " := " is somewhere in this string
 	auto colonIndex = line.find("::");
-	typeSignature.functionName = line.substr(0, colonIndex);
+	typeSignature.functionName = ns + line.substr(0, colonIndex);
 	Parser::rtrim(typeSignature.functionName);
 	Parser::ltrim(typeSignature.functionName);
 
@@ -187,7 +187,7 @@ CharmFunctionDefinitionInfo Parser::analyzeDefinition(CharmFunction f) {
 	return out;
 }
 
-CharmFunction Parser::parseDefinition(std::string line) {
+CharmFunction Parser::parseDefinition(std::string line, std::string ns) {
 	//if there was a function definition, do some weird stuff
 	//set functionType to FUNCTION_DEFINITION (duh)
 	//take the first token before the := and set it to the functionName
@@ -199,15 +199,13 @@ CharmFunction Parser::parseDefinition(std::string line) {
 	//this is called only if Parser::isLineFunctionDefinition was true, so that guarentees that
 	//the string " := " is somewhere in this string
 	auto equalsIndex = line.find(":=");
-	nameAndDef.first = line.substr(0, equalsIndex);
-	Parser::rtrim(nameAndDef.first);
-	Parser::ltrim(nameAndDef.first);
-	nameAndDef.second = line.substr(equalsIndex + 2);
 	//now we set the stuff!
-	currentFunction.functionName = nameAndDef.first;
+	currentFunction.functionName = ns + line.substr(0, equalsIndex);
+    Parser::rtrim(currentFunction.functionName);
+    Parser::ltrim(currentFunction.functionName);
 	ONLYDEBUG printf("FUNCTION IS NAMED %s\n", currentFunction.functionName.c_str());
-	ONLYDEBUG printf("FUNCTION BODY IS %s\n", nameAndDef.second.c_str());
-	currentFunction.literalFunctions = Parser::lex(nameAndDef.second).first;
+    currentFunction.literalFunctions = Parser::lex(line.substr(equalsIndex + 2), true, ns).first;
+	ONLYDEBUG printf("FUNCTION BODY IS %s\n", line.substr(equalsIndex + 2).c_str());
 	//we outta here!
 
 	//then, we analyze the function before returning it
@@ -218,10 +216,10 @@ CharmFunction Parser::parseDefinition(std::string line) {
 	return currentFunction;
 }
 
-CharmFunction Parser::parseDefinedFunction(std::string tok) {
+CharmFunction Parser::parseDefinedFunction(std::string tok, std::string ns) {
 	CharmFunction out;
 	out.functionType = DEFINED_FUNCTION;
-	out.functionName = tok;
+	out.functionName = ns + tok;
 	return out;
 }
 
@@ -288,7 +286,7 @@ CharmFunction Parser::parseStringFunction(std::string& token, std::string& rest)
 	return out;
 }
 
-CharmFunction Parser::parseListFunction(std::string& token, std::string& rest) {
+CharmFunction Parser::parseListFunction(std::string& token, std::string& rest, std::string ns) {
 	CharmFunction out;
 	out.functionType = LIST_FUNCTION;
 	//and not a string. this time, we look for a "]"
@@ -317,17 +315,17 @@ CharmFunction Parser::parseListFunction(std::string& token, std::string& rest) {
 		outS << token << " ";
 	}
 	//finally, we can put the inside of the [ ] into the out
-	out.literalFunctions = Parser::lex(outS.str(), false).first;
+	out.literalFunctions = Parser::lex(outS.str(), false, ns).first;
 	return out;
 }
 
-void Parser::delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline) {
+void Parser::delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline, const std::string ns) {
 	ONLYDEBUG printf("DELEGATE PARSING %s\n", token.c_str());
 	CharmFunction currentFunction;
 	CharmFunctionType type = Parser::recognizeFunction(token);
 	if (type == DEFINED_FUNCTION) {
 		//deal with DEFINED_FUNCTION first, easiest to deal with
-		currentFunction = Parser::parseDefinedFunction(token);
+		currentFunction = Parser::parseDefinedFunction(token, ns);
 		//if we're doing inline optimizations, do them here:
 		if (OPTIMIZE_INLINE && willInline) {
 			ONLYDEBUG puts("WE ARE DOING INLINE DEFINITIONS");
@@ -345,7 +343,7 @@ void Parser::delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::stri
 		currentFunction = Parser::parseStringFunction(token, rest);
 	} else if (type == LIST_FUNCTION) {
 		//same thing as before, except it's a list
-		currentFunction = Parser::parseListFunction(token, rest);
+		currentFunction = Parser::parseListFunction(token, rest, ns);
 	}
 	out.push_back(currentFunction);
 	if (DEBUGMODE) {
@@ -383,9 +381,9 @@ std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string char
 		//contain a function definition before parsing it
 		if (isLineFunctionDefinition(line)) {
 			//deal with FUNCTION_DEFINITION
-			out.push_back(Parser::parseDefinition(line));
+			out.push_back(Parser::parseDefinition(line, ns));
 		} else if (isLineTypeSignature(line)) {
-            fA.addTypeSignature(Parser::parseTypeSignature(line));
+            fA.addTypeSignature(Parser::parseTypeSignature(line, ns));
         } else {
 			std::string rest = line;
 			std::string token;
@@ -394,7 +392,7 @@ std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string char
 					//if the token is empty bc multiple spaces
 					continue;
 				}
-				delegateParsing(out, token, rest, willInline);
+				delegateParsing(out, token, rest, willInline, ns);
 			}
 		}
 	}
