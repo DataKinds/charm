@@ -114,7 +114,6 @@ int main(int argc, char const *argv[]) {
 	std::optional<std::string> optFileName;
 	if (args.size() > 0) {
 		optFileName = args.back();
-		std::cout << *optFileName;
 	}
 
 	//if theres a file to run, load it and run it
