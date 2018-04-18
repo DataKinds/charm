@@ -23,7 +23,7 @@ release: $(OBJECT_FILES)
 install:
 	cp charm /usr/bin/charm
 
-ffi-lib:
+ffi-lib: clean
 	make ffi-build-objects CPPFLAGS=-fPIC
 	ar rvs libcharmffi.a $(LIB_OBJECT_FILES)
 ffi-build-objects: $(LIB_OBJECT_FILES)
