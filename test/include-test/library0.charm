@@ -1,0 +1,3 @@
+" library1.charm " " lib1: " include
+
+addTwo := lib1:two +

@@ -18,21 +18,22 @@ private:
 
 	bool isLineTypeSignature(std::string line);
 	CharmTypes tokenToType(std::string token);
-	CharmTypeSignature parseTypeSignature(std::string line, std::string ns);
+	CharmTypeSignature parseTypeSignature(std::string line);
 	CharmFunctionDefinitionInfo analyzeDefinition(CharmFunction f);
 
 	FunctionAnalyzer fA;
 
 	bool advanceParse(std::string& token, std::string& rest);
-	void delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline, const std::string ns);
+	void delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline);
 
-	CharmFunction parseDefinition(std::string line, std::string ns);
-	CharmFunction parseDefinedFunction(std::string tok, std::string ns);
+	CharmFunction parseDefinition(std::string line);
+	CharmFunction parseDefinedFunction(std::string tok);
 	CharmFunction parseNumberFunction(std::string tok);
 	std::string escapeString(std::string tok);
 	CharmFunction parseStringFunction(std::string& token, std::string& rest);
-	CharmFunction parseListFunction(std::string& token, std::string& rest, std::string ns);
+	CharmFunction parseListFunction(std::string& token, std::string& rest);
 public:
 	Parser();
-	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lex(const std::string charmInput, bool willInline = true, const std::string ns = "");
+	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lex(const std::string charmInput);
+	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> lexAskToInline(const std::string charmInput, bool willInline);
 };

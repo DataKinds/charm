@@ -942,6 +942,39 @@ native_functions:
                   - type: any
                     desc: The value of the reference
               pushes:
+    - category: Library Interaction
+      functions:
+        - include:
+              desc: Creates a new named stack to work with.
+              note:
+                  - No inline optimization is done for functions called from a library. This is because all inlining is indexed and performed at compile time, whereas library includsion is performed at runtime.
+                  - For proper calling syntax and usage (as the quick view does not do this function justice), visit <a href="https://github.com/Aearnus/charm/blob/master/test/include-test">https://github.com/Aearnus/charm/blob/master/test/include-test</a> for a real world usage example.
+              source: |
+                addBuiltinFunction("include", [](Runner* r) {
+                	//NOTE: no inlining is done for included files
+                	//this is because all inlining is done at compiletime,
+                	//and this inclusion happens at run-time
+
+                	//the namespace to place functions in
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	//the path of the file to import
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if ((f1.functionType != STRING_FUNCTION) || (f2.functionType != STRING_FUNCTION)) {
+                		runtime_die("Non string passed to `include`.");
+                	}
+                	std::string line;
+                	std::ifstream importFile(f2.stringValue);
+                	Parser parser = Parser();
+                	while (std::getline(importFile, line)) {
+                		r->run(parser.lex(line), f1.stringValue);
+                	}
+                });
+              pops:
+                  - type: string
+                    desc: The path to the Charm file to include
+                  - type: string
+                    desc: The namespace, which gets prepended to the functions in the library
+              pushes:
 
 
 prelude_functions:

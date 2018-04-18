@@ -1,0 +1,3 @@
+" library0.charm " " lib0: " include
+
+2 lib0:addTwo put

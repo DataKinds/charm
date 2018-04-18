@@ -155,9 +155,9 @@ static char* function_name_generator(const char* line, int state) {
     int len = strlen(line);
 
     // match with functions defined in this runner
-    auto fds = runner->getFunctionDefinitions();
+    auto fds = runner->functionDefinitions;
 	for (const auto& fd : fds) {
-		const char* name = fd.functionName.c_str();
+		const char* name = fd.second.functionName.c_str();
 		if (strncmp(name, line, len) == 0) {
 			return strdup(name);
 		}
