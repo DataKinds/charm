@@ -61,6 +61,7 @@ clean:
 	-rm $(OBJECT_FILES)
 	-rm gui.o
 	-rm libcharmffi.a
+	-rm charm
 
 reload-prelude:
 	rm Prelude.charm.o
