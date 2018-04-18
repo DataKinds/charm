@@ -143,7 +143,7 @@ Tail-call optimization is necessary for this language, as there are no other way
 ### Todo list
 
 - ~~C FFI & linkage~~ Done!
-- Imports from other files
+- ~~Imports from other files~~ Done!
 - Type signatures
 - Possible C++ codegen?
 
