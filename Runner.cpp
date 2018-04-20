@@ -11,15 +11,8 @@ void Runner::addFunctionDefinition(FunctionDefinition fD) {
 	//first, check and make sure there's no other definition with
 	//the same name. if there is, overwrite it. if not, just push_back
 	//this definition.
-	bool functionExists = false;
-	for (unsigned long long definitionIndex = 0; definitionIndex < Runner::functionDefinitions.size(); definitionIndex++) {
-		if (functionDefinitions[definitionIndex].functionName == fD.functionName) {
-			functionDefinitions[definitionIndex] = fD;
-			functionExists = true;
-		}
-	}
-	if (!functionExists) {
-		functionDefinitions.push_back(fD);
+	if (functionDefinitions.find(fD.functionName) == functionDefinitions.end()) {
+		functionDefinitions[fD.functionName] = fD;
 	}
 }
 
@@ -89,10 +82,6 @@ void Runner::setReference(CharmFunction key, CharmFunction value) {
 	references.push_back(newRef);
 }
 
-std::vector<FunctionDefinition> Runner::getFunctionDefinitions() {
-	return Runner::functionDefinitions;
-}
-
 void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 	//PredefinedFunctions.h holds all the functions written in C++
 	//other than that, if these functions aren't built in, they are run through
@@ -116,33 +105,69 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 		//look through the functionDefinitions table for a function with
 		//a matching name, and run that. if there are no functions - throw
 		//an error.
-		bool functionFound = false;
-		for (FunctionDefinition fD : functionDefinitions) {
-			if (fD.functionName == f.functionName) {
-				functionFound = true;
-				//wait! before we run it, check and make sure this function isn't tail recursive
-				if (fD.definitionInfo.tailCallRecursive) {
-					//if it is, drop the last call to itself and just run it in a loop
-					//TODO: exiting a tail-call loop?
-					CHARM_LIST_TYPE functionBodyCopy = fD.functionBody;
-					functionBodyCopy.pop_back();
-					while (1) {
-						Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(functionBodyCopy, context->fA));
-					}
+		auto possibleFunction = functionDefinitions.find(f.functionName);
+		if (possibleFunction != functionDefinitions.end()) {
+			auto fD = possibleFunction->second;
+			//wait! before we run it, check and make sure this function isn't tail recursive
+			if (fD.definitionInfo.tailCallRecursive) {
+				//if it is, drop the last call to itself and just run it in a loop
+				//TODO: exiting a tail-call loop?
+				CHARM_LIST_TYPE functionBodyCopy = fD.functionBody;
+				functionBodyCopy.pop_back();
+				while (1) {
+					Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(functionBodyCopy, context->fA));
 				}
-				//ooh. the only time we use this call!
-				context->fD = &fD;
-				Runner::runWithContext(fD.functionBody, context);
 			}
-		}
-		if (!functionFound) {
+			//ooh. the only time we use this call!
+			context->fD = &fD;
+			Runner::runWithContext(fD.functionBody, context);
+		} else {
 			runtime_die("Unknown function `" + f.functionName + "`.");
 		}
 	}
 }
 
-void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context) {
+void Runner::addNamespacePrefix(CharmFunction& f, std::string ns) {
+	if (ns == "") {
+		return;
+	}
+	if (f.functionType == NUMBER_FUNCTION) {
+		return;
+	} else if (f.functionType == STRING_FUNCTION) {
+		return;
+	} else if (f.functionType == LIST_FUNCTION) {
+		for (CharmFunction& currentFunction : f.literalFunctions) {
+			addNamespacePrefix(currentFunction, ns);
+		}
+		return;
+	} else if (f.functionType == FUNCTION_DEFINITION) {
+		f.functionName = ns + f.functionName;
+		for (CharmFunction& currentFunction : f.literalFunctions) {
+			addNamespacePrefix(currentFunction, ns);
+		}
+		return;
+	} else if (f.functionType == DEFINED_FUNCTION) {
+		bool isAlreadyDefined = (functionDefinitions.find(f.functionName) != functionDefinitions.end());
+		bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
+		bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
+		ONLYDEBUG printf("isAlreadyDefined: %s, isPredefinedFunction: %s, isFFIFunction: %s\n", isAlreadyDefined ? "Yes" : "No", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
+		if (isPredefinedFunction || isFFIFunction || isAlreadyDefined) {
+			//don't rename the function if it was defined globally outside of this file
+			//or it was already defined (aka: in the prelude)
+			//note: adding the "if already defined" clause ensures that functions from its own file don't trip the system,
+			//as those functions were already transformed and had their namespace prepended.
+		} else {
+			f.functionName = ns + f.functionName;
+		}
+	}
+}
+
+void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns) {
 	for (CharmFunction currentFunction : parsedProgram) {
+		if (ns != "") {
+			ONLYDEBUG printf("ADDING NAMESPACE %s\n", ns.c_str());
+			Runner::addNamespacePrefix(currentFunction, ns);
+		}
 		//alright, now we get into the running portion
 		if (currentFunction.functionType == NUMBER_FUNCTION) {
 			ONLYDEBUG puts("RUNNING AS NUMBER_FUNCTION");
@@ -179,9 +204,9 @@ void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* contex
 	ONLYDEBUG puts("EXITING RUNNER::RUN");
 }
 
-void Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer) {
+void Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer, std::string ns) {
 	RunnerContext rC;
 	rC.fA = parsedProgramWithAnalyzer.second;
 	rC.fD = nullptr;
-	Runner::runWithContext(parsedProgramWithAnalyzer.first, &rC);
+	Runner::runWithContext(parsedProgramWithAnalyzer.first, &rC, ns);
 }

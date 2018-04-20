@@ -1,3 +1,4 @@
+#include <fstream>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -13,6 +14,7 @@
 #include "Runner.h"
 #include "FunctionAnalyzer.h"
 #include "FFI.h"
+#include "Parser.h"
 
 #ifdef CHARM_GUI
 #include "gui.h"
@@ -656,5 +658,27 @@ PredefinedFunctions::PredefinedFunctions() {
 		//the name of the reference
 		CharmFunction f2 = r->getCurrentStack()->pop();
 		r->setReference(f2, f1);
+	});
+	/*************************************
+	LIBRARY INTERACTION
+	*************************************/
+	addBuiltinFunction("include", [](Runner* r) {
+		//NOTE: no inlining is done for included files
+		//this is because all inlining is done at compile time,
+		//and this inclusion happens at runtime
+
+		//the namespace to place functions in
+		CharmFunction f1 = r->getCurrentStack()->pop();
+		//the path of the file to import
+		CharmFunction f2 = r->getCurrentStack()->pop();
+		if ((f1.functionType != STRING_FUNCTION) || (f2.functionType != STRING_FUNCTION)) {
+			runtime_die("Non string passed to `include`.");
+		}
+		std::string line;
+		std::ifstream importFile(f2.stringValue);
+		Parser parser = Parser();
+		while (std::getline(importFile, line)) {
+			r->run(parser.lex(line), f1.stringValue);
+		}
 	});
 }

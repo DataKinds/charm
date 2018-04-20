@@ -24,14 +24,14 @@ DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++1z -DDEBUGMODE=$(DEBUG) -DOPT
 
 release: $(OBJECT_FILES)
 	$(DEFAULT_EXECUTABLE_LINE) $(OBJECT_FILES) $(LDLIBS)
-install: release
+install:
 	cp charm /usr/bin/charm
 
-ffi-lib:
+ffi-lib: clean
 	make ffi-build-objects CPPFLAGS=-fPIC
 	ar rvs libcharmffi.a $(LIB_OBJECT_FILES)
 ffi-build-objects: $(LIB_OBJECT_FILES)
-install-lib: ffi-lib
+install-lib:
 	cp libcharmffi.a /usr/lib/
 	-mkdir /usr/include/charm
 	cp ParserTypes.h /usr/include/charm/

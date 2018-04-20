@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <unordered_map>
 #include "ParserTypes.h"
 #include "Stack.h"
 
@@ -23,10 +24,6 @@ struct Reference {
 extern "C"
 class Runner {
 private:
-	//alright, this is the nitty gritty
-	//here is the table of function definitions:
-	std::vector<FunctionDefinition> functionDefinitions;
-
 	//handle the functions that we don't know about
 	//and / or handle built in functions
 	void handleDefinedFunctions(CharmFunction f, RunnerContext* context);
@@ -39,13 +36,13 @@ private:
 	std::vector<Reference> references;
 public:
 	Runner();
-	std::vector<FunctionDefinition> getFunctionDefinitions();
 	//and this is how you add them
 	void addFunctionDefinition(FunctionDefinition fD);
 
-	//all of our instances
+	//all of our instances containing any sort of functions are right here:
 	PredefinedFunctions* pF;
 	FFI* ffi;
+	std::unordered_map<std::string, FunctionDefinition> functionDefinitions;
 
 	const unsigned int MAX_STACK = 20000;
 	bool doesStackExist(CharmFunction name);
@@ -56,6 +53,7 @@ public:
 	CharmFunction getReference(CharmFunction key);
 	void setReference(CharmFunction key, CharmFunction value);
 
-	void runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context);
-	void run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer);
+	void addNamespacePrefix(CharmFunction& f, std::string ns);
+	void runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns = "");
+	void run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer, std::string ns = "");
 };

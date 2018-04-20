@@ -114,7 +114,6 @@ int main(int argc, char const *argv[]) {
 	std::optional<std::string> optFileName;
 	if (args.size() > 0) {
 		optFileName = args.back();
-		std::cout << *optFileName;
 	}
 
 	//if theres a file to run, load it and run it
@@ -193,9 +192,9 @@ int main(int argc, char const *argv[]) {
 			CHARM_STACK_TYPE postStack = runner.getCurrentStack()->stack;
 			ONLYDEBUG printf("\n");
 			ONLYDEBUG printf("DEFINED FUNCTIONS: ");
-			auto functionDefinitions = runner.getFunctionDefinitions();
+			auto functionDefinitions = runner.functionDefinitions;
 			for (auto currentFunction : functionDefinitions) {
-				ONLYDEBUG printf("%s ", currentFunction.functionName.c_str());
+				ONLYDEBUG printf("%s ", currentFunction.second.functionName.c_str());
 			}
 			ONLYDEBUG printf("\n");
 		}
