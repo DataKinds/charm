@@ -25,6 +25,7 @@ DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++1z -DDEBUGMODE=$(DEBUG) -DOPT
 release: $(OBJECT_FILES)
 	$(DEFAULT_EXECUTABLE_LINE) $(OBJECT_FILES) $(LDLIBS)
 install:
+	chmod +x charm
 	cp charm /usr/bin/charm
 
 ffi-lib: clean
