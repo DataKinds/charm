@@ -4,19 +4,23 @@ OBJECT_FILES = main.o Parser.o Prelude.charm.o $(LIB_OBJECT_FILES)
 OUT_FILE ?= charm
 
 ifeq ($(GUI),)
-LDLIBS ?= -lreadline -lhistory -ldl
+LDLIBS += -lreadline -lhistory -ldl
 else
-LDLIBS ?= -lreadline -lhistory -lncurses -ldl
+LDLIBS += -lreadline -lhistory -ltermcap -lncurses -ldl
 CPPFLAGS += -DCHARM_GUI=1
 OBJECT_FILES += gui.o
 endif
+
+# Include directories and library search paths
+INCLUDEDIR ?=
+LIBDIR ?=
 
 # Compilation flags
 DEBUG ?= false
 OPTIMIZE_INLINE ?= true
 
-DEFAULT_EXECUTABLE_LINE = $(CXX) -Wall -O3 --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) -o $(OUT_FILE)
-DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++17 -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(LDFLAGS) $(LDLIBS)
+DEFAULT_EXECUTABLE_LINE = $(CXX) -Wall -O3 --std=c++1z -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDE_DIR) $(LIB_DIR) $(LDFLAGS) -o $(OUT_FILE) $(LDLIBS)
+DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++1z -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDE_DIR) $(LIB_DIR) $(LDFLAGS)
 
 release: $(OBJECT_FILES)
 	$(DEFAULT_EXECUTABLE_LINE) $(OBJECT_FILES) $(LDLIBS)
@@ -51,7 +55,7 @@ PredefinedFunctions.o: PredefinedFunctions.cpp
 FunctionAnalyzer.o: FunctionAnalyzer.cpp
 	$(DEFAULT_OBJECT_LINE) FunctionAnalyzer.cpp
 Prelude.charm.o: Prelude.charm.cpp
-	$(CXX) -c -Wall -O3 --std=c++17 Prelude.charm.cpp
+	$(CXX) -c -Wall -O3 --std=c++1z Prelude.charm.cpp
 gui.o: gui.cpp
 	$(DEFAULT_OBJECT_LINE) gui.cpp
 FFI.o: FFI.cpp
@@ -61,6 +65,14 @@ clean:
 	-rm $(OBJECT_FILES)
 	-rm gui.o
 	-rm libcharmffi.a
+	-rm charm
+	-rm charm-release
+	-rm libhistory.o
+	-rm libreadline.o
+	-rm libtermcap.o
+	-rm libtermcap.o
+	-rm charm.html*
+	-rm charm.js
 
 reload-prelude:
 	rm Prelude.charm.o
