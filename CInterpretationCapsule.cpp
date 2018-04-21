@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "Runner.h"
+#include "Prelude.charm.h"
 
 #include <iostream>
 #include <sstream>
@@ -13,8 +14,9 @@ extern "C" {
         CInterpretationCapsule() {
             p = new Parser();
             r = new Runner();
+            this->run(prelude.c_str());
         };
-        void run(char* in) {
+        void run(const char* in) {
             std::string inS(in);
             r->run(p->lex(inS));
         };
@@ -30,7 +32,11 @@ extern "C" {
         std::ostringstream newCout;
         std::cout.rdbuf(newCout.rdbuf());
         //then run
-        c->run(in);
+        try {
+            c->run(in);
+        } catch (std::exception& e) {
+            std::cout << e.what();
+        }
         //restore cout
         std::cout.rdbuf(oldCout);
         //and return the output

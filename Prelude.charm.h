@@ -1,3 +1,3 @@
 #include <string>
 
-extern std::string prelude;
+extern const std::string prelude;

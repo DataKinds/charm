@@ -90,6 +90,13 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 	//first, make sure that the function we're trying to run exists in the PredefinedFunctions
 	//table. if it doesn't - assume it's defined in Charm and run through the
 	//functionDefinitions table.
+	if (DEBUGMODE) {
+		puts("ALL PREDEFINED FUNCTIONS: ");
+		for (auto f : pF->cppFunctionNames) {
+			printf("%s ", f.first.c_str());
+		}
+		puts("");
+	}
 	bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
 	bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
 	ONLYDEBUG printf("isPredefinedFunction? %s. isFFIFunction? %s\n", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
@@ -105,6 +112,13 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 		//look through the functionDefinitions table for a function with
 		//a matching name, and run that. if there are no functions - throw
 		//an error.
+		if (DEBUGMODE) {
+			puts("ALL DEFINED FUNCTIONS: ");
+			for (auto f : functionDefinitions) {
+				printf("%s ", f.first.c_str());
+			}
+			puts("");
+		}
 		auto possibleFunction = functionDefinitions.find(f.functionName);
 		if (possibleFunction != functionDefinitions.end()) {
 			auto fD = possibleFunction->second;

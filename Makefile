@@ -79,6 +79,7 @@ CInterpretationCapsule.o: CInterpretationCapsule.cpp
 
 clean:
 	-rm $(OBJECT_FILES)
+	-rm CInterpretationCapsule.o
 	-rm gui.o
 	-rm libcharmffi.a
 	-rm charm

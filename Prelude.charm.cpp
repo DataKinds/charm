@@ -1,7 +1,7 @@
 #include <string>
 #include "Prelude.charm.h"
 
-std::string prelude = R"~(
+const std::string prelude = R"~(
 
 " OUTPUT FUNCTIONS " pop
 " ================ " pop

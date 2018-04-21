@@ -92,6 +92,8 @@ puts %Q~
         <title>
             Charm Function Glossary
         </title>
+        <script type="text/javascript" src="charm.js"></script>
+        <script type="text/javascript" src="expose_charm.js"></script>
         <script type="text/javascript">
             function codeClick(e) {
                 var elem = e.target;
@@ -105,16 +107,23 @@ puts %Q~
                     //codePre.style.height = (codePre.innerHTML.split("\\n").length * lineHeight) + "px";
                 }
             }
+            function replOnKeyDown(e) {
+                if (e.keyCode == 13) {
+                    var i = document.getElementById("replInput");
+                    runCharm(i.value);
+                    i.value = "";
+                }
+            }
             function init() {
                 var codes = document.getElementsByClassName("code-button");
                 for (let code of codes) {
                     code.onclick = function (e) { codeClick(e); };
                 }
+                document.getElementById("replInput").onkeydown = function (e) { replOnKeyDown(e); };
+                initCharm();
             }
             window.onload = init;
         </script>
-        <script type="text/javascript" src="charm.js"></script>
-        <script type="text/javascript" src="expose_charm.js"></script>
         <style type="text/css">
             html {
                 background-color: #ddd;
@@ -144,6 +153,22 @@ puts %Q~
             }
             h3.function:target {
                 background-color: yellow;
+            }
+            #replOutput {
+                margin: 0 auto;
+                width: 100%;
+                height: 16em;
+                padding: 8px;
+                border-width: thin;
+                border-color: black;
+                border-style: solid;
+                border-radius: 5px
+                background-color: #ccc;
+                font-family: monospace;
+                overflow-y: scroll;
+            }
+            #replInput {
+                width: calc(100% - 15em);
             }
             .info {
                 padding-left: 2em;
@@ -186,6 +211,11 @@ puts %Q~
         <h2>
             Try Charm!
         </h2>
+        <pre id="replOutput">#{`charm -v`.chomp} built using emscripten.</pre>
+        <label id="replInputLabel" for="replInput">
+            Charm (stack omitted)$
+        </label>
+        <input type="text" name="replInput" id="replInput" placeholder="Type Charm code here and press return...">
         <h2 class="index-header">
             Quick Function Index
         </h2>
