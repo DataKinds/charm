@@ -12,3 +12,7 @@ libcharmffi.a
 # eclipse files
 /.cproject
 /.project
+
+# emscripten files
+charm.html*
+charm.js
