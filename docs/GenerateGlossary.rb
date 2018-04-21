@@ -113,6 +113,8 @@ puts %Q~
             }
             window.onload = init;
         </script>
+        <script type="text/javascript" src="charm.js"></script>
+        <script type="text/javascript" src="expose_charm.js"></script>
         <style type="text/css">
             html {
                 background-color: #ddd;
@@ -181,6 +183,9 @@ puts %Q~
         <p>
             If you've stumbled across this page on accident, please feel free to check out Charm, a stack-based functional programming language at <a href="https://github.com/aearnus/charm">https://github.com/aearnus/charm</a>. It's free, terse, paradigm-smashing, and fun to use and think in.
         </p>
+        <h2>
+            Try Charm!
+        </h2>
         <h2 class="index-header">
             Quick Function Index
         </h2>

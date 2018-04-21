@@ -1,6 +1,9 @@
 #include "Parser.h"
 #include "Runner.h"
 
+#include <iostream>
+#include <sstream>
+
 extern "C" {
     class CInterpretationCapsule {
     private:
@@ -21,9 +24,17 @@ extern "C" {
         return new CInterpretationCapsule();
     }
     
-    void runCapsule(CInterpretationCapsule* c, char* in) {
+    const char* runCapsule(CInterpretationCapsule* c, char* in) {
+        //redirect cout to our stringstream
+        std::streambuf* oldCout = std::cout.rdbuf();
+        std::ostringstream newCout;
+        std::cout.rdbuf(newCout.rdbuf());
+        //then run
         c->run(in);
-        // TODO: return the print values
+        //restore cout
+        std::cout.rdbuf(oldCout);
+        //and return the output
+        return newCout.str().c_str();
     }
 };
 

@@ -15,4 +15,3 @@ libcharmffi.a
 
 # emscripten files
 charm.html*
-charm.js
