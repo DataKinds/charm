@@ -82,6 +82,8 @@ This will install `libcharmffi.a` to `/usr/lib/` and include headers to `/usr/in
 
 * `DEBUG=true`: Builds Charm with verbose debug mode enabled.
 
+* `USE_READLINE=false`: Builds Charm without GNU readline support.
+
 ## About Charm
 
 ### Full Charm Function Glossary

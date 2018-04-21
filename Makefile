@@ -1,12 +1,22 @@
 LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o
 OBJECT_FILES = main.o Parser.o Prelude.charm.o $(LIB_OBJECT_FILES)
+EMSCRIPTEN_OBJECT_FILES = CInterpretationCapsule.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o Prelude.charm.o
 
 OUT_FILE ?= charm
 
-ifeq ($(GUI),)
-LDLIBS += -lreadline -lhistory -ldl
+LDLIBS += -ldl
+
+USE_READLINE ?= true
+ifeq ($(USE_READLINE),true)
+LDLIBS += -lreadline -lhistory
 else
-LDLIBS += -lreadline -lhistory -ltermcap -lncurses -ldl
+endif
+
+
+ifeq ($(GUI),)
+LDLIBS += -lreadline -lhistory
+else
+LDLIBS += -lreadline -lhistory -ltermcap -lncurses
 CPPFLAGS += -DCHARM_GUI=1
 OBJECT_FILES += gui.o
 endif
@@ -20,10 +30,13 @@ DEBUG ?= false
 OPTIMIZE_INLINE ?= true
 
 DEFAULT_EXECUTABLE_LINE = $(CXX) -Wall -O3 --std=c++1z -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDEDIR) $(LIBDIR) $(LDFLAGS) -o $(OUT_FILE) $(LDLIBS)
-DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++1z -DDEBUGMODE=$(DEBUG) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDEDIR) $(LIBDIR) $(LDFLAGS)
+DEFAULT_OBJECT_LINE = $(CXX) -c -Wall -O3 --std=c++1z -DDEBUGMODE=$(DEBUG) -DUSE_READLINE=$(USE_READLINE) -DOPTIMIZE_INLINE=$(OPTIMIZE_INLINE) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDEDIR) $(LIBDIR) $(LDFLAGS)
 
 release: $(OBJECT_FILES)
 	$(DEFAULT_EXECUTABLE_LINE) $(OBJECT_FILES) $(LDLIBS)
+emscripten-release: $(EMSCRIPTEN_OBJECT_FILES)
+	$(DEFAULT_EXECUTABLE_LINE) $(EMSCRIPTEN_OBJECT_FILES) $(LDLIBS)
+build-objects: $(OBJECT_FILES)
 install:
 	chmod +x charm
 	cp charm /usr/bin/charm
@@ -61,6 +74,8 @@ gui.o: gui.cpp
 	$(DEFAULT_OBJECT_LINE) gui.cpp
 FFI.o: FFI.cpp
 	$(DEFAULT_OBJECT_LINE) FFI.cpp
+CInterpretationCapsule.o: CInterpretationCapsule.cpp
+	$(DEFAULT_OBJECT_LINE) CInterpretationCapsule.cpp
 
 clean:
 	-rm $(OBJECT_FILES)

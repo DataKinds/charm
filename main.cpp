@@ -174,8 +174,14 @@ int main(int argc, char const *argv[]) {
 		while (true) {
 			std::stringstream prompt;
 			prompt << "Charm (Stack " << charmFunctionToString(runner.getCurrentStack()->name) << ")$ ";
-			std::string codeInput(readline(prompt.str().c_str()));
-			add_history(codeInput.c_str());
+			#if USE_READLINE == true
+				std::string codeInput(readline(prompt.str().c_str()));
+				add_history(codeInput.c_str());
+			#else
+				std::string codeInput;
+				std::cout << prompt.str();
+				std::cin >> codeInput;
+			#endif
 			auto parsedProgram = parser.lex(codeInput);
 			ONLYDEBUG printf("TOKEN TYPES: ");
 			for (auto currentFunction : parsedProgram.first) {
