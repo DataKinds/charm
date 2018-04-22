@@ -1,5 +1,5 @@
-LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o
-OBJECT_FILES = main.o Parser.o Prelude.charm.o $(LIB_OBJECT_FILES)
+LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o 
+OBJECT_FILES = main.o Prelude.charm.o $(LIB_OBJECT_FILES)
 EMSCRIPTEN_OBJECT_FILES = CInterpretationCapsule.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o Prelude.charm.o
 
 OUT_FILE ?= charm

@@ -3,7 +3,7 @@
 extern "C" {
 extern void __stginit_Doubler(void);
 }
-#include <charm/CharmFFI.h>
+#include <charm/CharmFFI.hpp>
 #include <iostream>
 
 extern "C"
