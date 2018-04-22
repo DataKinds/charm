@@ -1,3 +1,5 @@
 " hsinit " " ./hsLib.so " " haskellInit " ffi
 " hsexit " " ./hsLib.so " " haskellExit " ffi
 " hsfunc " " ./hsLib.so " " haskellDoubler " ffi
+
+hsinit 10 hsfunc p newline hsexit
