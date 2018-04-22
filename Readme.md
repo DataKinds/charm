@@ -84,6 +84,14 @@ This will install `libcharmffi.a` to `/usr/lib/` and include headers to `/usr/in
 
 * `USE_READLINE=false`: Builds Charm without GNU readline support.
 
+### Compilation note for Raspberry Pi users
+
+The built-in dynamic version of `libstdc++` (located at `/usr/lib/arm-linux-gnueabihf/libstdc++.so.6`) isn't new enough to support the modern C++17 features used in Charm. Consequently, to compile Charm on a Raspberry Pi, make sure to use static linking against the compiler provided version of `libstdc++` through the command
+```
+make CPPFLAGS=-static-libstdc++
+```
+Do note that you still need either GCC (>7.0.0) or Clang (>4.0) to compile on a Raspberry Pi.
+
 ## About Charm
 
 ### Full Charm Function Glossary
