@@ -1,5 +1,8 @@
 # In the base charm directory, make sure you've run `make ffi-lib`.
-# Then, inside of charm (from this directory), run " hello " " main.o " " charmFFIHelloWorld " ffi
+# Then, inside of charm (from this directory), run " hello " " testLib.so " " charmFFIHelloWorld " ffi
 
 all:
-	g++ -shared -fPIC --std=c++17 -lcharmffi -o testLib.so testLib.cpp
+	g++ --shared -fPIC --std=c++17 -lcharmffi -o testLib.so testLib.cpp
+
+clean:
+	-rm testLib.so
