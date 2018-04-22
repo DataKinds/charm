@@ -52,7 +52,7 @@ Charm$ putN
 
 ## Dependencies
 
-- GCC (>7)
+- GCC (>7.0.0) or Clang (>4.0)
 - libreadline and related development packages (`libreadline-dev on apt-based systems`)
 - A willingness to think outside of the box
 
