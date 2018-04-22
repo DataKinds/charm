@@ -54,7 +54,7 @@ install-lib:
 	cp PredefinedFunctions.h /usr/include/charm/
 	cp FunctionAnalyzer.h /usr/include/charm/
 	cp FFI.h /usr/include/charm/
-	cp CharmFFI.h /usr/include/charm/
+	cp CharmFFI.hpp /usr/include/charm/
 
 main.o: main.cpp
 	$(DEFAULT_OBJECT_LINE) main.cpp
