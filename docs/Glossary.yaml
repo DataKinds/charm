@@ -945,7 +945,7 @@ native_functions:
     - category: Library Interaction
       functions:
         - include:
-              desc: Creates a new named stack to work with.
+              desc: Includes a Charm library into another file.
               note:
                   - No inline optimization is done for functions called from a library. This is because all inlining is indexed and performed at compile time, whereas library includsion is performed at runtime.
                   - For proper calling syntax and usage (as the quick view does not do this function justice), visit <a href="https://github.com/Aearnus/charm/blob/master/test/include-test">https://github.com/Aearnus/charm/blob/master/test/include-test</a> for a real world usage example.
