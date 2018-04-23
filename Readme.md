@@ -7,7 +7,7 @@
    </a>
 </p>
 
-**Charm** is an experimental stack based functional language based off of Forth and Joy. It implements functions as a first class data structure, able to be manipulated with ease, using generally applicable tools and functions.
+**Charm** is an experimental stack based functional language based off of Lisp and Joy. It implements functions as a first class data structure, able to be manipulated with ease, using generally applicable tools and functions.
 
 ## :boom: Why use Charm? :question:
 
