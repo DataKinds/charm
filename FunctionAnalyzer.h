@@ -20,5 +20,6 @@ public:
     bool doInline(CHARM_LIST_TYPE& out, CharmFunction currentFunction);
 
     void addTypeSignature(CharmTypeSignature t);
-    bool checkTypeSignature(CharmFunction f, CHARM_LIST_TYPE definition);
+    std::optional<CharmTypeSignature> getTypeSignature(std::string name);
+    static unsigned int maxTypeSignatureLength(CharmTypeSignature t);
 };

@@ -6,6 +6,7 @@
 #include "Error.h"
 #include "Debug.h"
 #include "FFI.h"
+#include "FunctionAnalyzer.h"
 
 void Runner::addFunctionDefinition(FunctionDefinition fD) {
 	//first, check and make sure there's no other definition with
@@ -81,6 +82,61 @@ void Runner::setReference(CharmFunction key, CharmFunction value) {
 	//if it wasn't previously defined then
 	references.push_back(newRef);
 }
+
+std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string name, RunnerContext* context) {
+	std::optional<std::vector<CharmFunction>> out;
+	std::optional<CharmTypeSignature> type = context->fA->getTypeSignature(name);
+	ONLYDEBUG printf("RUNNING TYPESIGNATURETICK FOR %s\n", name.c_str());
+	if (type) {
+		//assign a vector to be checked by 
+		unsigned int maxLength = FunctionAnalyzer::maxTypeSignatureLength(*type);
+		ONLYDEBUG printf("FOUND A TYPE SIGNATURE FOR %s OF MAX LENGTH %i\n", name.c_str(), maxLength);
+		out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rbegin() + maxLength);
+		//check the popped values to see if they match up with a type signature
+		//NOTE: this is repeated in typeSignatureTock
+		//TODO: DRY
+		for (auto unit : type->units) {
+			bool isSignatureValid = true;
+			//check the type signature against the stack
+			for (unsigned int i = 0; i < unit.pops.size(); i++) {
+				auto popSig = unit.pops.at(i);
+				auto popStack = out->at(i);
+				if (popSig == TYPESIG_ANY) {
+					isSignatureValid = true;
+				} else if (popSig == TYPESIG_LIST) {
+					isSignatureValid = TYPESIG_LIST == charmFunctionToType(popStack);
+				} else if (popSig == TYPESIG_LISTSTRING) {
+					isSignatureValid = (TYPESIG_LIST == charmFunctionToType(popStack) || TYPESIG_STRING == charmFunctionToType(popStack));
+				} else if (popSig == TYPESIG_STRING) {
+					isSignatureValid = TYPESIG_STRING == charmFunctionToType(popStack);
+				} else if (popSig == TYPESIG_INT) {
+					isSignatureValid = TYPESIG_INT == charmFunctionToType(popStack);
+				} else if (popSig == TYPESIG_FLOAT) {
+					isSignatureValid = TYPESIG_FLOAT == charmFunctionToType(popStack);
+				}
+				if (!isSignatureValid) {
+					break;
+				}
+			}
+			// and if it's still valid by the time the types have been checked, then 
+			// we return and don't error
+			if (isSignatureValid) {
+				return out;
+			}
+		}
+		//if we exited the type signature checking function without finding a valid type signature
+		std::stringstream typeSigError;
+		typeSigError << "Type signature check for function " << name << " failed." << std::endl;
+		typeSigError << "The function wanted types `" << charmTypeSignatureToString(*type) << "` but it got types `" << "TODO" << "`" << std::endl;
+		runtime_die(typeSigError.str());
+	}
+	//this returns an empty std::option
+	return out;
+}
+void Runner::typeSignatureTock(std::vector<CharmFunction> tick) {
+	
+}
+
 
 void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 	//PredefinedFunctions.h holds all the functions written in C++
@@ -176,7 +232,7 @@ void Runner::addNamespacePrefix(CharmFunction& f, std::string ns) {
 	}
 }
 
-void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns) {
+void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns) {	
 	for (CharmFunction currentFunction : parsedProgram) {
 		if (ns != "") {
 			ONLYDEBUG printf("ADDING NAMESPACE %s\n", ns.c_str());
@@ -210,9 +266,18 @@ void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* contex
 			//that was easy too! oh no...
 		} else if (currentFunction.functionType == DEFINED_FUNCTION) {
 			ONLYDEBUG puts("RUNNING AS DEFINED_FUNCTION");
+			//check the top of the stack before the function itself runs
+			//TODO: the function gets optimized out before it comes here.
+			//what can I do about that? i have no idea. i'll do it tomorrow.
+			auto tick = Runner::typeSignatureTick(currentFunction.functionName, context);
 			//let's do these defined functions now
 			Runner::handleDefinedFunctions(currentFunction, context);
 			//lol you thought i'd do it here
+			//check the stack at function's exit to make sure the type signature holds up
+			//if the optional is unset, there was no type sig provided so don't bother running this
+			if (tick) {
+				Runner::typeSignatureTock(*tick);
+			}
 		}
 	}
 	ONLYDEBUG puts("EXITING RUNNER::RUN");

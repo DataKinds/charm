@@ -11,6 +11,28 @@ FunctionAnalyzer::FunctionAnalyzer() {
 void FunctionAnalyzer::addTypeSignature(CharmTypeSignature t) {
     typeSignatures[t.functionName] = t;
 }
+std::optional<CharmTypeSignature> FunctionAnalyzer::getTypeSignature(std::string name) {
+    std::optional<CharmTypeSignature> out;
+    auto iter = typeSignatures.find(name);
+    if (iter != typeSignatures.end()) {
+        out = iter->second;
+    }
+    return out;
+}
+
+unsigned int FunctionAnalyzer::maxTypeSignatureLength(CharmTypeSignature t) {
+    unsigned int maxLength = 0;
+    for (auto& unit : t.units) {
+        if (unit.pops.size() > maxLength) {
+            maxLength = unit.pops.size();
+        }
+        if (unit.pushes.size() > maxLength) {
+            maxLength = unit.pushes.size();
+        }
+    }
+    ONLYDEBUG printf("MAX TYPE SIGNATURE LENGTH IS %i\n", maxLength);
+    return maxLength;
+}
 
 void FunctionAnalyzer::addToInlineDefinitions(CharmFunction f) {
     if (f.functionType == FUNCTION_DEFINITION) {

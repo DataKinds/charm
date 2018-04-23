@@ -75,6 +75,64 @@ struct CharmFunction {
 	//ONLY USED WITH FUNCTION_DEFINITION
 	CharmFunctionDefinitionInfo definitionInfo;
 };
+inline std::string charmTypeSignatureToString(CharmTypeSignature t) {
+	std::stringstream out;
+	return "TODO";
+}
+inline std::string charmTypeToString(CharmTypes t) {
+	switch (t) { 
+	case TYPESIG_ANY:
+	return "any";
+	break;
+	case TYPESIG_LIST:
+	return "list";
+	break;
+	case TYPESIG_LISTSTRING:
+	return "list/string";
+	break;
+	case TYPESIG_STRING:
+	return "string";
+	break;
+	case TYPESIG_INT:
+	return "int";
+	break;
+	case TYPESIG_FLOAT:
+	return "float";
+	break;
+	}
+}
+inline CharmTypes charmFunctionToType(CharmFunction f) {
+	switch (f.functionType) {
+		case LIST_FUNCTION:
+		return TYPESIG_LIST;
+		break;
+
+		case NUMBER_FUNCTION:
+		switch (f.numberValue.whichType) {
+			case INTEGER_VALUE:
+			return TYPESIG_INT;
+			break;
+
+			case FLOAT_VALUE:
+			return TYPESIG_FLOAT;
+			break;
+		}
+		break;
+
+		case STRING_FUNCTION:
+		return TYPESIG_STRING;
+		break;
+		
+		//these shouldn't happen in the course of normal execution
+		case FUNCTION_DEFINITION:
+		return TYPESIG_ANY;
+		break;
+		case DEFINED_FUNCTION:
+		return TYPESIG_ANY;
+		break;
+	}
+	return TYPESIG_ANY;
+}
 inline std::string charmFunctionToString(CharmFunction f) {
 	std::stringstream out;
 	switch (f.functionType) {

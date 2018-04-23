@@ -43,6 +43,10 @@ public:
 	PredefinedFunctions* pF;
 	FFI* ffi;
 	std::unordered_map<std::string, FunctionDefinition> functionDefinitions;
+	
+	//type signature runtime checking
+	std::optional<std::vector<CharmFunction>> typeSignatureTick(std::string name, RunnerContext* context);
+	void typeSignatureTock(std::vector<CharmFunction> tick);
 
 	const unsigned int MAX_STACK = 20000;
 	bool doesStackExist(CharmFunction name);
