@@ -560,6 +560,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		} else {
 			runtime_die("Non number passed to `abs`.");
 		}
+		r->getCurrentStack()->push(f1);
 	});
 	/*************************************
 	INTEGER OPS
