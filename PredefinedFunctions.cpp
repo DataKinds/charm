@@ -630,17 +630,7 @@ PredefinedFunctions::PredefinedFunctions() {
 	addBuiltinFunction("createstack", [](Runner* r) {
 		//name of the stack
 		CharmFunction f1 = r->getCurrentStack()->pop();
-		//length of the stack
-		CharmFunction f2 = r->getCurrentStack()->pop();
-		if (Stack::isInt(f2)) {
-			if (sgn(f2.numberValue.integerValue) == 1) {
-				r->createStack(f2.numberValue.integerValue.get_ui(), f1);
-			} else {
-				runtime_die("Negative integer or zero passed to `createStack`.");
-			}
-		} else {
-			runtime_die("Non integer passed to `createStack`.");
-		}
+		r->createStack(f1);
 	});
 	addBuiltinFunction("getstack", [](Runner* r) {
 		//name of the stack

@@ -4,11 +4,9 @@
 
 class Stack {
 private:
-	//says how much of the stack was changed, for printing n stuff
-	unsigned long long modifiedStackArea;
 public:
     CharmFunction name;
-    Stack(unsigned long long size, CharmFunction name);
+    Stack(CharmFunction name);
     //the stack is automatically initialized to MAX_INT zero ints
     CHARM_STACK_TYPE stack;
     //check to see if the stack name is equal
@@ -29,5 +27,4 @@ public:
     CharmFunction pop();
     //swap values at index n1 and n2 from the top (zero-indexed)
     void swap(unsigned long long n1, unsigned long long n2);
-    unsigned int getModifiedStackArea();
 };

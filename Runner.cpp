@@ -21,7 +21,7 @@ Runner::Runner() {
 	//initialize the stacks
 	CharmFunction zero = Stack::zeroF();
 	currentStackName = zero;
-	stacks.push_back(Stack(MAX_STACK, zero));
+	stacks.push_back(Stack(zero));
 	pF = new PredefinedFunctions();
 	ffi = new FFI();
 }
@@ -51,11 +51,11 @@ void Runner::switchCurrentStack(CharmFunction name) {
 	}
 }
 
-void Runner::createStack(unsigned long long length, CharmFunction name) {
+void Runner::createStack(CharmFunction name) {
 	if (Runner::doesStackExist(name)) {
 		runtime_die("Tried to create stack that already exists.");
 	} else {
-		stacks.push_back(Stack(length, name));
+		stacks.push_back(Stack(name));
 	}
 }
 
@@ -88,7 +88,7 @@ std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string 
 	std::optional<CharmTypeSignature> type = context->fA->getTypeSignature(name);
 	ONLYDEBUG printf("RUNNING TYPESIGNATURETICK FOR %s\n", name.c_str());
 	if (type) {
-		//assign a vector to be checked by 
+		//assign a vector to be checked by
 		unsigned int maxLength = FunctionAnalyzer::maxTypeSignatureLength(*type);
 		ONLYDEBUG printf("FOUND A TYPE SIGNATURE FOR %s OF MAX LENGTH %i\n", name.c_str(), maxLength);
 		out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rbegin() + maxLength);
@@ -118,7 +118,7 @@ std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string 
 					break;
 				}
 			}
-			// and if it's still valid by the time the types have been checked, then 
+			// and if it's still valid by the time the types have been checked, then
 			// we return and don't error
 			if (isSignatureValid) {
 				return out;
@@ -134,7 +134,7 @@ std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string 
 	return out;
 }
 void Runner::typeSignatureTock(std::vector<CharmFunction> tick) {
-	
+
 }
 
 
@@ -232,7 +232,7 @@ void Runner::addNamespacePrefix(CharmFunction& f, std::string ns) {
 	}
 }
 
-void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns) {	
+void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns) {
 	for (CharmFunction currentFunction : parsedProgram) {
 		if (ns != "") {
 			ONLYDEBUG printf("ADDING NAMESPACE %s\n", ns.c_str());
