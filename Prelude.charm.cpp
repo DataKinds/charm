@@ -129,6 +129,9 @@ revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for
 " [ list ] reverse " pop
 reverse := [ ] flip [ item concat ] revfor
 
+" [ list ] delitem " pop
+delitem := 1 + split flip len 1 - split pop flip concat
+
 " NAMED REF MANIPULATION " pop
 " ====================== " pop
 

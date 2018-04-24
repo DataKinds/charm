@@ -1258,6 +1258,18 @@ prelude_functions:
               pushes:
                   - type: list
                     desc: Reversed list
+        - delitem:
+              desc: Removes an item from a list by index.
+              source: |
+                 delitem := 1 + split flip len 1 - split pop flip concat
+              pops:
+                  - type: list
+                    desc: List to affect
+                  - type: int
+                    desc: Index to remove
+              pushes:
+                  - type: list
+                    desc: The affected list
     - category: Named Reference Manipulation
       functions:
         - modref:
