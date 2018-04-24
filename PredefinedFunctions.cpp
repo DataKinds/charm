@@ -186,7 +186,7 @@ PredefinedFunctions::PredefinedFunctions() {
 			if ((f1.numberValue.integerValue >= r->MAX_STACK) || (f2.numberValue.integerValue >= r->MAX_STACK)) {
 				runtime_die("Overflowing pointers passed to `swap`.");
 			}
-			r->getCurrentStack()->swap((unsigned long long)f1.numberValue.integerValue, (unsigned long long)f2.numberValue.integerValue);
+			r->getCurrentStack()->swap((unsigned long long)f1.numberValue.integerValue.get_ui(), (unsigned long long)f2.numberValue.integerValue.get_ui());
 		} else {
 			runtime_die("Non integer passed to `swap`.");
 		}
@@ -229,13 +229,15 @@ PredefinedFunctions::PredefinedFunctions() {
 					runtime_die("Empty list passed to `at`.");
 				}
 				out.functionType = LIST_FUNCTION;
-				out.literalFunctions = { f2.literalFunctions.at(f1.numberValue.integerValue % f2.literalFunctions.size()) };
+				mpz_class atIndex = f1.numberValue.integerValue % mpz_class(f2.literalFunctions.size());
+				out.literalFunctions = { f2.literalFunctions.at(atIndex.get_ui()) };
 			} else if (f2.functionType == STRING_FUNCTION) {
 				if (f2.stringValue.size() < 1) {
 					runtime_die("Empty string passed to `at`.");
 				}
 				out.functionType = STRING_FUNCTION;
-				out.stringValue = f2.stringValue[f1.numberValue.integerValue % f2.stringValue.size()];
+				mpz_class atIndex = f1.numberValue.integerValue % mpz_class(f2.stringValue.size());
+				out.stringValue = f2.stringValue[atIndex.get_ui()];
 			} else {
 				runtime_die("Neither a list nor a string was passed to `at`");
 			}
@@ -257,8 +259,9 @@ PredefinedFunctions::PredefinedFunctions() {
 		if (f3.functionType == LIST_FUNCTION) {
 			//only allow a list to be inserted into a list
 			if (f2.functionType == LIST_FUNCTION) {
+				mpz_class beginIndex = f1.numberValue.integerValue % mpz_class(f3.literalFunctions.size());
 				f3.literalFunctions.insert(
-					f3.literalFunctions.begin() + (f1.numberValue.integerValue % f3.literalFunctions.size()),
+					f3.literalFunctions.begin() + (beginIndex.get_ui()),
 					f2.literalFunctions.begin(),
 					f2.literalFunctions.end()
 				);
@@ -268,8 +271,9 @@ PredefinedFunctions::PredefinedFunctions() {
 		} else if (f3.functionType == STRING_FUNCTION) {
 			//only allow a string to be inserted into another string
 			if (f2.functionType == STRING_FUNCTION) {
+				mpz_class beginIndex = f1.numberValue.integerValue % mpz_class(f3.stringValue.size());
 				f3.stringValue.insert(
-					f1.numberValue.integerValue % f3.stringValue.size(),
+					beginIndex.get_ui(),
 					f2.stringValue
 				);
 			} else {
@@ -302,19 +306,19 @@ PredefinedFunctions::PredefinedFunctions() {
 		CharmFunction highOut;
 		if (f1.functionType == NUMBER_FUNCTION && f1.numberValue.whichType == INTEGER_VALUE) {
 			//bounds checking
-			if (f1.numberValue.integerValue < 0 || (unsigned long long)f1.numberValue.integerValue > f2.literalFunctions.size()) {
+			if (f1.numberValue.integerValue < 0 || f1.numberValue.integerValue > mpz_class(f2.literalFunctions.size())) {
 				runtime_die("Out of bounds error on the number passed to `split`.");
 			}
 			if (f2.functionType == LIST_FUNCTION) {
 				lowOut.functionType = LIST_FUNCTION;
-				lowOut.literalFunctions.assign(f2.literalFunctions.begin(), f2.literalFunctions.begin() + f1.numberValue.integerValue);
+				lowOut.literalFunctions.assign(f2.literalFunctions.begin(), f2.literalFunctions.begin() + f1.numberValue.integerValue.get_ui());
 				highOut.functionType = LIST_FUNCTION;
-				highOut.literalFunctions.assign(f2.literalFunctions.begin() + f1.numberValue.integerValue, f2.literalFunctions.end());
+				highOut.literalFunctions.assign(f2.literalFunctions.begin() + f1.numberValue.integerValue.get_ui(), f2.literalFunctions.end());
 			} else if (f2.functionType == STRING_FUNCTION) {
 				lowOut.functionType = STRING_FUNCTION;
-				lowOut.stringValue.assign(f2.stringValue.begin(), f2.stringValue.begin() + f1.numberValue.integerValue);
+				lowOut.stringValue.assign(f2.stringValue.begin(), f2.stringValue.begin() + f1.numberValue.integerValue.get_ui());
 				highOut.functionType = STRING_FUNCTION;
-				highOut.stringValue.assign(f2.stringValue.begin() + f1.numberValue.integerValue, f2.stringValue.end());
+				highOut.stringValue.assign(f2.stringValue.begin() + f1.numberValue.integerValue.get_ui(), f2.stringValue.end());
 			} else {
 				runtime_die("Non list/string passed to `split`.");
 			}
@@ -343,7 +347,7 @@ PredefinedFunctions::PredefinedFunctions() {
 				} else {
 					CharmFunction out;
 					out.functionType = STRING_FUNCTION;
-					out.stringValue = std::string(1, static_cast<char>(f1.numberValue.integerValue));
+					out.stringValue = std::string(1, static_cast<char>(f1.numberValue.integerValue.get_ui()));
 					r->getCurrentStack()->push(out);
 				}
 			} else {
@@ -360,7 +364,7 @@ PredefinedFunctions::PredefinedFunctions() {
 				CharmFunction out;
 				CharmNumber n;
 				n.whichType = INTEGER_VALUE;
-				n.integerValue = static_cast<long long>(f1.stringValue[0]);
+				n.integerValue = mpz_class(static_cast<unsigned long>(f1.stringValue[0]));
 				out.functionType = NUMBER_FUNCTION;
 				out.numberValue = n;
 				r->getCurrentStack()->push(out);
@@ -430,7 +434,7 @@ PredefinedFunctions::PredefinedFunctions() {
 							r->runWithContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
-								if (cond.numberValue.integerValue > 0) {
+								if (sgn(cond.numberValue.integerValue) == 1) {
 									r->runWithContext(truthy.literalFunctions, context);
 								} else {
 									r->runWithContext(falsy.literalFunctions, context);
@@ -451,7 +455,7 @@ PredefinedFunctions::PredefinedFunctions() {
 							r->runWithContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
-								if (cond.numberValue.integerValue > 0) {
+								if (sgn(cond.numberValue.integerValue) == 1) {
 									r->runWithContext(truthy.literalFunctions, context);
 									//end this function immediately once the tail call loop ends
 									ONLYDEBUG printf("DISENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
@@ -476,7 +480,7 @@ PredefinedFunctions::PredefinedFunctions() {
 						while (1) {
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
-								if (cond.numberValue.integerValue > 0) {
+								if (sgn(cond.numberValue.integerValue) == 1) {
 									r->runWithContext(truthy.literalFunctions, context);
 								} else {
 									r->runWithContext(falsy.literalFunctions, context);
@@ -494,7 +498,7 @@ PredefinedFunctions::PredefinedFunctions() {
 				//now we check the top of the stack to see if it's truthy or falsy
 				CharmFunction cond = r->getCurrentStack()->pop();
 				if (Stack::isInt(cond)) {
-					if (cond.numberValue.integerValue > 0) {
+					if (sgn(cond.numberValue.integerValue) == 1) {
 						r->runWithContext(truthy.literalFunctions, context);
 					} else {
 						r->runWithContext(falsy.literalFunctions, context);
@@ -538,7 +542,7 @@ PredefinedFunctions::PredefinedFunctions() {
 			CharmNumber outNum;
 			outNum.whichType = INTEGER_VALUE;
 			//cancer incoming
-			outNum.integerValue = ((f1.numberValue.integerValue > 0) ^ (f2.numberValue.integerValue > 0));
+			outNum.integerValue = (sgn(f1.numberValue.integerValue) ^ sgn(f2.numberValue.integerValue));
 			//no more cancer
 			out.numberValue = outNum;
 			r->getCurrentStack()->push(out);
@@ -552,7 +556,7 @@ PredefinedFunctions::PredefinedFunctions() {
 	addBuiltinFunction("abs", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (Stack::isInt(f1)) {
-			std::abs(f1.numberValue.integerValue);
+			abs(f1.numberValue.integerValue);
 		} else if (Stack::isFloat(f1)) {
 			if (f1.numberValue.floatValue < 0) {
 				f1.numberValue.floatValue = -f1.numberValue.floatValue;
@@ -594,7 +598,7 @@ PredefinedFunctions::PredefinedFunctions() {
 			//f2 used as modulus
 			f2.numberValue.integerValue = f2.numberValue.integerValue % f1.numberValue.integerValue;
 		} else {
-			runtime_die("Non integer passed to `+`.");
+			runtime_die("Non integer passed to `/`.");
 		}
 		r->getCurrentStack()->push(f2);
 		r->getCurrentStack()->push(f1);
@@ -613,7 +617,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (Stack::isFloat(f1)) {
 			f1.numberValue.whichType = INTEGER_VALUE;
-			f1.numberValue.integerValue = (long long)f1.numberValue.floatValue;
+			f1.numberValue.integerValue = trunc(f1.numberValue.floatValue);
 		} else if (Stack::isInt(f1)) {
 			//do nothing, it's already an int
 		} else {
@@ -629,8 +633,8 @@ PredefinedFunctions::PredefinedFunctions() {
 		//length of the stack
 		CharmFunction f2 = r->getCurrentStack()->pop();
 		if (Stack::isInt(f2)) {
-			if (f2.numberValue.integerValue > 0) {
-				r->createStack(f2.numberValue.integerValue, f1);
+			if (sgn(f2.numberValue.integerValue) == 1) {
+				r->createStack(f2.numberValue.integerValue.get_ui(), f1);
 			} else {
 				runtime_die("Negative integer or zero passed to `createStack`.");
 			}
