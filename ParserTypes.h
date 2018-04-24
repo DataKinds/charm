@@ -4,6 +4,7 @@
 #include <vector>
 #include <deque>
 #include <variant>
+#include <gmpxx.h>
 
 #ifndef CHARM_STACK_TYPE
 	#define CHARM_STACK_TYPE std::deque<CharmFunction>
@@ -52,8 +53,8 @@ enum CharmNumberType {
 
 struct CharmNumber {
 	CharmNumberType whichType;
-	long long integerValue;
-	long double floatValue;
+	mpz_class integerValue;
+	mpf_class floatValue;
 	//to allow Charm to support both floats
 	//and integers, we add both
 };
@@ -80,7 +81,7 @@ inline std::string charmTypeSignatureToString(CharmTypeSignature t) {
 	return "TODO";
 }
 inline std::string charmTypeToString(CharmTypes t) {
-	switch (t) { 
+	switch (t) {
 	case TYPESIG_ANY:
 	return "any";
 	break;
@@ -122,7 +123,7 @@ inline CharmTypes charmFunctionToType(CharmFunction f) {
 		case STRING_FUNCTION:
 		return TYPESIG_STRING;
 		break;
-		
+
 		//these shouldn't happen in the course of normal execution
 		case FUNCTION_DEFINITION:
 		return TYPESIG_ANY;
@@ -154,11 +155,19 @@ inline std::string charmFunctionToString(CharmFunction f) {
 		case NUMBER_FUNCTION:
 		switch (f.numberValue.whichType) {
 			case INTEGER_VALUE:
-			out << f.numberValue.integerValue;
+			out << f.numberValue.integerValue.get_str();
 			break;
 
 			case FLOAT_VALUE:
-			out << f.numberValue.floatValue;
+			long exponent;
+			std::string outString = f.numberValue.floatValue.get_str(exponent);
+			if (exponent < 0) {
+				out << "0." << outString.insert(0, std::abs(exponent), '0');
+			} else if (exponent == 0) {
+				out << "0." << outString;
+			} else if (exponent > 0) {
+				out << outString.insert(exponent, 1, '.');
+			}
 			break;
 		}
 		break;

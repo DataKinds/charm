@@ -4,7 +4,7 @@ EMSCRIPTEN_OBJECT_FILES = CInterpretationCapsule.o Runner.o Stack.o PredefinedFu
 
 OUT_FILE ?= charm
 
-LDLIBS += -ldl
+LDLIBS += -ldl -lgmp
 
 USE_READLINE ?= true
 ifeq ($(USE_READLINE),true)
