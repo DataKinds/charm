@@ -162,9 +162,9 @@ inline std::string charmFunctionToString(CharmFunction f) {
 			long exponent;
 			std::string outString = f.numberValue.floatValue.get_str(exponent);
 			if (exponent < 0) {
-				out << "0." << outString.insert(0, std::abs(exponent) - 1, '0');
+				out << "0." << outString.insert(0, std::abs(exponent), '0');
 			} else if (exponent == 0) {
-				out << "1.0";
+				out << "0." << outString;
 			} else if (exponent > 0) {
 				out << outString.insert(exponent, 1, '.');
 			}
