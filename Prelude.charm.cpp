@@ -119,4 +119,30 @@ _map_cleanup := flip pop
 _map         := [ _map_cond ] [ _map_iter _map ] [ _map_cleanup ] ifthen
 map          := _map_args _map
 
+" [ list ] [ function ] for " pop
+_for_args := " for_function " flip setref " for_iterable " flip setref
+_for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
+item := " for_item " getref
+for := _for_args " for_index " 0 setref _for_body
+revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
+
+" [ list ] reverse " pop
+reverse := [ ] flip [ item concat ] revfor
+
+" NAMED REF MANIPULATION " pop
+" ====================== " pop
+
+" <ref name> [ function ] modref " pop
+_modref_args := " modref_function " flip setref " modref_reference " flip setref
+modref := _modref_args " modref_reference " getref getref " modref_function " getref i " modref_reference " getref flip setref
+
+" [ list ] setrefs " pop
+setrefs := [ item i flip setref ] revfor
+
+" MISCELLANEOUS " pop
+" ============= " pop
+
+" <library> sinclude "
+sinclude := dup " arg " flip setref " .charm " concat " arg " getref " : " concat include
+
 )~";

@@ -1232,3 +1232,61 @@ prelude_functions:
               pushes:
                   - type: list
                     desc: Mapped list
+        - for:
+              desc: Applies a function to every element in a list but returns nothing.
+              note:
+                  - The function passed to <span class="code">for</span> has no requirements, unlike with <span class="code">map</span>. It may do whatever it likes to the stack.
+                  - A good example of a proper <span class="code">for</span> call is <span class="code">[ 1 2 3 ] [ item i put ] for</span>. Note how the value is unquoted (<span class="code">i</span>) but not quoted again due to there being no point in re-quoting.
+              source: |
+                 _for_args := " for_function " flip setref " for_iterable " flip setref
+                 _for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
+                 item := " for_item " getref
+                 for := _for_args " for_index " 0 setref _for_body
+                 revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
+              pops:
+                  - type: list
+                    desc: List to iterate through
+                  - type: function
+                    desc: Function to apply, may pop or push as it pleases
+        - reverse:
+              desc: Reverses a list.
+              source: |
+                 reverse := [ ] flip [ item concat ] revfor
+              pops:
+                  - type: list
+                    desc: List to reverse
+              pushes:
+                  - type: list
+                    desc: Reversed list
+    - category: Named Reference Manipulation
+      functions:
+        - modref:
+              desc: Modifies a named reference in-place.
+              note:
+                  - An example of usage is <span class="code">" my_ref " [ 1 + ] modref</span> to add 1 to <span class="code">" my_ref "</span>.
+              source: |
+                 _modref_args := " modref_function " flip setref " modref_reference " flip setref
+                 modref := _modref_args " modref_reference " getref getref " modref_function " getref i " modref_reference " getref flip setref
+              pops:
+                  - type: any
+                    desc: Name of a named reference to modify
+                  - type: function
+                    desc: Function to apply on the named reference
+        - setrefs:
+              desc: Performs batch definition of named references.
+              note:
+                  - This function goes through the list in reverse order and pops values from the stack to define references until the list is done. This is useful for taking arguments in a function.
+              source: |
+                 setrefs := [ item i flip setref ] revfor
+              pops:
+                  - type: list
+                    desc: List of named references to define
+    - category: Micellaneous
+      functions:
+        - sinclude:
+              desc: Includes a library and automatically sets the namespace to <span class="code">library:</span>.
+              source: |
+                 sinclude := dup " arg " flip setref " .charm " concat " arg " getref " : " concat include
+              pops:
+                  - type: string
+                    desc: Name of a library without the extension
