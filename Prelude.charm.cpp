@@ -142,10 +142,4 @@ modref := _modref_args " modref_reference " getref getref " modref_function " ge
 " [ list ] setrefs " pop
 setrefs := [ item i flip setref ] revfor
 
-" MISCELLANEOUS " pop
-" ============= " pop
-
-" <library> sinclude "
-sinclude := dup " arg " flip setref " .charm " concat " arg " getref " : " concat include
-
 )~";

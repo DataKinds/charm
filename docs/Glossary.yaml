@@ -1293,12 +1293,3 @@ prelude_functions:
               pops:
                   - type: list
                     desc: List of named references to define
-    - category: Micellaneous
-      functions:
-        - sinclude:
-              desc: Includes a library and automatically sets the namespace to <span class="code">library:</span>.
-              source: |
-                 sinclude := dup " arg " flip setref " .charm " concat " arg " getref " : " concat include
-              pops:
-                  - type: string
-                    desc: Name of a library without the extension
