@@ -22,7 +22,11 @@
 #include "Runner.h"
 #include "Debug.h"
 
+<<<<<<< HEAD
 const std::string VERSION = "0.2.0";
+=======
+const std::string VERSION = "0.1.0";
+>>>>>>> 69fc517735f4581cbd0b813298d4b4ce02422b9d
 
 template<std::vector<std::string>* arg, std::string* flag, std::function<void()>* f>
 struct CommandLineLambda {

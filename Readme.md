@@ -7,7 +7,7 @@
    </a>
 </p>
 
-**Charm** is an experimental stack based functional language based off of Forth and Joy. It implements functions as a first class data structure, able to be manipulated with ease, using generally applicable tools and functions.
+**Charm** is an experimental stack based functional language based off of Lisp and Joy. It implements functions as a first class data structure, able to be manipulated with ease, using generally applicable tools and functions.
 
 ## :boom: Why use Charm? :question:
 
@@ -53,7 +53,8 @@ Charm$ putN
 ## Dependencies
 
 - GCC (>7.0.0) or Clang (>4.0)
-- libreadline and related development packages (`libreadline-dev on apt-based systems`)
+- libreadline and related development packages (`libreadline-dev` on apt-based systems)
+- libgmp and related development packages (`libgmp-dev` on apt-based systems)
 - A willingness to think outside of the box
 
 To run all the tests...
@@ -124,7 +125,7 @@ Charm has an extremely simple syntax. Everything is space delimited (even the li
 
 Everything in Charm is a function, and there are four types of functions. These are:
 * Number functions (`3`, `-0.2`, `50000`)
-    * Internally represented as either a `long long` or a `long double`.
+    * Internally represented as GMP BigInt and BigFloat types. The latter has the default level of precision.
 * List functions (`[ 1 2 3 4 ]`, `[ i put pop q ]`)
 * String functions (`" Hello! "`, `" \t I'm indented! "`)
     * Internally represented as a `std::string`.

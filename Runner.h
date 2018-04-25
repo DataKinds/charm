@@ -43,7 +43,7 @@ public:
 	PredefinedFunctions* pF;
 	FFI* ffi;
 	std::unordered_map<std::string, FunctionDefinition> functionDefinitions;
-	
+
 	//type signature runtime checking
 	std::optional<std::vector<CharmFunction>> typeSignatureTick(std::string name, RunnerContext* context);
 	void typeSignatureTock(std::vector<CharmFunction> tick);
@@ -52,7 +52,7 @@ public:
 	bool doesStackExist(CharmFunction name);
 	Stack* getCurrentStack();
 	void switchCurrentStack(CharmFunction name);
-	void createStack(unsigned long long length, CharmFunction name);
+	void createStack(CharmFunction name);
 
 	CharmFunction getReference(CharmFunction key);
 	void setReference(CharmFunction key, CharmFunction value);

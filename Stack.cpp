@@ -35,47 +35,51 @@ bool Stack::isNameEqualTo(CharmFunction f) {
     return (Stack::name == f);
 }
 
-Stack::Stack(unsigned long long size, CharmFunction name) {
-    Stack::modifiedStackArea = 0;
-	for (unsigned long long stackIndex = 0; stackIndex < size; stackIndex++) {
-		Stack::stack.push_back(Stack::zeroF());
-	}
+Stack::Stack(CharmFunction name) {
+	Stack::stack.push_back(Stack::zeroF());
     Stack::name = name;
 }
 
-
-unsigned int Stack::getModifiedStackArea() {
-    return Stack::modifiedStackArea;
-}
-
-
 CharmFunction Stack::pop() {
-	//ensure that the stack never changes size
-	//this is by placing more zeroes at the start
-	//as stuff is popped off the end
-	Stack::stack.insert(Stack::stack.begin(), Stack::zeroF());
-	CharmFunction tempCharmF = Stack::stack.at(Stack::stack.size() - 1);
-	Stack::stack.pop_back();
-	if (Stack::modifiedStackArea != 0) Stack::modifiedStackArea--;
-	return tempCharmF;
+	// if the stack is large enough to support it,
+	// simply pop. else, we return a zero function
+	if (Stack::stack.size() > 0) {
+		auto temp = *std::prev(Stack::stack.end());
+		Stack::stack.pop_back();
+		return temp;
+	}
+	return Stack::zeroF();
 }
 
 void Stack::push(CharmFunction f) {
-	//ensure the stack never changes size again
-	//pop an element off the back of the stack
 	Stack::stack.push_back(f);
-	Stack::stack.erase(Stack::stack.begin());
-	Stack::modifiedStackArea++;
 }
 
 void Stack::swap(unsigned long long n1, unsigned long long n2) {
-	/*CharmFunction tempFromN1 = Stack::stack.at(Stack::stack.size() - n1 - 1);
-	CharmFunction tempFromN2 = Stack::stack.at(Stack::stack.size() - n2 - 1);
-	Stack::stack[Stack::stack.size() - n1 - 1] = tempFromN2;
-	Stack::stack[Stack::stack.size() - n2 - 1] = tempFromN1;
-	Stack::updateModifiedStackArea();
-	*/
+	// trivial case
+	if (n1 == n2) {
+		return;
+	}
+	unsigned long stackLastElem = Stack::stack.size() - 1;
+	// we gotta handle 4 cases as follows:
+	// the first one: both n1 and n2 are outside the actual stack size
+	// in this case, we do nothing (you swap a 0 with a 0)
+	if (n1 > stackLastElem && n2 > stackLastElem) {
+		return;
+	}
+	// now just n1 is greater than the last elem, so we push until n2 and then swap
+	else if (n1 > stackLastElem) {
+		for (unsigned long i = 0; i < n1 - stackLastElem; i++) {
+			Stack::stack.push_front(Stack::zeroF());
+		}
+	}
+	// ... or the other way around
+	else if (n2 > stackLastElem) {
+		for (unsigned long i = 0; i < n2 - stackLastElem; i++) {
+			Stack::stack.push_front(Stack::zeroF());
+		}
+	}
+	// then we swap
 	std::iter_swap(Stack::stack.end() - n1 - 1, Stack::stack.end() - n2 - 1);
-	if (n1 + 1 > Stack::modifiedStackArea) Stack::modifiedStackArea = n1;
-	if (n2 + 1 > Stack::modifiedStackArea) Stack::modifiedStackArea = n2;
+	// and we're on our merry way
 }

@@ -233,10 +233,11 @@ CharmFunction Parser::parseNumberFunction(std::string tok) {
 	//if not it's a long long
 	if (tok.find('.') != std::string::npos) {
 		numberValue.whichType = FLOAT_VALUE;
-		numberValue.floatValue = std::stold(tok);
+        //TODO: FIND AN EASIER WAY TO SPECIFY FLOAT PRECISION
+		numberValue.floatValue = mpf_class(tok.c_str());
 	} else {
 		numberValue.whichType = INTEGER_VALUE;
-		numberValue.integerValue = std::stoll(tok);
+		numberValue.integerValue = mpz_class(tok.c_str());
 	}
 	out.numberValue = numberValue;
 	return out;

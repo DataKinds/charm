@@ -1,10 +1,10 @@
-LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o 
+LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o
 OBJECT_FILES = main.o Prelude.charm.o $(LIB_OBJECT_FILES)
 EMSCRIPTEN_OBJECT_FILES = CInterpretationCapsule.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o Prelude.charm.o
 
 OUT_FILE ?= charm
 
-LDLIBS += -ldl
+LDLIBS += -ldl -lgmp
 
 USE_READLINE ?= true
 ifeq ($(USE_READLINE),true)
@@ -39,7 +39,7 @@ emscripten-release: $(EMSCRIPTEN_OBJECT_FILES)
 build-objects: $(OBJECT_FILES)
 install:
 	chmod +x charm
-	cp charm /usr/bin/charm
+	cp charm /usr/local/bin/charm
 
 ffi-lib: clean
 	make ffi-build-objects CPPFLAGS=-fPIC
