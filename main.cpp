@@ -22,7 +22,7 @@
 #include "Runner.h"
 #include "Debug.h"
 
-const std::string VERSION = "0.0.1";
+const std::string VERSION = "0.2.0";
 
 template<std::vector<std::string>* arg, std::string* flag, std::function<void()>* f>
 struct CommandLineLambda {
@@ -182,16 +182,17 @@ int main(int argc, char const *argv[]) {
 			std::cout << prompt.str();
 			std::cin >> codeInput;
 #endif
-			auto parsedProgram = parser.lex(codeInput);
-			ONLYDEBUG printf("TOKEN TYPES: ");
-			for (auto currentFunction : parsedProgram.first) {
-				ONLYDEBUG printf("%i ", currentFunction.functionType);
-			}
-			ONLYDEBUG printf("\n");
 			try {
+				auto parsedProgram = parser.lex(codeInput);
+				ONLYDEBUG printf("TOKEN TYPES: ");
+				for (auto currentFunction : parsedProgram.first) {
+					ONLYDEBUG printf("%i ", currentFunction.functionType);
+				}
+				ONLYDEBUG printf("\n");
 				runner.run(parsedProgram);
 			} catch (const std::runtime_error& e) {
-				printf("ERRROR: %s\n", e.what());
+				//don't do anything, the parsetime_die and runtime_die macros will always spit out messages.
+				//printf("ERROR: %s\n", e.what());
 				//return -1;
 			}
 			ONLYDEBUG printf("THE STACK (just the types): ");
