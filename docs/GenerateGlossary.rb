@@ -211,7 +211,7 @@ puts %Q~
         <h2>
             Try Charm!
         </h2>
-        <pre id="replOutput">#{`charm -v`} built using emscripten.</pre>
+        <pre id="replOutput">#{`charm -v`.chomp} built using emscripten.</pre>
         <label id="replInputLabel" for="replInput">
             Charm (stack omitted)$
         </label>
