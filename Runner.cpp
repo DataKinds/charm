@@ -91,7 +91,15 @@ std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string 
 		//assign a vector to be checked by
 		unsigned int maxLength = FunctionAnalyzer::maxTypeSignatureLength(*type);
 		ONLYDEBUG printf("FOUND A TYPE SIGNATURE FOR %s OF MAX LENGTH %i\n", name.c_str(), maxLength);
-		out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rbegin() + maxLength);
+		//if the stack is small, make sure to just fake copying it with zero functions
+		if (Runner::getCurrentStack()->stack.size() < maxLength) {
+			out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rend());
+			for (unsigned int i = 0; i < maxLength - Runner::getCurrentStack()->stack.size(); i++) {
+				out->push_back(Stack::zeroF());
+			}
+		} else {
+			out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rbegin() + maxLength);
+		}
 		//check the popped values to see if they match up with a type signature
 		//NOTE: this is repeated in typeSignatureTock
 		//TODO: DRY

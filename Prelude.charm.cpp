@@ -12,12 +12,14 @@ put := dup p newline
 " ========= " pop
 
 " <stack length> clearstack " pop
+clearstack :: int ->
 _clearstack_args := " clearstackref " flip setref
 _clearstack_cond := " clearstackref " getref 1 - dup " clearstackref " flip setref
 _clearstack      := [ _clearstack_cond ] [ 0 _clearstack ] [ ] ifthen
 clearstack       := _clearstack_args _clearstack
 
 " <stack depth> printstack " pop
+printstack :: int ->
 _printstack_args       := " printstackref " flip setref
 _printstack_correction := " printstackref " getref rotate
 printstack             := _printstack_args [ put " printstackref " getref rotate ] " printstackref " getref repeat i _printstack_correction
@@ -26,6 +28,7 @@ printstack             := _printstack_args [ put " printstackref " getref rotate
 pause := " Press return to continue... " pstring getline pop
 
 " [ <arguments> ] [ <code> ] <stack depth> stepthrough " pop
+stepthrough :: list list int ->
 " stepthroughstack " createstack
 
 _stepthrough_pop_args          := " stepthroughdepthref " flip setref   inline " stepthroughcoderef " flip setref   " stepthroughargsref " flip setref
