@@ -886,26 +886,16 @@ void PredefinedFunctions::print(CharmFunction f1) {
 </pre>
 </div>
 
-<h3>Stack Creation and Destruction</h3><h3 id="createstack-id" class="function">createstack</h3><h4>Description</h4><div class="info">Creates a new named stack to work with.</div><div class="info">NOTE: This function does not switch to the specified stack. Use <span class="code">switchstack</span> for that.</div><div class="info">NOTE: The default stack is 20,000 functions long and named <span class="code">0</span>.</div><h4>Quick Usage View</h4><div class="code"><i>int</i> <i>any</i> createstack </div><div><h4>Pops</h4><dl class="info"><dt>Stack index 1: int</dt><dd>The size of the stack to create</dd><dt>Stack index 0: any</dt><dd>The name of the stack</dd></dl></div>
+<h3>Stack Creation and Destruction</h3><h3 id="createstack-id" class="function">createstack</h3><h4>Description</h4><div class="info">Creates a new named stack to work with.</div><div class="info">NOTE: This function does not switch to the specified stack. Use <span class="code">switchstack</span> for that.</div><h4>Quick Usage View</h4><div class="code"><i>any</i> createstack </div><div><h4>Pops</h4><dl class="info"><dt>Stack index 0: any</dt><dd>The name of the stack</dd></dl></div>
 <div class="code-container">
     <button class="code-button">
         Source (click to open/close)
     </button>
-    <pre class="code code-drawer">void PredefinedFunctions::createStack(Runner* r) {
+    <pre class="code code-drawer">addBuiltinFunction(&quot;createstack&quot;, [](Runner* r) {
 	//name of the stack
 	CharmFunction f1 = r-&gt;getCurrentStack()-&gt;pop();
-	//length of the stack
-	CharmFunction f2 = r-&gt;getCurrentStack()-&gt;pop();
-	if (Stack::isInt(f2)) {
-		if (f2.numberValue.integerValue &gt; 0) {
-			r-&gt;createStack(f2.numberValue.integerValue, f1);
-		} else {
-			runtime_die(&quot;Negative integer or zero passed to `createStack`.&quot;);
-		}
-	} else {
-		runtime_die(&quot;Non integer passed to `createStack`.&quot;);
-	}
-}
+	r-&gt;createStack(f1);
+});
 </pre>
 </div>
 <h3 id="getstack-id" class="function">getstack</h3><h4>Description</h4><div class="info">Gets the name of the current stack.</div><h4>Quick Usage View</h4><div class="code">getstack         => <i>any</i> </div><div><h4>Pushes</h4><dl class="info"><dt>Stack index 0: any</dt><dd>The name of the current stack</dd></dl></div>

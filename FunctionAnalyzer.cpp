@@ -79,7 +79,11 @@ bool FunctionAnalyzer::_isInlineable(std::string fName, CharmFunction f) {
 			break;
 		}
 	}
-	return !recursive;
+    //a function is ALSO not inlineable if it has a type signature
+    //this is so runner can tick and tock it
+    bool hasTypeSignature = FunctionAnalyzer::typeSignatures.find(fName) != FunctionAnalyzer::typeSignatures.end();
+    
+	return (!recursive && !hasTypeSignature);
 }
 bool FunctionAnalyzer::isInlinable(CharmFunction f) {
 	return (_isInlineable(f.functionName, f));

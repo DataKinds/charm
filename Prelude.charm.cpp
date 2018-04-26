@@ -26,7 +26,7 @@ printstack             := _printstack_args [ put " printstackref " getref rotate
 pause := " Press return to continue... " pstring getline pop
 
 " [ <arguments> ] [ <code> ] <stack depth> stepthrough " pop
-20000 " stepthroughstack " createstack
+" stepthroughstack " createstack
 
 _stepthrough_pop_args          := " stepthroughdepthref " flip setref   inline " stepthroughcoderef " flip setref   " stepthroughargsref " flip setref
 _stepthrough_stack_init&switch := " stepthroughstack " switchstack clearstack " stepthroughargsref " getref i

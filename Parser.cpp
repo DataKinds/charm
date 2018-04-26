@@ -115,7 +115,7 @@ CharmTypes Parser::tokenToType(std::string token) {
     } else {
         std::stringstream errorOut;
         errorOut << "Unrecognized type: " << token << std::endl;
-        runtime_die(errorOut.str());
+        parsetime_die(errorOut.str());
     }
 }
 CharmTypeSignature Parser::parseTypeSignature(std::string line) {
@@ -143,7 +143,7 @@ CharmTypeSignature Parser::parseTypeSignature(std::string line) {
         if (typeStringToken == "|") {
             //this is only valid after an entire type signature has been specified.
             //thus, using it before a -> is invalid
-            runtime_die("Type alternative specified before completion of type");
+            parsetime_die("Type alternative specified before completion of type.");
         }
         unit.pops.push_back(Parser::tokenToType(typeStringToken));
     }
@@ -271,11 +271,16 @@ CharmFunction Parser::parseStringFunction(std::string& token, std::string& rest)
 	out.functionType = STRING_FUNCTION;
     //a string continues until it hits a " \" " token
     std::stringstream outS;
+    bool correctlyEndQuoted = false;
     while (Parser::advanceParse(token, rest)) {
         if (token == "\"") {
+            correctlyEndQuoted = true;
             break;
         }
         outS << Parser::escapeString(token) << " ";
+    }
+    if (!correctlyEndQuoted) {
+        parsetime_die("Expected an ending quote before the end of the line. Perhaps you missed a space?");
     }
     out.stringValue = outS.str();
     //if our string is non-empty, there will be a final space pushed to it that
@@ -318,6 +323,9 @@ CharmFunction Parser::parseListFunction(std::string& token, std::string& rest) {
 		outS << token << " ";
 	}
 	//finally, we can put the inside of the [ ] into the out
+    if (listDepth > 0) {
+        parsetime_die("Expected a close bracket before the end of the line. Perhaps you missed a space?");
+    }
 	out.literalFunctions = Parser::lexAskToInline(outS.str(), false).first;
 	return out;
 }

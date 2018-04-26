@@ -864,26 +864,13 @@ native_functions:
               desc: Creates a new named stack to work with.
               note:
                   - This function does not switch to the specified stack. Use <span class="code">switchstack</span> for that.
-                  - The default stack is 20,000 functions long and named <span class="code">0</span>.
               source: |
-                 void PredefinedFunctions::createStack(Runner* r) {
-                 	//name of the stack
-                 	CharmFunction f1 = r->getCurrentStack()->pop();
-                 	//length of the stack
-                 	CharmFunction f2 = r->getCurrentStack()->pop();
-                 	if (Stack::isInt(f2)) {
-                 		if (f2.numberValue.integerValue > 0) {
-                 			r->createStack(f2.numberValue.integerValue, f1);
-                 		} else {
-                 			runtime_die("Negative integer or zero passed to `createStack`.");
-                 		}
-                 	} else {
-                 		runtime_die("Non integer passed to `createStack`.");
-                 	}
-                 }
+                addBuiltinFunction("createstack", [](Runner* r) {
+                	//name of the stack
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	r->createStack(f1);
+                });
               pops:
-                  - type: int
-                    desc: The size of the stack to create
                   - type: any
                     desc: The name of the stack
               pushes:
