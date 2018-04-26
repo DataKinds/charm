@@ -76,31 +76,45 @@ struct CharmFunction {
 	//ONLY USED WITH FUNCTION_DEFINITION
 	CharmFunctionDefinitionInfo definitionInfo;
 };
-inline std::string charmTypeSignatureToString(CharmTypeSignature t) {
-	std::stringstream out;
-	return "TODO";
-}
 inline std::string charmTypeToString(CharmTypes t) {
 	switch (t) {
-	case TYPESIG_ANY:
-	return "any";
-	break;
-	case TYPESIG_LIST:
-	return "list";
-	break;
-	case TYPESIG_LISTSTRING:
-	return "list/string";
-	break;
-	case TYPESIG_STRING:
-	return "string";
-	break;
-	case TYPESIG_INT:
-	return "int";
-	break;
-	case TYPESIG_FLOAT:
-	return "float";
-	break;
+		case TYPESIG_ANY:
+		return "any";
+		break;
+		case TYPESIG_LIST:
+		return "list";
+		break;
+		case TYPESIG_LISTSTRING:
+		return "list/string";
+		break;
+		case TYPESIG_STRING:
+		return "string";
+		break;
+		case TYPESIG_INT:
+		return "int";
+		break;
+		case TYPESIG_FLOAT:
+		return "float";
+		break;
 	}
+}
+inline std::string charmTypeSignatureToString(CharmTypeSignature t) {
+	std::stringstream out;
+	for (auto unitIter = t.units.begin(); unitIter != t.units.end(); ++unitIter) {
+		for (auto& type : unitIter->pops) {
+			out << charmTypeToString(type) << " ";
+		}
+		out << "-> ";
+		for (auto& type : unitIter->pushes) {
+			out << charmTypeToString(type) << " ";
+		}
+		// only add the pipe if we're not at the end
+		if (unitIter != std::prev(t.units.end())) {
+			out << "| ";
+			continue;
+		}
+	}
+	return out.str();
 }
 inline CharmTypes charmFunctionToType(CharmFunction f) {
 	switch (f.functionType) {

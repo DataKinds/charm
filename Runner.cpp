@@ -100,6 +100,7 @@ std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string 
 		} else {
 			out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rbegin() + maxLength);
 		}
+		std::reverse(out->begin(), out->end());
 		//check the popped values to see if they match up with a type signature
 		//NOTE: this is repeated in typeSignatureTock
 		//TODO: DRY
@@ -134,8 +135,22 @@ std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string 
 		}
 		//if we exited the type signature checking function without finding a valid type signature
 		std::stringstream typeSigError;
-		typeSigError << "Type signature check for function " << name << " failed." << std::endl;
-		typeSigError << "The function wanted types `" << charmTypeSignatureToString(*type) << "` but it got types `" << "TODO" << "`" << std::endl;
+		typeSigError << "Type signature check for function `" << name << "` failed." << std::endl;
+		typeSigError << "The function has type signature `" << charmTypeSignatureToString(*type) << "` but it popped types `";
+		for (CharmFunction& f : (*out)) {
+			if (f.functionType == LIST_FUNCTION) {
+				typeSigError << "list ";
+			} else if (f.functionType == STRING_FUNCTION) {
+				typeSigError << "string ";
+			} else if (f.functionType == NUMBER_FUNCTION) {
+				if (f.numberValue.whichType == FLOAT_VALUE) {
+					typeSigError << "float ";
+				} else if (f.numberValue.whichType == INTEGER_VALUE) {
+					typeSigError << "int ";
+				}
+			}
+		}
+		typeSigError << "`" << std::endl;
 		runtime_die(typeSigError.str());
 	}
 	//this returns an empty std::option
