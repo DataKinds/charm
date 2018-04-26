@@ -138,6 +138,7 @@ map          := _map_args _map
 
 " [ list ] [ function ] for " pop
 for :: list list ->
+revfor :: list list ->
 _for_args := " for_function " flip setref " for_iterable " flip setref
 _for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
 for_item := " for_item " getref
@@ -151,6 +152,11 @@ reverse := [ ] flip [ for_item concat ] revfor
 " [ list ] <list index> delitem " pop
 delitem :: list int -> list
 delitem := 1 + split flip len 1 - split pop flip concat
+
+" [ condition ] [ code ] while " pop
+while :: list ->
+_loopwhile := [ " condition " getref i ] [ " block " getref i _loopwhile ] [ ] ifthen
+while := [ " condition " " block " ] setrefs _loopwhile
 
 " NAMED REF MANIPULATION " pop
 " ====================== " pop
