@@ -22,7 +22,7 @@
 #include "Runner.h"
 #include "Debug.h"
 
-const std::string VERSION = "0.2.0";
+const std::string VERSION = "0.3.0";
 
 template<std::vector<std::string>* arg, std::string* flag, std::function<void()>* f>
 struct CommandLineLambda {

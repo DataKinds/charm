@@ -1,3 +1,8 @@
+# 0.3.0
+* Type signatures
+* Bug fixes & TCO rework
+* Extra Prelude functions
+
 # 0.2.0
 
 * Bignum support
