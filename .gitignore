@@ -15,6 +15,3 @@ libcharmffi.a
 
 # emscripten files
 charm.html*
-
-# local generator
-docs/GenerateGlossaryLocal.rb
