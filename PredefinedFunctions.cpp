@@ -416,26 +416,31 @@ PredefinedFunctions::PredefinedFunctions() {
 			(truthy.functionType == LIST_FUNCTION) &&
 			(falsy.functionType == LIST_FUNCTION)) {
 				//first, we run checks to set the tail call bools
-				if (context->fD != nullptr) {
+				//we can only do TCO if we're in a function definition -- that is, context's fD (functionDefinition) is non-null
+				//we can also only do TCO if the if is the last thing that happens
+				if (context->fD != nullptr && context->fIndex == context->fD->functionBody.size() - 1) {
+					//on every run but the first, the entire function is run in order to pick up the functions before the if/then
+					bool firstRun = true;
 					std::string defName = context->fD->functionName;
 					if (truthy.literalFunctions.size() > 0 && truthy.literalFunctions.back().functionName == defName) {
 						truthyTailCall = true;
+						truthy.literalFunctions.pop_back();
 					}
 					if (falsy.literalFunctions.size() > 0 && falsy.literalFunctions.back().functionName == defName) {
 						falsyTailCall = true;
+						falsy.literalFunctions.pop_back();
 					}
 					//now, if we _DO_ have a tail call, modify truthy/falsy and enter a loop instead
 					//there are 3 seperate cases here: truthy tail call, falsy tail call, or both
 					if (truthyTailCall) {
 						ONLYDEBUG printf("ENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
-						//remove the tail call
-						truthy.literalFunctions.pop_back();
 						while (1) {
 							r->runWithContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {
 								if (sgn(cond.numberValue.integerValue) == 1) {
 									r->runWithContext(truthy.literalFunctions, context);
+									//run the function to prepare for the next
 								} else {
 									r->runWithContext(falsy.literalFunctions, context);
 									//end this function immediately once the tail call loop ends
@@ -445,12 +450,11 @@ PredefinedFunctions::PredefinedFunctions() {
 							} else {
 								runtime_die("`ifthen` condition returned non integer.");
 							}
+							firstRun = false;
 						}
 					}
 					if (falsyTailCall) {
 						ONLYDEBUG printf("ENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
-						//remove the tail call
-						falsy.literalFunctions.pop_back();
 						while (1) {
 							r->runWithContext(condFunction.literalFunctions, context);
 							CharmFunction cond = r->getCurrentStack()->pop();
@@ -474,9 +478,6 @@ PredefinedFunctions::PredefinedFunctions() {
 					//so we run it as an infinite loop
 					if (truthyTailCall && falsyTailCall) {
 						ONLYDEBUG printf("ENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
-						//remove the tail calls
-						truthy.literalFunctions.pop_back();
-						falsy.literalFunctions.pop_back();
 						while (1) {
 							CharmFunction cond = r->getCurrentStack()->pop();
 							if (Stack::isInt(cond)) {

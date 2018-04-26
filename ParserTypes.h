@@ -257,4 +257,5 @@ class FunctionAnalyzer;
 struct RunnerContext {
 	FunctionDefinition* fD;
 	FunctionAnalyzer* fA;
+	unsigned long fIndex;
 };

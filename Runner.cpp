@@ -256,6 +256,7 @@ void Runner::addNamespacePrefix(CharmFunction& f, std::string ns) {
 }
 
 void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns) {
+	unsigned long functionIndex = 0;
 	for (CharmFunction currentFunction : parsedProgram) {
 		if (ns != "") {
 			ONLYDEBUG printf("ADDING NAMESPACE %s\n", ns.c_str());
@@ -290,8 +291,6 @@ void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* contex
 		} else if (currentFunction.functionType == DEFINED_FUNCTION) {
 			ONLYDEBUG puts("RUNNING AS DEFINED_FUNCTION");
 			//check the top of the stack before the function itself runs
-			//TODO: the function gets optimized out before it comes here.
-			//what can I do about that? i have no idea. i'll do it tomorrow.
 			auto tick = Runner::typeSignatureTick(currentFunction.functionName, context);
 			//let's do these defined functions now
 			Runner::handleDefinedFunctions(currentFunction, context);
@@ -302,6 +301,8 @@ void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* contex
 				Runner::typeSignatureTock(*tick);
 			}
 		}
+		functionIndex++;
+		context->fIndex = functionIndex;
 	}
 	ONLYDEBUG puts("EXITING RUNNER::RUN");
 }
@@ -310,5 +311,6 @@ void Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWith
 	RunnerContext rC;
 	rC.fA = parsedProgramWithAnalyzer.second;
 	rC.fD = nullptr;
+	rC.fIndex = 0;
 	Runner::runWithContext(parsedProgramWithAnalyzer.first, &rC, ns);
 }
