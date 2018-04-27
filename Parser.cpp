@@ -213,6 +213,7 @@ CharmFunction Parser::parseDefinition(std::string line) {
 	//then, we analyze the function before returning it
 	CharmFunctionDefinitionInfo functionInfo = Parser::analyzeDefinition(currentFunction);
 	currentFunction.definitionInfo = functionInfo;
+    definitionInfoCache[currentFunction.functionName] = functionInfo;
 	ONLYDEBUG printf("IS %s INLINEABLE? %s\n", currentFunction.functionName.c_str(), currentFunction.definitionInfo.inlineable ? "Yes" : "No");
 	ONLYDEBUG printf("IS %s TAIL CALL RECURSIVE? %s\n", currentFunction.functionName.c_str(), currentFunction.definitionInfo.tailCallRecursive ? "Yes" : "No");
 	return currentFunction;
@@ -340,11 +341,18 @@ void Parser::delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::stri
 		//if we're doing inline optimizations, do them here:
 		if (OPTIMIZE_INLINE && willInline) {
 			ONLYDEBUG puts("WE ARE DOING INLINE DEFINITIONS");
-			if (fA.doInline(out, currentFunction)) {
-				//if the function was able to be inline optimized, skip the final push_back
-				//this means that we don't push a duplicate currentFunction
-				return;
-			}
+            // only do inlining if the function says we can -- not just if it's possible
+            // many functions _aren't_ inlineable because they have type signatures, but
+            // they still have inlineDefinition's (in order to be able to use `inline`)
+            auto defInfo = definitionInfoCache.find(currentFunction.functionName);
+            if (defInfo != definitionInfoCache.end() && defInfo->second.inlineable) {
+                ONLYDEBUG printf("YES, %s IS INLINEABLE SO WE'RE DOING IT\n", currentFunction.functionName.c_str());
+    			if (fA.doInline(out, currentFunction)) {
+    				//if the function was able to be inline optimized, skip the final push_back
+    				//this means that we don't push a duplicate currentFunction
+    				return;
+    			}
+            }
 		}
 	} else if (type == NUMBER_FUNCTION) {
 		//next deal with NUMBER_FUNCTION

@@ -83,8 +83,10 @@ bool FunctionAnalyzer::_isInlineable(std::string fName, CharmFunction f, bool ig
     //this is so runner can tick and tock it
     bool hasTypeSignature = FunctionAnalyzer::typeSignatures.find(fName) != FunctionAnalyzer::typeSignatures.end();
     if (ignoreTypeSignature) {
+        ONLYDEBUG printf("_isInlineable IGNORING TYPE SIGNATURE FOR FUNCTION %s: %s\n", fName.c_str(), !recursive ? "Inlineable" : "Non-inlineable");
         return !recursive;
     }
+    ONLYDEBUG printf("_isInlineable USING TYPE SIGNATURE FOR FUNCTION %s: %s\n", fName.c_str(), (!recursive && !hasTypeSignature) ? "Inlineable" : "Non-inlineable");
 	return (!recursive && !hasTypeSignature);
 }
 bool FunctionAnalyzer::isInlinable(CharmFunction f) {
