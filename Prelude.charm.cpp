@@ -120,7 +120,7 @@ _cut          := [ _cut_distance succ ] [ _cut_iter _cut ] [ pop pop flip ] ifth
 cut           := _cut_args _cut
 
 " [ list ] <number> repeat " pop
-repeat :: list int -> list
+repeat :: list/string int -> list
 _repeat_args := flip type " repeattyperef " flip setref dup 0 2 swap 1 -
 _repeat_iter := 0 2 swap dup 0 2 swap concat flip 2 0 swap 1 -
 _repeat_zero := [ " repeattyperef " getref " LIST_FUNCTION " eq ] [ [ ] ] [ " " ] ifthen
