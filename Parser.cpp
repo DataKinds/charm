@@ -179,8 +179,8 @@ CharmFunctionDefinitionInfo Parser::analyzeDefinition(CharmFunction f) {
 	CharmFunctionDefinitionInfo out;
 	//first, we fill in the info and see if the function is not recursive/inlineable
 	out.inlineable = fA.isInlinable(f);
-	//then we fill in the inlineDefinitions deque, for parsing future DEFINED_FUNCTIONs
-	if (out.inlineable) {
+	//then we fill in the inlineDefinitions deque (ignoring type signatures), for parsing future DEFINED_FUNCTIONs or for using the `inline` function
+	if (fA.isInlinableIgnoringTypeSignature(f)) {
 		fA.addToInlineDefinitions(f);
 	}
 	out.tailCallRecursive = fA.isTailCallRecursive(f);

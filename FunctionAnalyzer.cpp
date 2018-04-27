@@ -66,12 +66,12 @@ bool FunctionAnalyzer::doInline(CHARM_LIST_TYPE& out, CharmFunction currentFunct
     return false;
 }
 
-bool FunctionAnalyzer::_isInlineable(std::string fName, CharmFunction f) {
+bool FunctionAnalyzer::_isInlineable(std::string fName, CharmFunction f, bool ignoreTypeSignature) {
 	//if the function calls itself, it's recursive and not inlineable
 	bool recursive = false;
 	for (unsigned long long fIndex = 0; fIndex < f.literalFunctions.size(); fIndex++) {
 		if (f.literalFunctions[fIndex].functionType == LIST_FUNCTION) {
-			recursive = recursive || (!_isInlineable(fName, f.literalFunctions[fIndex]));
+			recursive = recursive || (!_isInlineable(fName, f.literalFunctions[fIndex], ignoreTypeSignature));
 		} else {
 			recursive = recursive || (fName == f.literalFunctions[fIndex].functionName);
 		}
@@ -82,11 +82,16 @@ bool FunctionAnalyzer::_isInlineable(std::string fName, CharmFunction f) {
     //a function is ALSO not inlineable if it has a type signature
     //this is so runner can tick and tock it
     bool hasTypeSignature = FunctionAnalyzer::typeSignatures.find(fName) != FunctionAnalyzer::typeSignatures.end();
-    
+    if (ignoreTypeSignature) {
+        return !recursive;
+    }
 	return (!recursive && !hasTypeSignature);
 }
 bool FunctionAnalyzer::isInlinable(CharmFunction f) {
-	return (_isInlineable(f.functionName, f));
+	return (_isInlineable(f.functionName, f, false));
+}
+bool FunctionAnalyzer::isInlinableIgnoringTypeSignature(CharmFunction f) {
+	return (_isInlineable(f.functionName, f, true));
 }
 
 bool FunctionAnalyzer::isTailCallRecursive(CharmFunction f) {
