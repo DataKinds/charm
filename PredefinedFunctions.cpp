@@ -395,7 +395,12 @@ PredefinedFunctions::PredefinedFunctions() {
 		list.literalFunctions.push_back(f1);
 		r->getCurrentStack()->push(list);
 	});
-	addBuiltinFunction("ifthen", [](Runner* r, RunnerContext* context) {
+	addBuiltinFunction("ifthen", [](Runner* r, RunnerContext* c) {
+		//the very first thing we do is make a copy of the RunnerContext*
+		//this is because we actually modify the function that it points to throughout the function
+		//this bug took days to fix! DON'T REMOVE THIS LINE OF CODE!
+		RunnerContext tempContext = *c;
+		RunnerContext* context = &tempContext;
 		//the arguments to this function are a little different...
 		//ifthen performs very basic tail-call optimization on its two sections (truthy/falsy)
 		//if truthy (or falsy) end with the function itself (found through fD.functionName), then
@@ -455,8 +460,14 @@ PredefinedFunctions::PredefinedFunctions() {
 								ONLYDEBUG puts("PERFORMING TRUTHY TAIL CALL RECURSION");
 								//if we do tail call, pop the tailcall and the ifthen (guarenteed to be at the end),
 								truthy.literalFunctions.pop_back();
-								auto tcoFunctionBody = context->fD->functionBody;
+								ONLYDEBUG printf("context->fD->functionName is %s\n", context->fD->functionName.c_str());
+								CHARM_LIST_TYPE tcoFunctionBody = context->fD->functionBody;
 								tcoFunctionBody.pop_back();
+								ONLYDEBUG printf("AFTER TRUTHY TAIL CALL IF/THEN PRUNING, tcoFunctionBody IS:\n    ");
+								for (auto currentFunction : tcoFunctionBody) {
+									ONLYDEBUG printf("%s ", charmFunctionToString(currentFunction).c_str());
+								}
+								ONLYDEBUG puts("");
 								//then run the new stripped definitions in a loop
 								while (1) {
 									r->runWithContext(truthy.literalFunctions, context);

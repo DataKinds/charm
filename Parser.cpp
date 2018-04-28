@@ -117,6 +117,7 @@ CharmTypes Parser::tokenToType(std::string token) {
         errorOut << "Unrecognized type: " << token << std::endl;
         parsetime_die(errorOut.str());
     }
+    return TYPESIG_ANY;
 }
 CharmTypeSignature Parser::parseTypeSignature(std::string line) {
 	CharmTypeSignature typeSignature;

@@ -200,7 +200,8 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 		}
 		auto possibleFunction = functionDefinitions.find(f.functionName);
 		if (possibleFunction != functionDefinitions.end()) {
-			auto fD = possibleFunction->second;
+			FunctionDefinition fD = possibleFunction->second;
+			fD.functionBody = possibleFunction->second.functionBody;
 			//wait! before we run it, check and make sure this function isn't tail recursive
 			if (fD.definitionInfo.tailCallRecursive) {
 				//if it is, drop the last call to itself and just run it in a loop
@@ -211,8 +212,12 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 					Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(functionBodyCopy, context->fA));
 				}
 			}
-			//ooh. the only time we use this call!
+			ONLYDEBUG printf("SETTING CONTEXT fD FOR FUNCTION %s\n    ", f.functionName.c_str());
+			for (auto currentFunction : fD.functionBody) {
+				ONLYDEBUG printf("%s ", charmFunctionToString(currentFunction).c_str());
+			}
 			context->fD = &fD;
+			//ooh. the only time we use this call!
 			Runner::runWithContext(fD.functionBody, context);
 		} else {
 			runtime_die("Unknown function `" + f.functionName + "`.");

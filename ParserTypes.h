@@ -97,6 +97,7 @@ inline std::string charmTypeToString(CharmTypes t) {
 		return "float";
 		break;
 	}
+	return "unknowntype";
 }
 inline std::string charmTypeSignatureToString(CharmTypeSignature t) {
 	std::stringstream out;
