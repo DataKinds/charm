@@ -11,9 +11,10 @@
 //In Runner.h
 class Runner;
 class FunctionDefinition;
+class RunnerContext;
 
 struct BuiltinFunction {
-	std::variant<std::function<void(Runner*)>, std::function<void(Runner*, RunnerContext*)>> f;
+	std::variant<std::function<void(Runner*)>, std::function<void(Runner*, RunnerContext)>> f;
 	bool takesContext;
 };
 
@@ -26,7 +27,7 @@ private:
 public:
 	std::unordered_map<std::string, BuiltinFunction> cppFunctionNames;
 	PredefinedFunctions();
-	void functionLookup(std::string functionName, Runner* r, RunnerContext* context);
-	void addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext*)> f);
+	void functionLookup(std::string functionName, Runner* r, RunnerContext& context);
+	void addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext)> f);
 	void addBuiltinFunction(std::string n, std::function<void(Runner*)> f);
 };

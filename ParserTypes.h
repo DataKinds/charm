@@ -254,9 +254,4 @@ struct CharmDefinition {
 
 class FunctionDefinition;
 class FunctionAnalyzer;
-//USED IN RUNNER.CPP AND PREDEFINEDFUNCTIONS.CPP
-struct RunnerContext {
-	FunctionDefinition* fD;
-	FunctionAnalyzer* fA;
-	unsigned long fIndex;
-};
+

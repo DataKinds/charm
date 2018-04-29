@@ -158,6 +158,9 @@ while :: list ->
 _loopwhile := [ " condition " getref i ] [ " block " getref i _loopwhile ] [ ] ifthen
 while := [ " condition " " block " ] setrefs _loopwhile
 
+fromcharlist :: list -> string
+fromcharlist := [ len ] [ " " flip [ for_item i concat ] for ] [ pop ] ifthen
+
 " NAMED REF MANIPULATION " pop
 " ====================== " pop
 
