@@ -35,15 +35,15 @@ void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(R
 	bf.f = f; bf.takesContext = false;
 	cppFunctionNames[n] = bf;
 }
-void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext*)> f) {
+void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext)> f) {
 	BuiltinFunction bf;
 	bf.f = f; bf.takesContext = true;
 	cppFunctionNames[n] = bf;
 }
-void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, RunnerContext* context) {
+void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, RunnerContext& context) {
 	auto f = cppFunctionNames.at(functionName);
 	if (f.takesContext) {
-		auto castF = std::get<std::function<void(Runner*, RunnerContext*)>>(f.f);
+		auto castF = std::get<std::function<void(Runner*, RunnerContext)>>(f.f);
 		castF(r, context);
 	} else {
 		auto castF = std::get<std::function<void(Runner*)>>(f.f);
@@ -109,7 +109,7 @@ PredefinedFunctions::PredefinedFunctions() {
 	/*************************************
 	FUNCTION DEFINITION
 	*************************************/
-	addBuiltinFunction("def", [](Runner* r, RunnerContext* context) {
+	addBuiltinFunction("def", [](Runner* r, RunnerContext context) {
 		//function body
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		//function name
@@ -131,11 +131,11 @@ PredefinedFunctions::PredefinedFunctions() {
 		fD.functionBody = f.literalFunctions;
 
 		CharmFunctionDefinitionInfo defInfo;
-		defInfo.inlineable = context->fA->isInlinable(f);
+		defInfo.inlineable = context.fA->isInlinable(f);
 		if (defInfo.inlineable) {
-			context->fA->addToInlineDefinitions(f);
+			context.fA->addToInlineDefinitions(f);
 		}
-		defInfo.tailCallRecursive = context->fA->isInlinable(f);
+		defInfo.tailCallRecursive = context.fA->isInlinable(f);
 
 		fD.definitionInfo = defInfo;
 		r->addFunctionDefinition(fD);
@@ -378,12 +378,12 @@ PredefinedFunctions::PredefinedFunctions() {
 	/*************************************
 	CONTROL FLOW
 	*************************************/
-	addBuiltinFunction("i", [](Runner* r, RunnerContext* context) {
+	addBuiltinFunction("i", [](Runner* r, RunnerContext context) {
 		//pop the top of the stack and run it
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (f1.functionType == LIST_FUNCTION) {
 			//when we run with `i`, remove the context (we can't tail call from an `i`)
-			r->run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(f1.literalFunctions, context->fA));
+			r->run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(f1.literalFunctions, context.fA));
 		} else {
 			runtime_die("Non list passed to `i`.");
 		}
@@ -395,7 +395,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		list.literalFunctions.push_back(f1);
 		r->getCurrentStack()->push(list);
 	});
-	addBuiltinFunction("ifthen", [](Runner* r, RunnerContext* context) {
+	addBuiltinFunction("ifthen", [](Runner* r, RunnerContext context) {
 		//the arguments to this function are a little different...
 		//ifthen performs very basic tail-call optimization on its two sections (truthy/falsy)
 		//if truthy (or falsy) end with the function itself (found through fD.functionName), then
@@ -408,91 +408,124 @@ PredefinedFunctions::PredefinedFunctions() {
 		//stack[0] = falsy section (else...)
 		//have to reverse it because popping is weird
 		CharmFunction falsy = r->getCurrentStack()->pop();
-		bool falsyTailCall = false;
 		CharmFunction truthy = r->getCurrentStack()->pop();
-		bool truthyTailCall = false;
 		CharmFunction condFunction = r->getCurrentStack()->pop();
 		if ((condFunction.functionType == LIST_FUNCTION) &&
 			(truthy.functionType == LIST_FUNCTION) &&
 			(falsy.functionType == LIST_FUNCTION)) {
 				//first, we run checks to set the tail call bools
-				if (context->fD != nullptr) {
-					std::string defName = context->fD->functionName;
-					if (truthy.literalFunctions.size() > 0 && truthy.literalFunctions.back().functionName == defName) {
-						truthyTailCall = true;
+				//we can only do TCO if we're in a function definition -- that is, context's fD (functionDefinition) is non-null
+				//we can also only do TCO if the if we are the last thing that happens
+				if (context.inDefinition && context.fIndex == context.fD.functionBody.size() - 1) {
+					/*
+					bool truthyTailCall =
+						std::find_if(
+							truthy.literalFunctions.rbegin(), truthy.literalFunctions.rend(),
+							[=](CharmFunction f) { f.functionName == context->fD->functionName; }
+						) == std::prev(truthy.literalFunctions.rbegin());
+					bool falsyTailCall =
+						std::find_if(
+							falsy.literalFunctions.rbegin(), falsy.literalFunctions.rend(),
+							[=](CharmFunction f) { f.functionName == context->fD->functionName; }
+						) == std::prev(falsy.literalFunctions.rbegin());
+					*/
+					bool truthyTailCall;
+					bool falsyTailCall;
+					if (truthy.literalFunctions.size() > 0) {
+						truthyTailCall = std::prev(truthy.literalFunctions.end())->functionName == context.fD.functionName;
+					} else {
+						truthyTailCall = false;
 					}
-					if (falsy.literalFunctions.size() > 0 && falsy.literalFunctions.back().functionName == defName) {
-						falsyTailCall = true;
+					if (falsy.literalFunctions.size() > 0) {
+						falsyTailCall = std::prev(falsy.literalFunctions.end())->functionName == context.fD.functionName;
+					} else {
+						falsyTailCall = false;
 					}
-					//now, if we _DO_ have a tail call, modify truthy/falsy and enter a loop instead
-					//there are 3 seperate cases here: truthy tail call, falsy tail call, or both
-					if (truthyTailCall) {
-						ONLYDEBUG printf("ENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
-						//remove the tail call
-						truthy.literalFunctions.pop_back();
-						while (1) {
-							r->runWithContext(condFunction.literalFunctions, context);
-							CharmFunction cond = r->getCurrentStack()->pop();
-							if (Stack::isInt(cond)) {
-								if (sgn(cond.numberValue.integerValue) == 1) {
-									r->runWithContext(truthy.literalFunctions, context);
-								} else {
-									r->runWithContext(falsy.literalFunctions, context);
-									//end this function immediately once the tail call loop ends
-									ONLYDEBUG printf("DISENGAGING TRUTHY IF/THEN TAIL CALL OPTIMIZATION\n");
-									return;
-								}
-							} else {
-								runtime_die("`ifthen` condition returned non integer.");
-							}
-						}
-					}
-					if (falsyTailCall) {
-						ONLYDEBUG printf("ENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
-						//remove the tail call
-						falsy.literalFunctions.pop_back();
-						while (1) {
-							r->runWithContext(condFunction.literalFunctions, context);
-							CharmFunction cond = r->getCurrentStack()->pop();
-							if (Stack::isInt(cond)) {
-								if (sgn(cond.numberValue.integerValue) == 1) {
-									r->runWithContext(truthy.literalFunctions, context);
-									//end this function immediately once the tail call loop ends
-									ONLYDEBUG printf("DISENGAGING FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
-									return;
-								} else {
-									r->runWithContext(falsy.literalFunctions, context);
-								}
-							} else {
-								runtime_die("`ifthen` condition returned non integer.");
-							}
-						}
-					}
-					//here's an extra special case: if both truthy and falsy have a tail call
-					//th(at) is: `f := [ <cond> ] [ <code> f ] [ <code> f ] ifthen`
-					//this is equivalent to `f := [ <cond> ] [ <code> ] [ <code> ] ifthen f`
-					//so we run it as an infinite loop
+					//TODO: don't just fuck it
 					if (truthyTailCall && falsyTailCall) {
-						ONLYDEBUG printf("ENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
-						//remove the tail calls
-						truthy.literalFunctions.pop_back();
-						falsy.literalFunctions.pop_back();
-						while (1) {
-							CharmFunction cond = r->getCurrentStack()->pop();
-							if (Stack::isInt(cond)) {
-								if (sgn(cond.numberValue.integerValue) == 1) {
+						runtime_die("Both branches of `ifthen` make a tail call. This is unsupported. Please refactor to move the tail call to the outside.");
+					}
+					if (!truthyTailCall && !falsyTailCall) {
+						//sorry
+						goto NO_TCO;
+					}
+					//we ARE checking further for TCO
+					r->runWithContext(condFunction.literalFunctions, context);
+					//now we check the top of the stack to see if it's truthy or falsy
+					CharmFunction cond = r->getCurrentStack()->pop();
+					if (Stack::isInt(cond)) {
+						if (sgn(cond.numberValue.integerValue) == 1) {
+							if (truthyTailCall) {
+								ONLYDEBUG puts("PERFORMING TRUTHY TAIL CALL RECURSION");
+								//if we do tail call, pop the tailcall and the ifthen (guarenteed to be at the end),
+								truthy.literalFunctions.pop_back();
+								ONLYDEBUG printf("context->fD->functionName is %s\n", context.fD.functionName.c_str());
+								CHARM_LIST_TYPE tcoFunctionBody = context.fD.functionBody;
+								tcoFunctionBody.pop_back();
+								ONLYDEBUG printf("AFTER TRUTHY TAIL CALL IF/THEN PRUNING, tcoFunctionBody IS:\n    ");
+								for (auto currentFunction : tcoFunctionBody) {
+									ONLYDEBUG printf("%s ", charmFunctionToString(currentFunction).c_str());
+								}
+								ONLYDEBUG puts("");
+								//then run the new stripped definitions in a loop
+								while (1) {
 									r->runWithContext(truthy.literalFunctions, context);
-								} else {
-									r->runWithContext(falsy.literalFunctions, context);
+									//remember: the ifthen is guarenteed to be at the end for a tail call, so run the entire body
+									r->runWithContext(tcoFunctionBody, context);
+									//now, we'll have 3 things at the top of the stack: the cond, truthy, and falsy. we _don't_ need these, as we already have copies. remove them.
+									r->getCurrentStack()->pop(); //falsy
+									r->getCurrentStack()->pop(); //truthy
+									r->getCurrentStack()->pop(); //condFunction
+									//now, we run our preset condFunction for the falsy check
+									r->runWithContext(condFunction.literalFunctions, context);
+									//we do another little branch in the tail call, but we just mostly check for falsyness
+									if (sgn(r->getCurrentStack()->pop().numberValue.integerValue) < 1) {
+										r->runWithContext(falsy.literalFunctions, context);
+										return;
+									}
 								}
 							} else {
-								runtime_die("`ifthen` condition returned non integer.");
+								//if there was no truthy tail call, just run as normal
+								r->runWithContext(truthy.literalFunctions, context);
+							}
+						} else {
+							if (falsyTailCall) {
+								ONLYDEBUG puts("PERFORMING FALSY TAIL CALL RECURSION");
+								//if we do tail call, pop the tailcall and the ifthen (guarenteed to be at the end),
+								falsy.literalFunctions.pop_back();
+								auto tcoFunctionBody = context.fD.functionBody;
+								tcoFunctionBody.pop_back();
+								//then run the new stripped definitions in a loop
+								while (1) {
+									r->runWithContext(falsy.literalFunctions, context);
+									//remember: the ifthen is guarenteed to be at the end for a tail call, so run the entire body
+									r->runWithContext(tcoFunctionBody, context);
+									//now, we'll have 3 things at the top of the stack: the cond, truthy, and falsy. we _don't_ need these, as we already have copies. remove them.
+									r->getCurrentStack()->pop(); //falsy
+									r->getCurrentStack()->pop(); //truthy
+									r->getCurrentStack()->pop(); //condFunction
+									//now, we run our preset condFunction for the falsy check
+									r->runWithContext(condFunction.literalFunctions, context);
+									//we do another little branch in the tail call, but we just mostly check for truthyness
+									if (sgn(r->getCurrentStack()->pop().numberValue.integerValue) == 1) {
+										r->runWithContext(truthy.literalFunctions, context);
+										return;
+									}
+								}
+							} else {
+								//if the falsy block doesn't tail call, just run it normally
+								r->runWithContext(falsy.literalFunctions, context);
 							}
 						}
+					} else {
+						runtime_die("`ifthen` condition returned non integer.");
+						if (context.inDefinition) {
+							printf("This occured in the definition of %s\n", context.fD.functionName.c_str());
+						}
 					}
-					//good joke
-					ONLYDEBUG printf("DISENGAGING TRUTHY/FALSY IF/THEN TAIL CALL OPTIMIZATION\n");
 				}
+				NO_TCO:
+				ONLYDEBUG puts("NO IF THEN TCO");
 				//but if not (or context was nullptr), continue execution as normal
 				r->runWithContext(condFunction.literalFunctions, context);
 				//now we check the top of the stack to see if it's truthy or falsy
@@ -510,7 +543,7 @@ PredefinedFunctions::PredefinedFunctions() {
 				runtime_die("Non list passed to `ifthen`.");
 			}
 	});
-	addBuiltinFunction("inline", [](Runner* r, RunnerContext* context) {
+	addBuiltinFunction("inline", [](Runner* r, RunnerContext context) {
 		//the boxed function to take in
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (f1.functionType == LIST_FUNCTION) {
@@ -518,7 +551,7 @@ PredefinedFunctions::PredefinedFunctions() {
 			out.functionType = LIST_FUNCTION;
 			for (CharmFunction f : f1.literalFunctions) {
 				if (f.functionType == DEFINED_FUNCTION) {
-					if (!context->fA->doInline(out.literalFunctions, f)) {
+					if (!context.fA->doInline(out.literalFunctions, f)) {
 						out.literalFunctions.push_back(f);
 					}
 				} else {
@@ -533,7 +566,7 @@ PredefinedFunctions::PredefinedFunctions() {
 	/*************************************
 	BOOLEAN OPS
 	*************************************/
-	addBuiltinFunction("xor", [](Runner* r) {
+	addBuiltinFunction("nor", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		CharmFunction f2 = r->getCurrentStack()->pop();
 		if (Stack::isInt(f1) && Stack::isInt(f2)) {
@@ -541,9 +574,11 @@ PredefinedFunctions::PredefinedFunctions() {
 			out.functionType = NUMBER_FUNCTION;
 			CharmNumber outNum;
 			outNum.whichType = INTEGER_VALUE;
-			//cancer incoming
-			outNum.integerValue = (sgn(f1.numberValue.integerValue) ^ sgn(f2.numberValue.integerValue));
-			//no more cancer
+			if (sgn(f1.numberValue.integerValue) == 1 || sgn(f2.numberValue.integerValue) == 1) {
+				outNum.integerValue = 0;
+			} else {
+				outNum.integerValue = 1;
+			}
 			out.numberValue = outNum;
 			r->getCurrentStack()->push(out);
 		} else {
@@ -556,11 +591,9 @@ PredefinedFunctions::PredefinedFunctions() {
 	addBuiltinFunction("abs", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (Stack::isInt(f1)) {
-			abs(f1.numberValue.integerValue);
+			f1.numberValue.integerValue = abs(f1.numberValue.integerValue);
 		} else if (Stack::isFloat(f1)) {
-			if (f1.numberValue.floatValue < 0) {
-				f1.numberValue.floatValue = -f1.numberValue.floatValue;
-			}
+			f1.numberValue.floatValue = abs(f1.numberValue.floatValue);
 		} else {
 			runtime_die("Non number passed to `abs`.");
 		}

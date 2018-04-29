@@ -155,7 +155,7 @@ Tail-call optimization is necessary for this language, as there are no other way
 
 - ~~C FFI & linkage~~ Done!
 - ~~Imports from other files~~ Done!
-- Type signatures
+- ~~Type signatures~~ Done!
 - Possible C++ codegen?
 
 ### Other Links

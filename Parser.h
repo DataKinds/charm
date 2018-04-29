@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <deque>
+#include <unordered_map>
 
 #include "ParserTypes.h"
 #include "FunctionAnalyzer.h"
@@ -22,6 +23,7 @@ private:
 	CharmFunctionDefinitionInfo analyzeDefinition(CharmFunction f);
 
 	FunctionAnalyzer fA;
+	std::unordered_map<std::string, CharmFunctionDefinitionInfo> definitionInfoCache;
 
 	bool advanceParse(std::string& token, std::string& rest);
 	void delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline);

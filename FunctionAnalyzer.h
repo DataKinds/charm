@@ -7,13 +7,14 @@
 
 class FunctionAnalyzer {
 private:
-    bool _isInlineable(std::string fName, CharmFunction f);
+    bool _isInlineable(std::string fName, CharmFunction f, bool ignoreTypeSignature);
     std::unordered_map<std::string, CharmFunction> inlineDefinitions;
     std::unordered_map<std::string, CharmTypeSignature> typeSignatures;
 public:
     FunctionAnalyzer();
 
     bool isInlinable(CharmFunction f);
+    bool isInlinableIgnoringTypeSignature(CharmFunction f);
     bool isTailCallRecursive(CharmFunction f);
 
     void addToInlineDefinitions(CharmFunction f);
