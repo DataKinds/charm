@@ -1405,10 +1405,10 @@ prelude_functions:
                     desc: Whether the value is considered true or not
     - category: Integer Operations
       functions:
-        - "<":
+        - lt:
               desc: Check if a value is less than another value.
               source: |
-                 < := - dup abs eq not
+                 lt := - dup abs eq not
               pops:
                   - type: int
                     desc: The value representing a
@@ -1417,10 +1417,10 @@ prelude_functions:
               pushes:
                   - type: int
                     desc: "The result of a < b"
-        - ">":
+        - gt:
               desc: Check if a value is greater than another value.
               source: |
-                 > := flip <
+                 gt := flip lt
               pops:
                   - type: int
                     desc: The value representing a
