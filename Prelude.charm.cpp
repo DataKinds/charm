@@ -164,6 +164,48 @@ modref := _modref_args " modref_reference " getref getref " modref_function " ge
 setrefs :: list ->
 setrefs := [ for_item i flip setref ] revfor
 
+" BOOLEAN OPERATIONS " pop
+" ================== " pop
+
+" <bool> <bool> and " pop
+and :: int int -> int
+and := not flip not nor
+
+" <bool> <bool> nand " pop
+nand :: int int -> int
+nand := and not
+
+" <bool> <bool> xor " pop
+xor :: int int -> int
+xor := bool flip bool eq not
+
+" <bool> <bool> xnor " pop
+xnor :: int int -> int
+xnor := xor not
+
+" <bool> <bool> or " pop
+or :: int int -> int
+or := nor not
+
+" <bool> not " pop
+not :: int -> int
+not := dup nor
+
+" <number> bool " pop
+bool :: int -> int
+bool := not not
+
+" INTEGER OPERATIONS " pop
+" ================== " pop
+
+" int int < " pop
+< :: int int -> int
+< := - dup abs eq not
+
+" int int > " pop
+> :: int int -> int
+> := flip <
+
 " CONTROL FLOW " pop
 " ============ " pop
 
@@ -180,6 +222,5 @@ revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for
 while :: list list ->
 _loopwhile := [ " condition " getref i ] [ " block " getref i _loopwhile ] [ ] ifthen
 while := [ " condition " " block " ] setrefs _loopwhile
-
 
 )~";

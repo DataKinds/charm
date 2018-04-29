@@ -1321,3 +1321,111 @@ prelude_functions:
                     desc: List to iterate through
                   - type: function
                     desc: Function to apply, may pop or push as it pleases
+    - category: Boolean Operations
+      functions:
+        - and:
+              desc: and.
+              source: |
+                 and := not flip not nor
+              pops:
+                  - type: int
+                    desc: The first value to and
+                  - type: int
+                    desc: The second value to and
+              pushes:
+                  - type: int
+                    desc: The result of the anding
+        - nand:
+              desc: nand.
+              source: |
+                 nand := and not
+              pops:
+                  - type: int
+                    desc: The first value to nand
+                  - type: int
+                    desc: The second value to nand
+              pushes:
+                  - type: int
+                    desc: The result of the nanding
+        - xor:
+              desc: xor.
+              source: |
+                 xor := bool flip bool eq not
+              pops:
+                  - type: int
+                    desc: The first value to xor
+                  - type: int
+                    desc: The second value to xor
+              pushes:
+                  - type: int
+                    desc: The result of the xoring
+        - xnor:
+              desc: xnor
+              source: |
+                 xnor := xor not
+              pops:
+                  - type: int
+                    desc: The first value to xnor
+                  - type: int
+                    desc: The second value to xnor
+              pushes:
+                  - type: int
+                    desc: The result of the xnoring
+        - or:
+              desc: or.
+              source: |
+                 or := nor not
+              pops:
+                  - type: int
+                    desc: The first value to or
+                  - type: int
+                    desc: The second value to or
+              pushes:
+                  - type: int
+                    desc: The result of the oring
+        - not:
+              desc: not.
+              source: |
+                 not := dup nor
+              pops:
+                  - type: int
+                    desc: The value to not
+              pushes:
+                  - type: int
+                    desc: The result of the noting
+        - bool:
+              desc: Returns 0 or 1 depending on whether a value is considered true.
+              source: |
+                 bool := not not
+              pops:
+                  - type: int
+                    desc: The value to bool
+              pushes:
+                  - type: int
+                    desc: Whether the value is considered true or not
+    - category: Integer Operations
+      functions:
+        - lt:
+              desc: Check if a value is less than another value.
+              source: |
+                 lt := - dup abs eq not
+              pops:
+                  - type: int
+                    desc: The value representing a
+                  - type: int
+                    desc: The value representing b
+              pushes:
+                  - type: int
+                    desc: "The result of a < b"
+        - gt:
+              desc: Check if a value is greater than another value.
+              source: |
+                 gt := flip lt
+              pops:
+                  - type: int
+                    desc: The value representing a
+                  - type: int
+                    desc: The value representing b
+              pushes:
+                  - type: int
+                    desc: "The result of a > b"
