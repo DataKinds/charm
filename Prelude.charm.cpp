@@ -34,7 +34,7 @@ stepthrough :: list list int ->
 " stepthroughstack " createstack
 
 _stepthrough_pop_args          := " stepthroughdepthref " flip setref   inline " stepthroughcoderef " flip setref   " stepthroughargsref " flip setref
-_stepthrough_stack_init&switch := " stepthroughstack " switchstack clearstack " stepthroughargsref " getref i
+_stepthrough_stack_init&switch := " stepthroughstack " switchstack _stepthrough_arg_depth clearstack " stepthroughargsref " getref i
 _stepthrough_init_cursor       := " stepthroughcursor " 0 setref
 _stepthrough_init              := _stepthrough_pop_args _stepthrough_init_cursor _stepthrough_stack_init&switch " Initial stack: " pstring newline _stepthrough_print_stack pause newline
 
@@ -106,7 +106,12 @@ _substring_args     := " " 3 pushto
 _substring_distance := dup 2 copyfrom - 1 -
 _substring_iter     := 0 2 swap 1 copyfrom at 1 4 swap concat 0 3 swap 0 2 swap flip succ flip
 _substring          := [ _substring_distance succ ] [ _substring_iter _substring ] [ pop pop flip ] ifthen
-substring           := _substring_args _substring
+substring           := _substring_args [ _substring_distance succ ] [ _substring ] [ pop pop flip ] ifthen
+
+tocharlist :: string -> list
+_tocharlist_popstring := len 1 flip substring flip 0 1 substring flip pop 
+_tocharlist           := [ len ] [ _tocharlist_popstring q 1 2 swap concat flip _tocharlist ] [ pop ] ifthen
+tocharlist            := [ ] flip [ len ] [ _tocharlist ] [ pop ] ifthen
 
 " LIST MANIPULATION " pop
 " ================= " pop
@@ -136,15 +141,6 @@ _map_cleanup := flip pop
 _map         := [ _map_cond ] [ _map_iter _map ] [ _map_cleanup ] ifthen
 map          := _map_args _map
 
-" [ list ] [ function ] for " pop
-for :: list list ->
-revfor :: list list ->
-_for_args := " for_function " flip setref " for_iterable " flip setref
-_for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
-for_item := " for_item " getref
-for := _for_args " for_index " 0 setref _for_body
-revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
-
 " [ list ] reverse " pop
 reverse :: list -> list
 reverse := [ ] flip [ for_item concat ] revfor
@@ -152,11 +148,6 @@ reverse := [ ] flip [ for_item concat ] revfor
 " [ list ] <list index> delitem " pop
 delitem :: list int -> list
 delitem := 1 + split flip len 1 - split pop flip concat
-
-" [ condition ] [ code ] while " pop
-while :: list ->
-_loopwhile := [ " condition " getref i ] [ " block " getref i _loopwhile ] [ ] ifthen
-while := [ " condition " " block " ] setrefs _loopwhile
 
 fromcharlist :: list -> string
 fromcharlist := [ len ] [ " " flip [ for_item i concat ] for ] [ pop ] ifthen
@@ -172,5 +163,23 @@ modref := _modref_args " modref_reference " getref getref " modref_function " ge
 " [ list ] setrefs " pop
 setrefs :: list ->
 setrefs := [ for_item i flip setref ] revfor
+
+" CONTROL FLOW " pop
+" ============ " pop
+
+" [ list ] [ function ] for " pop
+for :: list list ->
+revfor :: list list ->
+_for_args := " for_function " flip setref " for_iterable " flip setref
+_for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
+for_item := " for_item " getref
+for := _for_args " for_index " 0 setref _for_body
+revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
+
+" [ condition ] [ code ] while " pop
+while :: list list ->
+_loopwhile := [ " condition " getref i ] [ " block " getref i _loopwhile ] [ ] ifthen
+while := [ " condition " " block " ] setrefs _loopwhile
+
 
 )~";

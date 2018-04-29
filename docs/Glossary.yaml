@@ -1130,14 +1130,16 @@ prelude_functions:
         - substring:
               desc: Gets a substring of a string.
               source: |
+                 " \" string \" <from> <to> substring " pop
+                 substring :: string int int -> string
                  _substring_args     := " " 3 pushto
                  _substring_distance := dup 2 copyfrom - 1 -
                  _substring_iter     := 0 2 swap 1 copyfrom at 1 4 swap concat 0 3 swap 0 2 swap flip succ flip
                  _substring          := [ _substring_distance succ ] [ _substring_iter _substring ] [ pop pop flip ] ifthen
-                 substring           := _substring_args _substring
+                 substring           := _substring_args [ _substring_distance succ ] [ _substring ] [ pop pop flip ] ifthen
               pops:
                   - type: string
-                    desc: Stirng to get a substring of
+                    desc: String to get a substring of
                   - type: int
                     desc: Starting index of substring
                   - type: int
@@ -1147,6 +1149,19 @@ prelude_functions:
                     desc: Original string
                   - type: string
                     desc: Cut string
+        - tocharlist:
+              desc: Converts a string to a list of characters.
+              source: |
+                tocharlist :: string -> list
+                _tocharlist_popstring := len 1 flip substring flip 0 1 substring flip pop 
+                _tocharlist           := [ len ] [ _tocharlist_popstring q 1 2 swap concat flip _tocharlist ] [ pop ] ifthen
+                tocharlist            := [ ] flip [ len ] [ _tocharlist ] [ pop ] ifthen
+              pops:
+                  - type: string
+                    desc: String to convert
+              pushes:
+                  - type: list
+                    desc: The converted list of characters
         - space:
               desc: Pushes a space to the top of the stack.
               note:
@@ -1229,6 +1244,17 @@ prelude_functions:
               pushes:
                   - type: list
                     desc: Reversed list
+        - fromcharlist:
+              desc: Converts a list of characters to a string.
+              source: |
+                 fromcharlist :: list -> string
+                 fromcharlist := [ len ] [ " " flip [ for_item i concat ] for ] [ pop ] ifthen
+              pops:
+                  - type: list
+                    desc: The character list
+              pushes:
+                  - type: string
+                    desc: The concatenated, converted string
         - delitem:
               desc: Removes an item from a list by index.
               source: |
