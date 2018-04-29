@@ -445,6 +445,10 @@ PredefinedFunctions::PredefinedFunctions() {
 					if (truthyTailCall && falsyTailCall) {
 						runtime_die("Both branches of `ifthen` make a tail call. This is unsupported. Please refactor to move the tail call to the outside.");
 					}
+					if (!truthyTailCall && !falsyTailCall) {
+						//sorry
+						goto NO_TCO;
+					}
 					//we ARE checking further for TCO
 					r->runWithContext(condFunction.literalFunctions, context);
 					//now we check the top of the stack to see if it's truthy or falsy
@@ -516,10 +520,11 @@ PredefinedFunctions::PredefinedFunctions() {
 					} else {
 						runtime_die("`ifthen` condition returned non integer.");
 						if (context.inDefinition) {
-							printf("This occured in the definition of %s\n", context.fD.functionName);
+							printf("This occured in the definition of %s\n", context.fD.functionName.c_str());
 						}
 					}
 				}
+				NO_TCO:
 				ONLYDEBUG puts("NO IF THEN TCO");
 				//but if not (or context was nullptr), continue execution as normal
 				r->runWithContext(condFunction.literalFunctions, context);
