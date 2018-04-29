@@ -693,36 +693,38 @@ native_functions:
                     desc: The completed inline optimization
     - category: Boolean Operations
       functions:
-        - xor:
-              desc: Exclusive or.
+        - nor:
+              desc: Negated or.
               note:
                   - This considers any value greater than 0 as true and less than 0 as false. It is not a bitwise call.
               source: |
-                void PredefinedFunctions::exor(Runner* r) {
-                  	CharmFunction f1 = r->getCurrentStack()->pop();
-                  	CharmFunction f2 = r->getCurrentStack()->pop();
-                  	if (Stack::isInt(f1) && Stack::isInt(f2)) {
-                  		CharmFunction out;
-                  		out.functionType = NUMBER_FUNCTION;
-                  		CharmNumber outNum;
-                  		outNum.whichType = INTEGER_VALUE;
-                  		//cancer incoming
-                  		outNum.integerValue = ((f1.numberValue.integerValue > 0) ^ (f2.numberValue.integerValue > 0));
-                  		//no more cancer
-                  		out.numberValue = outNum;
-                  		r->getCurrentStack()->push(out);
-                  	} else {
-                  		runtime_die("Non integer passed to logic function.");
-                  	}
-                }
+                addBuiltinFunction("nor", [](Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                		CharmFunction out;
+                		out.functionType = NUMBER_FUNCTION;
+                		CharmNumber outNum;
+                		outNum.whichType = INTEGER_VALUE;
+                		if (sgn(f1.numberValue.integerValue) == 1 || sgn(f2.numberValue.integerValue) == 1) {
+                			outNum.integerValue = 0;
+                		} else {
+                			outNum.integerValue = 1;
+                		}
+                		out.numberValue = outNum;
+                		r->getCurrentStack()->push(out);
+                	} else {
+                		runtime_die("Non integer passed to logic function.");
+                	}
+                });
               pops:
                   - type: int
-                    desc: The first value to xor
+                    desc: The first value to nor
                   - type: int
-                    desc: The second value to xor
+                    desc: The second value to nor
               pushes:
                   - type: int
-                    desc: The result of the xoring
+                    desc: The result of the noring
     - category: Type Inspecific Math
       functions:
         - abs:

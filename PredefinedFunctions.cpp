@@ -566,7 +566,7 @@ PredefinedFunctions::PredefinedFunctions() {
 	/*************************************
 	BOOLEAN OPS
 	*************************************/
-	addBuiltinFunction("xor", [](Runner* r) {
+	addBuiltinFunction("nor", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		CharmFunction f2 = r->getCurrentStack()->pop();
 		if (Stack::isInt(f1) && Stack::isInt(f2)) {
@@ -574,9 +574,11 @@ PredefinedFunctions::PredefinedFunctions() {
 			out.functionType = NUMBER_FUNCTION;
 			CharmNumber outNum;
 			outNum.whichType = INTEGER_VALUE;
-			//cancer incoming
-			outNum.integerValue = (sgn(f1.numberValue.integerValue) ^ sgn(f2.numberValue.integerValue));
-			//no more cancer
+			if (sgn(f1.numberValue.integerValue) == 1 || sgn(f2.numberValue.integerValue) == 1) {
+				outNum.integerValue = 0;
+			} else {
+				outNum.integerValue = 1;
+			}
 			out.numberValue = outNum;
 			r->getCurrentStack()->push(out);
 		} else {
