@@ -589,11 +589,9 @@ PredefinedFunctions::PredefinedFunctions() {
 	addBuiltinFunction("abs", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		if (Stack::isInt(f1)) {
-			abs(f1.numberValue.integerValue);
+			f1.numberValue.integerValue = abs(f1.numberValue.integerValue);
 		} else if (Stack::isFloat(f1)) {
-			if (f1.numberValue.floatValue < 0) {
-				f1.numberValue.floatValue = -f1.numberValue.floatValue;
-			}
+			f1.numberValue.floatValue = abs(f1.numberValue.floatValue);
 		} else {
 			runtime_die("Non number passed to `abs`.");
 		}
