@@ -1278,6 +1278,7 @@ prelude_functions:
               source: |
                  _modref_args := " modref_function " flip setref " modref_reference " flip setref
                  modref := _modref_args " modref_reference " getref getref " modref_function " getref i " modref_reference " getref flip setref
+              pushes:
               pops:
                   - type: any
                     desc: Name of a named reference to modify
@@ -1289,6 +1290,7 @@ prelude_functions:
                   - This function goes through the list in reverse order and pops values from the stack to define references until the list is done. This is useful for taking arguments in a function.
               source: |
                  setrefs := [ item i flip setref ] revfor
+              pushes:
               pops:
                   - type: list
                     desc: List of named references to define
@@ -1298,7 +1300,8 @@ prelude_functions:
               desc: Runs code while a condition is true, similar to ifthen but repeated until the condition is 0.
               source: |
                  _loopwhile := [ " condition " getref i ] [ " block " getref i _loopwhile ] [ ] ifthen
-                 while := [ " condition " " block " ] setrefs _loopwhil
+                 while := [ " condition " " block " ] setrefs _loopwhile
+              pushes:
               pops:
                   - type: function
                     desc: Condition
@@ -1307,17 +1310,20 @@ prelude_functions:
         - for:
               desc: Applies a function to every element in a list but returns nothing.
               note:
-                  - The function passed to <span class="code">for</span> has no requirements, unlike with <span class="code">map</span>. It may do whatever it likes to the stack.
-                  - A good example of a proper <span class="code">for</span> call is <span class="code">[ 1 2 3 ] [ item i put ] for</span>. Note how the value is unquoted (<span class="code">i</span>) but not quoted again due to there being no point in re-quoting.
+                  - The function passed to <span class="code">for</span> has no requirements, unlike with <span class="code">map</span>. It may modify the stack in any way.
+                  - A good example of a proper <span class="code">for</span> call is <span class="code">[ 1 2 3 ] [ for_item i put ] for</span>. Note how the value is unquoted (<span class="code">i</span>) but not quoted again due to there being no point in re-quoting.
                   - <span class="code">revfor</span> can be used to iterate backwards through the list.
               source: |
-                 _for_args := " for_function " flip setref " for_iterable " flip setref
-                 _for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
-                 item := " for_item " getref
-                 for := _for_args " for_index " 0 setref _for_body
-                 revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
+                for :: list list ->
+                revfor :: list list ->
+                _for_args := " for_function " flip setref " for_iterable " flip setref
+                _for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
+                for_item := " for_item " getref
+                for := _for_args " for_index " 0 setref _for_body
+                revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
+              pushes:
               pops:
                   - type: list
                     desc: List to iterate through
-                  - type: function
+                  - type: list
                     desc: Function to apply, may pop or push as it pleases
