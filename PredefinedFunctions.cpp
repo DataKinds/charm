@@ -625,16 +625,17 @@ PredefinedFunctions::PredefinedFunctions() {
 	addBuiltinFunction("/", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		CharmFunction f2 = r->getCurrentStack()->pop();
+		//use a copy so that I don't have to rewrite the initialization of a number function
+		CharmFunction out = f1;
+		CharmFunction remain = f2;
 		if (Stack::isInt(f1) && Stack::isInt(f2)) {
-			//f1 used as answer
-			f1.numberValue.integerValue = f2.numberValue.integerValue / f1.numberValue.integerValue;
-			//f2 used as modulus
-			f2.numberValue.integerValue = f2.numberValue.integerValue % f1.numberValue.integerValue;
+			out.numberValue.integerValue = f2.numberValue.integerValue / f1.numberValue.integerValue;
+			remain.numberValue.integerValue = f2.numberValue.integerValue % f1.numberValue.integerValue;
 		} else {
 			runtime_die("Non integer passed to `/`.");
 		}
-		r->getCurrentStack()->push(f2);
-		r->getCurrentStack()->push(f1);
+		r->getCurrentStack()->push(remain);
+		r->getCurrentStack()->push(out);
 	});
 	addBuiltinFunction("*", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
