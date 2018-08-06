@@ -199,12 +199,12 @@ bool := not not
 " ================== " pop
 
 " int int < " pop
-< :: int int -> int
-< := - dup abs eq not
+lt :: int int -> int
+lt := - dup abs eq not
 
 " int int > " pop
-> :: int int -> int
-> := flip <
+gt :: int int -> int
+gt := flip lt
 
 " CONTROL FLOW " pop
 " ============ " pop
