@@ -416,6 +416,9 @@ PredefinedFunctions::PredefinedFunctions() {
 				//first, we run checks to set the tail call bools
 				//we can only do TCO if we're in a function definition -- that is, context's fD (functionDefinition) is non-null
 				//we can also only do TCO if the if we are the last thing that happens
+				r->runWithContext(condFunction.literalFunctions, context);
+				//now we check the top of the stack to see if it's truthy or falsy
+				CharmFunction cond = r->getCurrentStack()->pop();
 				if (context.inDefinition && context.fIndex == context.fD.functionBody.size() - 1) {
 					/*
 					bool truthyTailCall =
@@ -450,9 +453,6 @@ PredefinedFunctions::PredefinedFunctions() {
 						goto NO_TCO;
 					}
 					//we ARE checking further for TCO
-					r->runWithContext(condFunction.literalFunctions, context);
-					//now we check the top of the stack to see if it's truthy or falsy
-					CharmFunction cond = r->getCurrentStack()->pop();
 					if (Stack::isInt(cond)) {
 						if (sgn(cond.numberValue.integerValue) == 1) {
 							if (truthyTailCall) {
@@ -527,9 +527,8 @@ PredefinedFunctions::PredefinedFunctions() {
 				NO_TCO:
 				ONLYDEBUG puts("NO IF THEN TCO");
 				//but if not (or context was nullptr), continue execution as normal
-				r->runWithContext(condFunction.literalFunctions, context);
 				//now we check the top of the stack to see if it's truthy or falsy
-				CharmFunction cond = r->getCurrentStack()->pop();
+				ONLYDEBUG std::cout << "Conditino function: " << charmFunctionToString(cond) << std::endl;
 				if (Stack::isInt(cond)) {
 					if (sgn(cond.numberValue.integerValue) == 1) {
 						r->runWithContext(truthy.literalFunctions, context);

@@ -109,7 +109,7 @@ _substring          := [ _substring_distance succ ] [ _substring_iter _substring
 substring           := _substring_args [ _substring_distance succ ] [ _substring ] [ pop pop flip ] ifthen
 
 tocharlist :: string -> list
-_tocharlist_popstring := len 1 flip substring flip 0 1 substring flip pop 
+_tocharlist_popstring := len 1 flip substring flip 0 1 substring flip pop
 _tocharlist           := [ len ] [ _tocharlist_popstring q 1 2 swap concat flip _tocharlist ] [ pop ] ifthen
 tocharlist            := [ ] flip [ len ] [ _tocharlist ] [ pop ] ifthen
 
@@ -130,7 +130,7 @@ _repeat_args := flip type " repeattyperef " flip setref dup 0 2 swap 1 -
 _repeat_iter := 0 2 swap dup 0 2 swap concat flip 2 0 swap 1 -
 _repeat_zero := [ " repeattyperef " getref " LIST_FUNCTION " eq ] [ [ ] ] [ " " ] ifthen
 _repeat      := [ dup ] [ _repeat_iter _repeat ] [ pop flip pop ] ifthen
-repeat       := _repeat_args [ dup ] [ _repeat ] [ pop pop pop _repeat_zero ] ifthen
+repeat       := _repeat_args [ dup 1 + ] [ _repeat ] [ pop pop pop _repeat_zero ] ifthen
 
 " [ list ] [ function ] map " pop
 map :: list list -> list
