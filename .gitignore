@@ -1,3 +1,7 @@
+.stack-work/
+charm.cabal
+*~
+
 # c++ files
 *.o
 gmon.out

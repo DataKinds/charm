@@ -254,4 +254,3 @@ struct CharmDefinition {
 
 class FunctionDefinition;
 class FunctionAnalyzer;
-
