@@ -15,17 +15,16 @@ data Token =
     | TNumber String         -- /-?\d+(\.\d+)?/ (using readMaybe)
     | TIdentifier String     -- any other string
 
+type Code = [ASTCode]
 data ASTCode = 
       ASTList [ASTCode]
     | ASTNumber String
     | ASTString String
     | ASTFunction String
     | ASTDefinition String [ASTCode]
-    | ASTSignature ASTTypeSignature
 
-data ASTTypeSignature = ASTTypeSignature String [ASTTypeSignatureUnit] [ASTTypeSignatureUnit]
---                                       Name   Popped                 Pushed 
-
+data TypeSignature = TypeSignature String [ASTTypeSignatureUnit] [ASTTypeSignatureUnit]
+--                                 Name   Popped                 Pushed 
 data ASTTypeSignatureUnit = 
       TSUType String
     | TSUTypeVariable String
@@ -54,3 +53,7 @@ lexOneLine = unfoldr lexOneToken
 
 lex :: String -> [[Token]]
 lex = map lexOneLine . lines
+
+parseOneLine :: [Token] -> Either TypeSignature Code
+
+parse :: [[Token]] -> [Either TypeSignature Code]
