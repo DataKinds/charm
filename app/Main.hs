@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Charm.Parser
 
 main :: IO ()
-main = someFunc
+main = putStrLn "todo"

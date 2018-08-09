@@ -1,14 +1,14 @@
 name:                charm
 version:             0.1.0.0
-github:              "githubuser/charm"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2018 Author name here"
+github:              "aearnus/charm"
+license:             MIT
+author:              "Aearnus"
+maintainer:          "tslimkemann42@gmail.com"
+copyright:           "2018 Aearnus"
 
 extra-source-files:
-- README.md
-- ChangeLog.md
+- Readme.md
+- Changelog.md
 
 # Metadata used when publishing your package
 # synopsis:            Short description of your package
@@ -26,7 +26,7 @@ library:
   source-dirs: src
 
 executables:
-  charm-exe:
+  charm:
     main:                Main.hs
     source-dirs:         app
     ghc-options:
