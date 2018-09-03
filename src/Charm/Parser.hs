@@ -55,5 +55,10 @@ lex :: String -> [[Token]]
 lex = map lexOneLine . lines
 
 parseOneLine :: [Token] -> Either TypeSignature Code
+parseOneLine line =
+  
+    where
+    
 
 parse :: [[Token]] -> [Either TypeSignature Code]
+parse = map parseOneLine
