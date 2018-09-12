@@ -693,36 +693,38 @@ native_functions:
                     desc: The completed inline optimization
     - category: Boolean Operations
       functions:
-        - xor:
-              desc: Exclusive or.
+        - nor:
+              desc: Negated or.
               note:
                   - This considers any value greater than 0 as true and less than 0 as false. It is not a bitwise call.
               source: |
-                void PredefinedFunctions::exor(Runner* r) {
-                  	CharmFunction f1 = r->getCurrentStack()->pop();
-                  	CharmFunction f2 = r->getCurrentStack()->pop();
-                  	if (Stack::isInt(f1) && Stack::isInt(f2)) {
-                  		CharmFunction out;
-                  		out.functionType = NUMBER_FUNCTION;
-                  		CharmNumber outNum;
-                  		outNum.whichType = INTEGER_VALUE;
-                  		//cancer incoming
-                  		outNum.integerValue = ((f1.numberValue.integerValue > 0) ^ (f2.numberValue.integerValue > 0));
-                  		//no more cancer
-                  		out.numberValue = outNum;
-                  		r->getCurrentStack()->push(out);
-                  	} else {
-                  		runtime_die("Non integer passed to logic function.");
-                  	}
-                }
+                addBuiltinFunction("nor", [](Runner* r) {
+                	CharmFunction f1 = r->getCurrentStack()->pop();
+                	CharmFunction f2 = r->getCurrentStack()->pop();
+                	if (Stack::isInt(f1) && Stack::isInt(f2)) {
+                		CharmFunction out;
+                		out.functionType = NUMBER_FUNCTION;
+                		CharmNumber outNum;
+                		outNum.whichType = INTEGER_VALUE;
+                		if (sgn(f1.numberValue.integerValue) == 1 || sgn(f2.numberValue.integerValue) == 1) {
+                			outNum.integerValue = 0;
+                		} else {
+                			outNum.integerValue = 1;
+                		}
+                		out.numberValue = outNum;
+                		r->getCurrentStack()->push(out);
+                	} else {
+                		runtime_die("Non integer passed to logic function.");
+                	}
+                });
               pops:
                   - type: int
-                    desc: The first value to xor
+                    desc: The first value to nor
                   - type: int
-                    desc: The second value to xor
+                    desc: The second value to nor
               pushes:
                   - type: int
-                    desc: The result of the xoring
+                    desc: The result of the noring
     - category: Type Inspecific Math
       functions:
         - abs:
@@ -814,20 +816,21 @@ native_functions:
         - /:
               desc: Division.
               source: |
-                void PredefinedFunctions::divI(Runner* r) {
+                addBuiltinFunction("/", [](Runner* r) {
                 	CharmFunction f1 = r->getCurrentStack()->pop();
                 	CharmFunction f2 = r->getCurrentStack()->pop();
+                	//use a copy so that I don't have to rewrite the initialization of a number function
+                	CharmFunction out = f1;
+                	CharmFunction remain = f2;
                 	if (Stack::isInt(f1) && Stack::isInt(f2)) {
-                		//f1 used as answer
-                		f1.numberValue.integerValue = f2.numberValue.integerValue / f1.numberValue.integerValue;
-                		//f2 used as modulus
-                		f2.numberValue.integerValue = f2.numberValue.integerValue % f1.numberValue.integerValue;
+                		out.numberValue.integerValue = f2.numberValue.integerValue / f1.numberValue.integerValue;
+                		remain.numberValue.integerValue = f2.numberValue.integerValue % f1.numberValue.integerValue;
                 	} else {
-                		runtime_die("Non integer passed to `+`.");
+                		runtime_die("Non integer passed to `/`.");
                 	}
-                	r->getCurrentStack()->push(f2);
-                	r->getCurrentStack()->push(f1);
-                }
+                	r->getCurrentStack()->push(remain);
+                	r->getCurrentStack()->push(out);
+                });
               pops:
                   - type: int
                     desc: The numerator
@@ -1130,14 +1133,16 @@ prelude_functions:
         - substring:
               desc: Gets a substring of a string.
               source: |
+                 " \" string \" <from> <to> substring " pop
+                 substring :: string int int -> string
                  _substring_args     := " " 3 pushto
                  _substring_distance := dup 2 copyfrom - 1 -
                  _substring_iter     := 0 2 swap 1 copyfrom at 1 4 swap concat 0 3 swap 0 2 swap flip succ flip
                  _substring          := [ _substring_distance succ ] [ _substring_iter _substring ] [ pop pop flip ] ifthen
-                 substring           := _substring_args _substring
+                 substring           := _substring_args [ _substring_distance succ ] [ _substring ] [ pop pop flip ] ifthen
               pops:
                   - type: string
-                    desc: Stirng to get a substring of
+                    desc: String to get a substring of
                   - type: int
                     desc: Starting index of substring
                   - type: int
@@ -1147,6 +1152,19 @@ prelude_functions:
                     desc: Original string
                   - type: string
                     desc: Cut string
+        - tocharlist:
+              desc: Converts a string to a list of characters.
+              source: |
+                tocharlist :: string -> list
+                _tocharlist_popstring := len 1 flip substring flip 0 1 substring flip pop 
+                _tocharlist           := [ len ] [ _tocharlist_popstring q 1 2 swap concat flip _tocharlist ] [ pop ] ifthen
+                tocharlist            := [ ] flip [ len ] [ _tocharlist ] [ pop ] ifthen
+              pops:
+                  - type: string
+                    desc: String to convert
+              pushes:
+                  - type: list
+                    desc: The converted list of characters
         - space:
               desc: Pushes a space to the top of the stack.
               note:
@@ -1219,22 +1237,6 @@ prelude_functions:
               pushes:
                   - type: list
                     desc: Mapped list
-        - for:
-              desc: Applies a function to every element in a list but returns nothing.
-              note:
-                  - The function passed to <span class="code">for</span> has no requirements, unlike with <span class="code">map</span>. It may do whatever it likes to the stack.
-                  - A good example of a proper <span class="code">for</span> call is <span class="code">[ 1 2 3 ] [ item i put ] for</span>. Note how the value is unquoted (<span class="code">i</span>) but not quoted again due to there being no point in re-quoting.
-              source: |
-                 _for_args := " for_function " flip setref " for_iterable " flip setref
-                 _for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
-                 item := " for_item " getref
-                 for := _for_args " for_index " 0 setref _for_body
-                 revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
-              pops:
-                  - type: list
-                    desc: List to iterate through
-                  - type: function
-                    desc: Function to apply, may pop or push as it pleases
         - reverse:
               desc: Reverses a list.
               source: |
@@ -1245,6 +1247,17 @@ prelude_functions:
               pushes:
                   - type: list
                     desc: Reversed list
+        - fromcharlist:
+              desc: Converts a list of characters to a string.
+              source: |
+                 fromcharlist :: list -> string
+                 fromcharlist := [ len ] [ " " flip [ for_item i concat ] for ] [ pop ] ifthen
+              pops:
+                  - type: list
+                    desc: The character list
+              pushes:
+                  - type: string
+                    desc: The concatenated, converted string
         - delitem:
               desc: Removes an item from a list by index.
               source: |
@@ -1266,6 +1279,7 @@ prelude_functions:
               source: |
                  _modref_args := " modref_function " flip setref " modref_reference " flip setref
                  modref := _modref_args " modref_reference " getref getref " modref_function " getref i " modref_reference " getref flip setref
+              pushes:
               pops:
                   - type: any
                     desc: Name of a named reference to modify
@@ -1277,6 +1291,148 @@ prelude_functions:
                   - This function goes through the list in reverse order and pops values from the stack to define references until the list is done. This is useful for taking arguments in a function.
               source: |
                  setrefs := [ item i flip setref ] revfor
+              pushes:
               pops:
                   - type: list
                     desc: List of named references to define
+    - category: Control Flow
+      functions:
+        - while:
+              desc: Runs code while a condition is true, similar to ifthen but repeated until the condition is 0.
+              source: |
+                 _loopwhile := [ " condition " getref i ] [ " block " getref i _loopwhile ] [ ] ifthen
+                 while := [ " condition " " block " ] setrefs _loopwhile
+              pushes:
+              pops:
+                  - type: function
+                    desc: Condition
+                  - type: function
+                    desc: Code to run
+        - for:
+              desc: Applies a function to every element in a list but returns nothing.
+              note:
+                  - The function passed to <span class="code">for</span> has no requirements, unlike with <span class="code">map</span>. It may modify the stack in any way.
+                  - A good example of a proper <span class="code">for</span> call is <span class="code">[ 1 2 3 ] [ for_item i put ] for</span>. Note how the value is unquoted (<span class="code">i</span>) but not quoted again due to there being no point in re-quoting.
+                  - <span class="code">revfor</span> can be used to iterate backwards through the list.
+              source: |
+                for :: list list ->
+                revfor :: list list ->
+                _for_args := " for_function " flip setref " for_iterable " flip setref
+                _for_body := " for_iterable " getref len flip pop [ " for_iterable " getref " for_index " getref at flip pop " for_item " flip setref " for_function " getref i " for_index " getref [ " for_rev " getref 1 eq ] [ 1 - ] [ 1 + ] ifthen " for_index " flip setref ] flip repeat i
+                for_item := " for_item " getref
+                for := _for_args " for_index " 0 setref _for_body
+                revfor := _for_args " for_index " " for_iterable " len flip pop 1 - setref " for_rev " 1 setref _for_body
+              pushes:
+              pops:
+                  - type: list
+                    desc: List to iterate through
+                  - type: list
+                    desc: Function to apply, may pop or push as it pleases
+    - category: Boolean Operations
+      functions:
+        - and:
+              desc: and.
+              source: |
+                 and := not flip not nor
+              pops:
+                  - type: int
+                    desc: The first value to and
+                  - type: int
+                    desc: The second value to and
+              pushes:
+                  - type: int
+                    desc: The result of the anding
+        - nand:
+              desc: nand.
+              source: |
+                 nand := and not
+              pops:
+                  - type: int
+                    desc: The first value to nand
+                  - type: int
+                    desc: The second value to nand
+              pushes:
+                  - type: int
+                    desc: The result of the nanding
+        - xor:
+              desc: xor.
+              source: |
+                 xor := bool flip bool eq not
+              pops:
+                  - type: int
+                    desc: The first value to xor
+                  - type: int
+                    desc: The second value to xor
+              pushes:
+                  - type: int
+                    desc: The result of the xoring
+        - xnor:
+              desc: xnor
+              source: |
+                 xnor := xor not
+              pops:
+                  - type: int
+                    desc: The first value to xnor
+                  - type: int
+                    desc: The second value to xnor
+              pushes:
+                  - type: int
+                    desc: The result of the xnoring
+        - or:
+              desc: or.
+              source: |
+                 or := nor not
+              pops:
+                  - type: int
+                    desc: The first value to or
+                  - type: int
+                    desc: The second value to or
+              pushes:
+                  - type: int
+                    desc: The result of the oring
+        - not:
+              desc: not.
+              source: |
+                 not := dup nor
+              pops:
+                  - type: int
+                    desc: The value to not
+              pushes:
+                  - type: int
+                    desc: The result of the noting
+        - bool:
+              desc: Returns 0 or 1 depending on whether a value is considered true.
+              source: |
+                 bool := not not
+              pops:
+                  - type: int
+                    desc: The value to bool
+              pushes:
+                  - type: int
+                    desc: Whether the value is considered true or not
+    - category: Integer Operations
+      functions:
+        - lt:
+              desc: Check if a value is less than another value.
+              source: |
+                 lt := - dup abs eq not
+              pops:
+                  - type: int
+                    desc: The value representing a
+                  - type: int
+                    desc: The value representing b
+              pushes:
+                  - type: int
+                    desc: "The result of a < b"
+        - gt:
+              desc: Check if a value is greater than another value.
+              source: |
+                 gt := flip lt
+              pops:
+                  - type: int
+                    desc: The value representing a
+                  - type: int
+                    desc: The value representing b
+              pushes:
+                  - type: int
+                    desc: "The result of a > b"

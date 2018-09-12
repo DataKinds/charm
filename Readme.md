@@ -12,7 +12,7 @@
 ## :boom: Why use Charm? :question:
 
 ```
-" hello " " world " concat pstring                      => hello world
+" hello,  " " world " concat pstring                      => hello, world
 ```
 
 * **Lispiness**: All code is data and all data is code. With this comes very powerful tooling for metaprogramming and surprising abstractions.

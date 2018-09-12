@@ -83,9 +83,9 @@ void Runner::setReference(CharmFunction key, CharmFunction value) {
 	references.push_back(newRef);
 }
 
-std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string name, RunnerContext* context) {
+std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string name, RunnerContext& context) {
 	std::optional<std::vector<CharmFunction>> out;
-	std::optional<CharmTypeSignature> type = context->fA->getTypeSignature(name);
+	std::optional<CharmTypeSignature> type = context.fA->getTypeSignature(name);
 	ONLYDEBUG printf("RUNNING TYPESIGNATURETICK FOR %s\n", name.c_str());
 	if (type) {
 		//assign a vector to be checked by
@@ -161,7 +161,7 @@ void Runner::typeSignatureTock(std::vector<CharmFunction> tick) {
 }
 
 
-void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
+void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext context) {
 	//PredefinedFunctions.h holds all the functions written in C++
 	//other than that, if these functions aren't built in, they are run through
 	//the functionDefinitions table.
@@ -200,7 +200,8 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 		}
 		auto possibleFunction = functionDefinitions.find(f.functionName);
 		if (possibleFunction != functionDefinitions.end()) {
-			auto fD = possibleFunction->second;
+			FunctionDefinition fD = possibleFunction->second;
+			fD.functionBody = possibleFunction->second.functionBody;
 			//wait! before we run it, check and make sure this function isn't tail recursive
 			if (fD.definitionInfo.tailCallRecursive) {
 				//if it is, drop the last call to itself and just run it in a loop
@@ -208,11 +209,16 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext* context) {
 				CHARM_LIST_TYPE functionBodyCopy = fD.functionBody;
 				functionBodyCopy.pop_back();
 				while (1) {
-					Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(functionBodyCopy, context->fA));
+					Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*>(functionBodyCopy, context.fA));
 				}
 			}
+			ONLYDEBUG printf("SETTING CONTEXT fD FOR FUNCTION %s\n    ", f.functionName.c_str());
+			for (auto currentFunction : fD.functionBody) {
+				ONLYDEBUG printf("%s ", charmFunctionToString(currentFunction).c_str());
+			}
+			context.fD = fD;
+			context.inDefinition = true;
 			//ooh. the only time we use this call!
-			context->fD = &fD;
 			Runner::runWithContext(fD.functionBody, context);
 		} else {
 			runtime_die("Unknown function `" + f.functionName + "`.");
@@ -255,8 +261,8 @@ void Runner::addNamespacePrefix(CharmFunction& f, std::string ns) {
 	}
 }
 
-void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns) {
-	unsigned long functionIndex = 0;
+void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext& context, std::string ns) {
+	context.fIndex = 0;
 	for (CharmFunction currentFunction : parsedProgram) {
 		if (ns != "") {
 			ONLYDEBUG printf("ADDING NAMESPACE %s\n", ns.c_str());
@@ -301,8 +307,7 @@ void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* contex
 				Runner::typeSignatureTock(*tick);
 			}
 		}
-		functionIndex++;
-		context->fIndex = functionIndex;
+		context.fIndex++;
 	}
 	ONLYDEBUG puts("EXITING RUNNER::RUN");
 }
@@ -310,7 +315,13 @@ void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* contex
 void Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer, std::string ns) {
 	RunnerContext rC;
 	rC.fA = parsedProgramWithAnalyzer.second;
-	rC.fD = nullptr;
+	
+	FunctionDefinition tempFD = FunctionDefinition();
+	tempFD.functionName = "";
+	tempFD.functionBody = CHARM_LIST_TYPE();
+	rC.fD = tempFD;
+	
 	rC.fIndex = 0;
-	Runner::runWithContext(parsedProgramWithAnalyzer.first, &rC, ns);
+	rC.inDefinition = false;
+	Runner::runWithContext(parsedProgramWithAnalyzer.first, rC, ns);
 }

@@ -16,6 +16,14 @@ struct FunctionDefinition {
 	CharmFunctionDefinitionInfo definitionInfo;
 };
 
+struct RunnerContext {
+	FunctionDefinition fD;
+	FunctionAnalyzer* fA;
+	unsigned long fIndex;
+	bool inDefinition;
+};
+
+
 struct Reference {
 	CharmFunction key;
 	CharmFunction value;
@@ -26,7 +34,7 @@ class Runner {
 private:
 	//handle the functions that we don't know about
 	//and / or handle built in functions
-	void handleDefinedFunctions(CharmFunction f, RunnerContext* context);
+	void handleDefinedFunctions(CharmFunction f, RunnerContext context);
 	//this is the name of the current stack that we
 	//are working with. by default, this is stack 0
 	CharmFunction currentStackName;
@@ -45,7 +53,7 @@ public:
 	std::unordered_map<std::string, FunctionDefinition> functionDefinitions;
 
 	//type signature runtime checking
-	std::optional<std::vector<CharmFunction>> typeSignatureTick(std::string name, RunnerContext* context);
+	std::optional<std::vector<CharmFunction>> typeSignatureTick(std::string name, RunnerContext& context);
 	void typeSignatureTock(std::vector<CharmFunction> tick);
 
 	const unsigned int MAX_STACK = 20000;
@@ -58,6 +66,6 @@ public:
 	void setReference(CharmFunction key, CharmFunction value);
 
 	void addNamespacePrefix(CharmFunction& f, std::string ns);
-	void runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext* context, std::string ns = "");
+	void runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext& context, std::string ns = "");
 	void run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer, std::string ns = "");
 };
