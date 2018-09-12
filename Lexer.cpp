@@ -9,35 +9,35 @@ std::optional<std::string> Lexer::consumeOpenBracket() {
     }
     return std::nullopt;
 }
-std::optional<std::string> consumeCloseBracket() {
+std::optional<std::string> Lexer::consumeCloseBracket() {
     if (this.rest.at(0) == ']') {
         this.rest = this.rest.substr(1);
         return "]";
     }
     return std::nullopt;
 }
-std::optional<std::string> consumeLineBreak() {
+std::optional<std::string> Lexer::consumeLineBreak() {
     if (this.rest.at(0) == '\n') {
         this.rest = this.rest.substr(1);
         return "\n";
     }
     return std::nullopt;
 }
-std::optional<std::string> consumeSingleColon() {
+std::optional<std::string> Lexer::consumeSingleColon() {
     if (this.rest.at(0) == ':') {
         this.rest = this.rest.substr(1);
         return ":";
     }
     return std::nullopt;
 }
-std::optional<std::string> consumeArrow() {
+std::optional<std::string> Lexer::consumeArrow() {
     if (this.rest.substr(0,2) == "->") {
         this.rest = this.rest.substr(2);
         return "->";
     }
     return std::nullopt;
 }
-std::optional<std::string> consumeString() {
+std::optional<std::string> Lexer::consumeString() {
     std::string out = "";
     if (this.rest.at(0) == '\"') {
         for (auto& c = std::next(this.rest.begin());; c++) {
@@ -55,13 +55,13 @@ std::optional<std::string> consumeString() {
     }
     return std::nullopt;
 }
-std::optional<std::string> consumeNumber() {
+std::optional<std::string> Lexer::consumeNumber() {
     std::string out = "";
     // TODO
 }
-std::optional<std::string> consumeIdent() {
+std::optional<std::string> Lexer::consumeIdent() {
     // TODO
 }
-std::optional<std::string> consumeWhitespace() {
+std::optional<std::string> Lexer::consumeWhitespace() {
     // TODO
 }
