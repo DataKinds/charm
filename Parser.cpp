@@ -8,25 +8,9 @@
 #include "FunctionAnalyzer.h"
 #include "Error.h"
 
-
-//thank u https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
 #include <algorithm>
 #include <cctype>
 #include <locale>
-
-// trim from start (in place)
-inline void Parser::ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
-        return !std::isspace(ch);
-    }));
-}
-
-// trim from end (in place)
-inline void Parser::rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
-        return !std::isspace(ch);
-    }).base(), s.end());
-}
 
 Parser::Parser() {
 }

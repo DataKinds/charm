@@ -9,9 +9,6 @@
 
 class Parser {
 private:
-	static inline void ltrim(std::string &s);
-	static inline void rtrim(std::string &s);
-
 	bool isCharDigit(char c);
 	bool isStringNumber(std::string str);
 	bool isLineFunctionDefinition(std::string line);
