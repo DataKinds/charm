@@ -11,32 +11,10 @@
 #include <algorithm>
 #include <cctype>
 #include <locale>
+#include <optional>
 
-Parser::Parser() {
-}
-
-bool Parser::isCharDigit(char c) {
-	std::string acceptableNumberChars = "-.0123456789";
-	for (auto checkNum : acceptableNumberChars) {
-		if (c == checkNum) return true;
-	}
-	return false;
-}
-
-bool Parser::isStringNumber(std::string str) {
-	bool hasDigit = false;
-	bool hasPunctuation = false;
-	for (auto c : str) {
-		if (!Parser::isCharDigit(c)) {
-			return false;
-		}
-		if (c == '.' || c == '-') {
-			hasPunctuation = true;
-		} else {
-			hasDigit = true;
-		}
-	}
-	return (hasDigit && hasPunctuation) || hasDigit;
+Parser::Parser(std::vector<Lexeme> rest) {
+	this->rest = rest;
 }
 
 bool Parser::isLineFunctionDefinition(std::string line) {
@@ -229,56 +207,6 @@ CharmFunction Parser::parseNumberFunction(std::string tok) {
 	return out;
 }
 
-std::string Parser::escapeString(std::string tok) {
-    for (auto c = tok.begin(); c != tok.end(); c++) {
-        //this will return "\ " unmodified
-        if (c == std::prev(tok.end())) {
-            break;
-        }
-        if (*c == '\\') {
-            auto i = c - tok.begin();
-            if (*std::next(c) == 'n') {
-                tok.replace(i, 2, "\n");
-            } else if (*std::next(c) == '\"') {
-                tok.replace(i, 2, "\"");
-            } else if (*std::next(c) == 't') {
-                tok.replace(i, 2, "\t");
-            } else if (*std::next(c) == '0') {
-                tok.replace(i, 2, "\0");
-            } else if (*std::next(c) == '\\') {
-                tok.replace(i, 2, "\\");
-            }
-        }
-    }
-    return tok;
-}
-CharmFunction Parser::parseStringFunction(std::string& token, std::string& rest) {
-	CharmFunction out;
-	out.functionType = STRING_FUNCTION;
-    //a string continues until it hits a " \" " token
-    std::stringstream outS;
-    bool correctlyEndQuoted = false;
-    while (Parser::advanceParse(token, rest)) {
-        if (token == "\"") {
-            correctlyEndQuoted = true;
-            break;
-        }
-        outS << Parser::escapeString(token) << " ";
-    }
-    if (!correctlyEndQuoted) {
-        parsetime_die("Expected an ending quote before the end of the line. Perhaps you missed a space?");
-    }
-    out.stringValue = outS.str();
-    //if our string is non-empty, there will be a final space pushed to it that
-    //we don't want. delete it here.
-    if (out.stringValue.size() > 0) {
-        out.stringValue.erase(std::prev(out.stringValue.end()));
-    }
-	//make sure that the final quote was removed if it exists
-	//(AKA we're not at the end of the line)
-	//FINALLY we can fill in out
-	return out;
-}
 
 CharmFunction Parser::parseListFunction(std::string& token, std::string& rest) {
 	CharmFunction out;
@@ -359,22 +287,9 @@ void Parser::delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::stri
 	}
 }
 
-bool Parser::advanceParse(std::string& token, std::string& rest) {
-    if (rest == "") {
-        return false;
-    }
-	auto nextSpace = rest.find_first_of(' ');
-	if (nextSpace == std::string::npos) {
-		token = rest;
-		rest = "";
-	} else {
-		token = rest.substr(0, nextSpace);
-		rest = rest.substr(nextSpace + 1);
-	}
-    return true;
-}
 
-std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lexAskToInline(const std::string charmInput, bool willInline) {
+CHARM_LIST_TYPE Parser::lexAskToInline(const std::string charmInput, bool willInline) {
+/*
 	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
 	CHARM_LIST_TYPE out;
 
@@ -403,7 +318,31 @@ std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lexAskToInline(const std::
 	//wow, we're finally done with this abomination of a function
 	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> outPair(out, &fA);
 	return outPair;
+*/
 }
-std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> Parser::lex(const std::string charmInput) {
+
+std::optional<Token> Parser::consumeList() {
+
+}
+std::optional<Token> Parser::consumeTypeSignature() {
+
+}
+std::optional<Token> Parser::consumeString() {
+
+}
+std::optional<Token> Parser::consumeNumber() {
+
+}
+std::optional<Token> Parser::consumeFunction() {
+
+}
+
+std::vector<Token> Parser::parse() {
+	/*
 	return Parser::lexAskToInline(charmInput, true);
+	*/
+	std::vector<Token> out;
+	while (lex.size() > 0) {
+		out.emplace_back();
+	}
 }
