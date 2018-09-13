@@ -7,11 +7,13 @@
 #include "Debug.h"
 #include "FunctionAnalyzer.h"
 #include "Error.h"
+#include "Lexer.h"
 
 #include <algorithm>
 #include <cctype>
 #include <locale>
 #include <optional>
+#include <variant>
 
 Parser::Parser(std::vector<Lexeme> rest) {
 	this->rest = rest;
@@ -322,27 +324,87 @@ CHARM_LIST_TYPE Parser::lexAskToInline(const std::string charmInput, bool willIn
 }
 
 std::optional<Token> Parser::consumeList() {
-
+	// ensure the first Lexeme is an open bracket
+	if (!std::holds_alternative<Lexeme::OpenBracket>(this->rest.at(0))) {
+		return std::nullopt;
+	}
+	// consume that first open bracket
+	this->rest.erase(this->rest.begin())
+	// if it is an open bracket, we consume to
+	// the end of the list, collecting lexemes as we go
+	std::vector<Lexeme> descent;
+	int depth = 1;
+	while (depth) {
+		if (this->rest.size() == 0) {
+			parsetime_die("Unclosed list");
+		}
+		std::visit(overloaded {
+			[](Lexeme::OpenBracket arg) {
+				depth++;
+			},
+			[](Lexeme::CloseBracket arg) {
+				depth--;
+			},
+			[](auto arg) {}
+		}, this->rest.begin());
+		if (!depth) break;
+		descent.push_back(this->rest.begin());
+		this->rest.erase(this->rest.begin());
+	}
+	// erase the closing bracket
+	this->rest.erase(this->rest.begin());
+	// then finally prepare the token for returning
+	Token token;
+	Parser descentParser = Parser(descent);
+	token.token = (struct Parser::List){ .list = descentParser.consumeAllTokens() };
+	return token;
 }
 std::optional<Token> Parser::consumeTypeSignature() {
-
+	// TODO: actual type signature parser
+	bool isTypeSignature = false;
+	for (auto& lexeme : this->rest) {
+		isTypeSignature = isTypeSignature || std::holds_alternative<Lexeme::SingleColon>(lexeme);
+	}
+	if (isTypeSignature) {
+		// TODO: just consume until the end of the line for now
+	}
 }
 std::optional<Token> Parser::consumeString() {
-
+	// TODO: stub
 }
 std::optional<Token> Parser::consumeNumber() {
-
+	// TODO: stub
 }
 std::optional<Token> Parser::consumeFunction() {
-
+	// TODO: stub
+}
+Token Parser::consumeToken() {
+	std::vector<Lexeme> backtrack = this->rest;
+	Token token;
+	// all of these require backtracking
+	if (token = Parser::consumeList()) {
+		goto success;
+	}
+	if (token = Parser::consumeTypeSignature()) {
+		goto success;
+	}
+	if (token = Parser::consumeString()) {
+		goto success;
+	}
+	if (token = Parser::consumeNumber()) {
+		goto success;
+	}
+	if (token = Parser::consumeFunction()) {
+		goto success;
+	}
+	parsetime_die("BBBBB");
+	success:
+	return token;
 }
 
-std::vector<Token> Parser::parse() {
-	/*
-	return Parser::lexAskToInline(charmInput, true);
-	*/
+std::vector<Token> Parser::consumeAllTokens() {
 	std::vector<Token> out;
-	while (lex.size() > 0) {
-		out.emplace_back();
+	while (this->rest.size() > 0) {
+		// TODO: stub
 	}
 }
