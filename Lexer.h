@@ -1,3 +1,8 @@
+#include <string>
+#include <variant>
+#include <optional>
+#include <vector>
+
 struct Lexeme {
     struct OpenBracket { };
     struct CloseBracket { };
