@@ -38,6 +38,13 @@ std::optional<std::string> Lexer::consumeSingleColon() {
     }
     return std::nullopt;
 }
+std::optional<std::string> Lexer::consumeColonEqual() {
+    if (this->rest.substr(0,2) == ":=") {
+        this->rest = this->rest.substr(2);
+        return ":=";
+    }
+    return std::nullopt;
+}
 std::optional<std::string> Lexer::consumeArrow() {
     if (this->rest.substr(0,2) == "->") {
         this->rest = this->rest.substr(2);

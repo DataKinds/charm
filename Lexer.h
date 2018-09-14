@@ -8,6 +8,7 @@ struct Lexeme {
     struct CloseBracket { };
     struct LineBreak { };
     struct SingleColon { };
+    struct ColonEqual { };
     struct Arrow { };
     struct String { std::string string; }; // any characters between quotes, skipping quotes preceded by backspaces
     struct Number { std::string number; }; // [+-]?<digits>(.<digits>)?
@@ -18,6 +19,7 @@ struct Lexeme {
         CloseBracket,
         LineBreak,
         SingleColon,
+        ColonEqual,
         Arrow,
         String,
         Number,
@@ -32,6 +34,7 @@ public:
     std::optional<std::string> consumeCloseBracket();
     std::optional<std::string> consumeLineBreak();
     std::optional<std::string> consumeSingleColon();
+    std::optional<std::string> consumeColonEqual();
     std::optional<std::string> consumeArrow();
     std::optional<std::string> consumeWhitespace();
     std::optional<std::string> consumeString();
