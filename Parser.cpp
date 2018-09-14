@@ -19,50 +19,6 @@ Parser::Parser(std::vector<Lexeme> rest) {
 	this->rest = rest;
 }
 
-bool Parser::isLineFunctionDefinition(std::string line) {
-	std::stringstream lineS(line);
-	std::string f;
-    bool stringDepth = false;
-    int listDepth = 0;
-	while (std::getline(lineS, f, ' ')) {
-        if (Parser::recognizeFunction(f) == LIST_FUNCTION) {
-            listDepth++;
-        } else if (f == "]") {
-            listDepth--;
-        } else if (Parser::recognizeFunction(f) == STRING_FUNCTION) {
-            stringDepth = !stringDepth;
-        }
-        if (listDepth == 0 && !stringDepth) {
-            if (Parser::recognizeFunction(f) == FUNCTION_DEFINITION) {
-                return true;
-            }
-        }
-	}
-	return false;
-}
-
-bool Parser::isLineTypeSignature(std::string line) {
-	std::stringstream lineS(line);
-	std::string f;
-    bool stringDepth = false;
-    int listDepth = 0;
-	while (std::getline(lineS, f, ' ')) {
-        if (Parser::recognizeFunction(f) == LIST_FUNCTION) {
-            listDepth++;
-        } else if (f == "]") {
-            listDepth--;
-        } else if (Parser::recognizeFunction(f) == STRING_FUNCTION) {
-            stringDepth = !stringDepth;
-        }
-        if (listDepth == 0 && !stringDepth) {
-            if (f == "::") {
-                return true;
-            }
-        }
-	}
-	return false;
-}
-
 CharmTypes Parser::tokenToType(std::string token) {
     if (token == "any") {
         return TYPESIG_ANY;
@@ -82,62 +38,6 @@ CharmTypes Parser::tokenToType(std::string token) {
         parsetime_die(errorOut.str());
     }
     return TYPESIG_ANY;
-}
-CharmTypeSignature Parser::parseTypeSignature(std::string line) {
-	CharmTypeSignature typeSignature;
-	//this is called only if Parser::isLineFunctionDefinition was true, so that guarentees that
-	//the string " := " is somewhere in this string
-	auto colonIndex = line.find("::");
-	typeSignature.functionName = line.substr(0, colonIndex);
-	Parser::rtrim(typeSignature.functionName);
-	Parser::ltrim(typeSignature.functionName);
-
-    ParseUnit:
-    CharmTypeSignatureUnit unit;
-	std::string typeStringRest = line.substr(colonIndex + 2);
-    std::string typeStringToken;
-
-    //first, parse the popped types
-    while (Parser::advanceParse(typeStringToken, typeStringRest)) {
-        if (typeStringToken == "") {
-            continue;
-        }
-        if (typeStringToken == "->") {
-            break;
-        }
-        if (typeStringToken == "|") {
-            //this is only valid after an entire type signature has been specified.
-            //thus, using it before a -> is invalid
-            parsetime_die("Type alternative specified before completion of type.");
-        }
-        unit.pops.push_back(Parser::tokenToType(typeStringToken));
-    }
-
-    //then, parse the pushed types
-    while (Parser::advanceParse(typeStringToken, typeStringRest)) {
-        if (typeStringToken == "") {
-            continue;
-        }
-        if (typeStringToken == "|") {
-            Parser::advanceParse(typeStringToken, typeStringRest);
-            typeSignature.units.push_back(unit);
-            goto ParseUnit;
-        }
-        unit.pushes.push_back(Parser::tokenToType(typeStringToken));
-    }
-    typeSignature.units.push_back(unit);
-	return typeSignature;
-}
-
-
-CharmFunctionType Parser::recognizeFunction(std::string s) {
-	if (s == "[") return LIST_FUNCTION;
-	if (s == "\"") return STRING_FUNCTION;
-	if (s == ":=") return FUNCTION_DEFINITION;
-	//if it's not any of those two
-	if (Parser::isStringNumber(s)) return NUMBER_FUNCTION;
-	//if it's just a string, it's just a function
-	return DEFINED_FUNCTION;
 }
 
 CharmFunctionDefinitionInfo Parser::analyzeDefinition(CharmFunction f) {
@@ -184,144 +84,6 @@ CharmFunction Parser::parseDefinition(std::string line) {
 	return currentFunction;
 }
 
-CharmFunction Parser::parseDefinedFunction(std::string tok) {
-	CharmFunction out;
-	out.functionType = DEFINED_FUNCTION;
-	out.functionName = tok;
-	return out;
-}
-
-CharmFunction Parser::parseNumberFunction(std::string tok) {
-	CharmFunction out;
-	out.functionType = NUMBER_FUNCTION;
-	CharmNumber numberValue;
-	//if it contains a '.' it's a long double
-	//if not it's a long long
-	if (tok.find('.') != std::string::npos) {
-		numberValue.whichType = FLOAT_VALUE;
-        //TODO: FIND AN EASIER WAY TO SPECIFY FLOAT PRECISION
-		numberValue.floatValue = mpf_class(tok.c_str());
-	} else {
-		numberValue.whichType = INTEGER_VALUE;
-		numberValue.integerValue = mpz_class(tok.c_str());
-	}
-	out.numberValue = numberValue;
-	return out;
-}
-
-
-CharmFunction Parser::parseListFunction(std::string& token, std::string& rest) {
-	CharmFunction out;
-	out.functionType = LIST_FUNCTION;
-	//and not a string. this time, we look for a "]"
-	//to end the list (or a new line. that works too)
-	//first, we have to make another string with the contents
-	//this is just like the string
-	std::stringstream outS;
-	std::stringstream listS(rest);
-	int listDepth = 1;
-	std::string f;
-	while (std::getline(listS, f, ' ')) {
-		Parser::advanceParse(token, rest);
-		ONLYDEBUG printf("LIST DEPTH %i\n", listDepth);
-		if (Parser::recognizeFunction(token) == LIST_FUNCTION) {
-		   //if we see another "[" inside of here, we increase listDepth in order to not break on the first ]
-		   listDepth++;
-		} else if (token == "]") {
-		   //else, we decrease listDepth
-		   //remember, the loop ends when listDepth is zero, and it starts at one.
-		   //additionally: ] is NOT a function and is not parsed as one, and weirdness ensues if it is
-		   listDepth--;
-		   if (listDepth <= 0) {
-			   break;
-		   }
-		}
-		outS << token << " ";
-	}
-	//finally, we can put the inside of the [ ] into the out
-    if (listDepth > 0) {
-        parsetime_die("Expected a close bracket before the end of the line. Perhaps you missed a space?");
-    }
-	out.literalFunctions = Parser::lexAskToInline(outS.str(), false).first;
-	return out;
-}
-
-void Parser::delegateParsing(CHARM_LIST_TYPE& out, std::string& token, std::string& rest, bool willInline) {
-	ONLYDEBUG printf("DELEGATE PARSING %s\n", token.c_str());
-	CharmFunction currentFunction;
-	CharmFunctionType type = Parser::recognizeFunction(token);
-	if (type == DEFINED_FUNCTION) {
-		//deal with DEFINED_FUNCTION first, easiest to deal with
-		currentFunction = Parser::parseDefinedFunction(token);
-		//if we're doing inline optimizations, do them here:
-		if (OPTIMIZE_INLINE && willInline) {
-			ONLYDEBUG puts("WE ARE DOING INLINE DEFINITIONS");
-            // only do inlining if the function says we can -- not just if it's possible
-            // many functions _aren't_ inlineable because they have type signatures, but
-            // they still have inlineDefinition's (in order to be able to use `inline`)
-            auto defInfo = definitionInfoCache.find(currentFunction.functionName);
-            if (defInfo != definitionInfoCache.end() && defInfo->second.inlineable) {
-                ONLYDEBUG printf("YES, %s IS INLINEABLE SO WE'RE DOING IT\n", currentFunction.functionName.c_str());
-    			if (fA.doInline(out, currentFunction)) {
-    				//if the function was able to be inline optimized, skip the final push_back
-    				//this means that we don't push a duplicate currentFunction
-    				return;
-    			}
-            }
-		}
-	} else if (type == NUMBER_FUNCTION) {
-		//next deal with NUMBER_FUNCTION
-		currentFunction = Parser::parseNumberFunction(token);
-	} else if (type == STRING_FUNCTION) {
-		//next deal with STRING_FUNCTION
-		currentFunction = Parser::parseStringFunction(token, rest);
-	} else if (type == LIST_FUNCTION) {
-		//same thing as before, except it's a list
-		currentFunction = Parser::parseListFunction(token, rest);
-	}
-	out.push_back(currentFunction);
-	if (DEBUGMODE) {
-		printf("AFTER 1 TOKEN, OUT NOW LOOKS LIKE THIS:\n     ");
-		for (CharmFunction f : out) {
-			printf("%s ", charmFunctionToString(f).c_str());
-		}
-		printf("\n");
-	}
-}
-
-
-CHARM_LIST_TYPE Parser::lexAskToInline(const std::string charmInput, bool willInline) {
-/*
-	ONLYDEBUG printf("WILL PARSE %s\n", charmInput.c_str());
-	CHARM_LIST_TYPE out;
-
-	std::stringstream charmInputS(charmInput);
-	std::string line;
-	while (std::getline(charmInputS, line, '\n')) {
-		//first, check and make sure that this line doesn't
-		//contain a function definition before parsing it
-		if (isLineFunctionDefinition(line)) {
-			//deal with FUNCTION_DEFINITION
-			out.push_back(Parser::parseDefinition(line));
-		} else if (isLineTypeSignature(line)) {
-            fA.addTypeSignature(Parser::parseTypeSignature(line));
-        } else {
-			std::string rest = line;
-			std::string token;
-			while (Parser::advanceParse(token, rest)) {
-				if (token == "") {
-					//if the token is empty bc multiple spaces
-					continue;
-				}
-				delegateParsing(out, token, rest, willInline);
-			}
-		}
-	}
-	//wow, we're finally done with this abomination of a function
-	std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> outPair(out, &fA);
-	return outPair;
-*/
-}
 
 std::optional<Token> Parser::consumeList() {
 	// ensure the first Lexeme is an open bracket
@@ -360,28 +122,106 @@ std::optional<Token> Parser::consumeList() {
 	return token;
 }
 std::optional<Token> Parser::consumeTypeSignature() {
+	if (this->rest.size() < 3) {
+		return std::nullopt;
+	}
 	// TODO: actual type signature parser
 	bool isTypeSignature = false;
 	for (auto& lexeme : this->rest) {
 		isTypeSignature = isTypeSignature || std::holds_alternative<Lexeme::SingleColon>(lexeme);
 	}
+
 	if (isTypeSignature) {
 		// TODO: just consume until the end of the line for now
+		while (this->rest.size() != 0) {
+			if (std::holds_alternative<Lexeme::LineBreak>(this->rest.at(0))) break;
+			this->rest.erase(this->rest.begin());
+		}
+	} else {
+		return std::nullopt;
 	}
+	Token token;
+	token.token = (struct Parser::TypeSignature){
+		.functionName = "",
+		.unit = { }
+	};
+	return token;
+}
+std::optional<Token> Parser::consumeDefinition() {
+	// a definition has to be at LEAST
+	// <function name> := <definition>
+	if (this->rest.size() < 3) {
+		return std::nullopt;
+	}
+	if (!std::holds_alternative<Lexeme::Ident>(this->rest.at(0))
+		|| !std::holds_alternative<Lexeme::ColonEqual>(this->rest.at(1))) {
+		return std::nullopt;
+	}
+	Token token;
+	token.token = (struct Parser::Definition){
+		.functionName = this->rest.at(0).function,
+		.definition = { }
+	};
+	// erase the function name and the :=
+	this->rest.erase(this->rest.begin());
+	this->rest.erase(this->rest.begin());
+	// then consume the definition
+	auto definitionEnd = this->rest.begin();
+	//TODO
+	//TODO
+	//TODO
+	while (this->rest.size() != 0) {
+		// TODO: this is _so_ ineffecient, we should
+		// be using consumeAllTokens with a sublist instead
+		Parser parser = Parser({ this->rest.at(0) });
+		token.token.definition.push_back(parser.consumeAllTokens());
+		this->rest.erase(this->rest.begin());
+	}
+	return token;
 }
 std::optional<Token> Parser::consumeString() {
-	// TODO: stub
+	if (std::holds_alternative<Lexeme::String>(this->rest.at(0))) {
+		Token token;
+		token.token = (struct Parser::String){ .string = this->rest.at(0).string };
+		this->rest.erase(this->rest.begin());
+		return token;
+	} else {
+		return std::nullopt;
+	}
 }
 std::optional<Token> Parser::consumeNumber() {
-	// TODO: stub
+	if (std::holds_alternative<Lexeme::Number>(this->rest.at(0))) {
+		Token token;
+		token.token = (struct Parser::Number){ .number = mpf_class(this->rest.at(0).number.c_str()) };
+		this->rest.erase(this->rest.begin());
+		return token;
+	} else {
+		return std::nullopt;
+	}
 }
 std::optional<Token> Parser::consumeFunction() {
-	// TODO: stub
+	if (std::holds_alternative<Lexeme::Ident>(this->rest.at(0))) {
+		Token token;
+		token.token = (struct Parser::Function){ .function = this->rest.at(0).function };
+		this->rest.erase(this->rest.begin());
+		return token;
+	} else {
+		return std::nullopt;
+	}
+}
+bool Parser::skipLineBreak() {
+	if (std::holds_alternative<Lexeme::LineBreak>(this->rest.at(0))) {
+		this->rest.erase(this->rest.begin());
+		return true;
+	} else {
+		return false;
+	}
 }
 Token Parser::consumeToken() {
 	std::vector<Lexeme> backtrack = this->rest;
 	Token token;
 	// all of these require backtracking
+	// (this is as a safety precaution)
 	if (token = Parser::consumeList()) {
 		goto success;
 	}
@@ -405,6 +245,8 @@ Token Parser::consumeToken() {
 std::vector<Token> Parser::consumeAllTokens() {
 	std::vector<Token> out;
 	while (this->rest.size() > 0) {
-		// TODO: stub
+		// discard extra whitespace
+		while (Parser::skipLineBreak()) {}
+		out.push_back(Lexer::consumeLexeme());
 	}
 }
