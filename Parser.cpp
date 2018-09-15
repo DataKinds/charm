@@ -1,6 +1,7 @@
 #include <vector>
 #include <sstream>
 #include <utility>
+#include <type_traits>
 
 #include "Types.h"
 #include "Parser.h"
@@ -103,13 +104,13 @@ std::optional<Token> Parser::consumeList() {
 			parsetime_die("Unclosed list");
 		}
 		// https://en.cppreference.com/w/cpp/utility/variant/visit
-		std::visit([&depth] (auto&& arg){
+		std::visit([&depth] (auto& arg){
 			using T = std::decay_t<decltype(arg)>;
 			if constexpr (std::is_same_v<T, Lexeme::OpenBracket>)
 				depth++;
 			if constexpr (std::is_same_v<T, Lexeme::CloseBracket>)
 				depth--;
-			}, this->rest.begin());
+			}, this->rest.at(0).lexeme);
 		if (!depth) break;
 		descent.push_back(this->rest.at(0));
 		this->rest.erase(this->rest.begin());
