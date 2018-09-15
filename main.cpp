@@ -18,6 +18,7 @@
 
 #include "Prelude.charm.h"
 
+#include "Lexer.h"
 #include "Parser.h"
 #include "Runner.h"
 #include "Debug.h"
@@ -61,6 +62,7 @@ struct CommandLineOptional {
 
 
 int main(int argc, char const *argv[]) {
+	Lexer lexer = Lexer();
 	Parser parser = Parser();
 	Runner runner = Runner();
 

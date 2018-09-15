@@ -3,28 +3,7 @@
 #include <optional>
 #include <vector>
 
-struct Lexeme {
-    struct OpenBracket { };
-    struct CloseBracket { };
-    struct LineBreak { };
-    struct SingleColon { };
-    struct ColonEqual { };
-    struct Arrow { };
-    struct String { std::string string; }; // any characters between quotes, skipping quotes preceded by backspaces
-    struct Number { std::string number; }; // [+-]?<digits>(.<digits>)?
-    struct Ident { std::string ident; };   // any non whitespace characters not otherwise captured
-
-    std::variant<
-        OpenBracket,
-        CloseBracket,
-        LineBreak,
-        SingleColon,
-        ColonEqual,
-        Arrow,
-        String,
-        Number,
-        Ident> lexeme;
-};
+#include "Types.h"
 
 class Lexer {
 public:

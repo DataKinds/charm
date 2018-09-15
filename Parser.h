@@ -8,34 +8,14 @@
 
 #include "ParserTypes.h"
 #include "FunctionAnalyzer.h"
+#include "Types.h"
 
-class Token {
-	struct TypeSignature {
-		std::string functionName;
-		std::vector<CharmTypeSignatureUnit> unit;
-	};
-	struct Definition {
-		std::string functionName;
-		std::vector<Token> definition;
-	};
-	struct List { std::vector<Token> list; };
-	struct String { std::string string; };
-	struct Number { mpf_class number; };
-	struct Function { std::string function; };
-
-	std::variant<
-		TypeSignature,
-		List,
-		String,
-		Number,
-		Definition,
-		Function> token;
-}
 
 class Parser {
 private:
 	std::optional<Token> consumeList();
 	std::optional<Token> consumeTypeSignature();
+	std::optional<Token> consumeDefinition();
 	std::optional<Token> consumeString();
 	std::optional<Token> consumeNumber();
 	std::optional<Token> consumeFunction();
