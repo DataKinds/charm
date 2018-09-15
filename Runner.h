@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include "ParserTypes.h"
+#include "Types.h"
 #include "Stack.h"
 
 //in PredefinedFunctions.h
@@ -12,29 +13,56 @@ class FFI;
 
 struct FunctionDefinition {
 	std::string functionName;
-	CHARM_LIST_TYPE functionBody;
+	std:vector<Token> functionBody;
 	CharmFunctionDefinitionInfo definitionInfo;
 };
-
-struct RunnerContext {
-	FunctionDefinition fD;
-	FunctionAnalyzer* fA;
-	unsigned long fIndex;
-	bool inDefinition;
-};
-
 
 struct Reference {
 	CharmFunction key;
 	CharmFunction value;
 };
 
+void addNamespacePrefix(CharmFunction& f, std::string ns) {
+	if (ns == "") {
+		return;
+	}
+	if (f.functionType == NUMBER_FUNCTION) {
+		return;
+	} else if (f.functionType == STRING_FUNCTION) {
+		return;
+	} else if (f.functionType == LIST_FUNCTION) {
+		for (CharmFunction& currentFunction : f.literalFunctions) {
+			addNamespacePrefix(currentFunction, ns);
+		}
+		return;
+	} else if (f.functionType == FUNCTION_DEFINITION) {
+		f.functionName = ns + f.functionName;
+		for (CharmFunction& currentFunction : f.literalFunctions) {
+			addNamespacePrefix(currentFunction, ns);
+		}
+		return;
+	} else if (f.functionType == DEFINED_FUNCTION) {
+		bool isAlreadyDefined = (functionDefinitions.find(f.functionName) != functionDefinitions.end());
+		bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
+		bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
+		ONLYDEBUG printf("isAlreadyDefined: %s, isPredefinedFunction: %s, isFFIFunction: %s\n", isAlreadyDefined ? "Yes" : "No", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
+		if (isPredefinedFunction || isFFIFunction || isAlreadyDefined) {
+			//don't rename the function if it was defined globally outside of this file
+			//or it was already defined (aka: in the prelude)
+			//note: adding the "if already defined" clause ensures that functions from its own file don't trip the system,
+			//as those functions were already transformed and had their namespace prepended.
+		} else {
+			f.functionName = ns + f.functionName;
+		}
+	}
+}
+
 extern "C"
-class Runner {
+class Runner{
 private:
 	//handle the functions that we don't know about
 	//and / or handle built in functions
-	void handleDefinedFunctions(CharmFunction f, RunnerContext context);
+	void handleDefinedFunctions(CharmFunction f);
 	//this is the name of the current stack that we
 	//are working with. by default, this is stack 0
 	CharmFunction currentStackName;
@@ -43,29 +71,21 @@ private:
 	//and the list of all of our references
 	std::vector<Reference> references;
 public:
-	Runner();
 	//and this is how you add them
 	void addFunctionDefinition(FunctionDefinition fD);
 
-	//all of our instances containing any sort of functions are right here:
-	PredefinedFunctions* pF;
-	FFI* ffi;
-	std::unordered_map<std::string, FunctionDefinition> functionDefinitions;
-
-	//type signature runtime checking
-	std::optional<std::vector<CharmFunction>> typeSignatureTick(std::string name, RunnerContext& context);
-	void typeSignatureTock(std::vector<CharmFunction> tick);
-
 	const unsigned int MAX_STACK = 20000;
 	bool doesStackExist(CharmFunction name);
-	Stack* getCurrentStack();
+	Stack& getCurrentStack();
 	void switchCurrentStack(CharmFunction name);
 	void createStack(CharmFunction name);
 
 	CharmFunction getReference(CharmFunction key);
 	void setReference(CharmFunction key, CharmFunction value);
 
-	void addNamespacePrefix(CharmFunction& f, std::string ns);
-	void runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext& context, std::string ns = "");
-	void run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer, std::string ns = "");
-};
+	PredefinedFunctions& pF;
+	FFI& ffi;
+	std::unordered_map<std::string, FunctionDefinition> definitions;
+
+	Runner(std::vector<Token> tokens, std::string ns);
+}

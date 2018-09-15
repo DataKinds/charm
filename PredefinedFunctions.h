@@ -25,7 +25,7 @@ private:
 	//b) an int
 	static bool isInt(CharmFunction f);
 public:
-	std::unordered_map<std::string, BuiltinFunction> cppFunctionNames;
+	std::unordered_map<std::string, BuiltinFunction> nativeFunctions;
 	PredefinedFunctions();
 	void functionLookup(std::string functionName, Runner* r, RunnerContext& context);
 	void addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext)> f);

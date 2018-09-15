@@ -8,15 +8,6 @@
 #include "FFI.h"
 #include "FunctionAnalyzer.h"
 
-void Runner::addFunctionDefinition(FunctionDefinition fD) {
-	//first, check and make sure there's no other definition with
-	//the same name. if there is, overwrite it. if not, just push_back
-	//this definition.
-	if (functionDefinitions.find(fD.functionName) == functionDefinitions.end()) {
-		functionDefinitions[fD.functionName] = fD;
-	}
-}
-
 Runner::Runner() {
 	//initialize the stacks
 	CharmFunction zero = Stack::zeroF();
@@ -24,6 +15,15 @@ Runner::Runner() {
 	stacks.push_back(Stack(zero));
 	pF = new PredefinedFunctions();
 	ffi = new FFI();
+}
+
+void Runner::addFunctionDefinition(FunctionDefinition fD) {
+	//first, check and make sure there's no other definition with
+	//the same name. if there is, overwrite it. if not, just push_back
+	//this definition.
+	if (functionDefinitions.find(fD.functionName) == functionDefinitions.end()) {
+		functionDefinitions[fD.functionName] = fD;
+	}
 }
 
 bool Runner::doesStackExist(CharmFunction name) {
@@ -82,86 +82,8 @@ void Runner::setReference(CharmFunction key, CharmFunction value) {
 	//if it wasn't previously defined then
 	references.push_back(newRef);
 }
-
-std::optional<std::vector<CharmFunction>> Runner::typeSignatureTick(std::string name, RunnerContext& context) {
-	std::optional<std::vector<CharmFunction>> out;
-	std::optional<CharmTypeSignature> type = context.fA->getTypeSignature(name);
-	ONLYDEBUG printf("RUNNING TYPESIGNATURETICK FOR %s\n", name.c_str());
-	if (type) {
-		//assign a vector to be checked by
-		unsigned int maxLength = FunctionAnalyzer::maxTypeSignatureLength(*type);
-		ONLYDEBUG printf("FOUND A TYPE SIGNATURE FOR %s OF MAX LENGTH %i\n", name.c_str(), maxLength);
-		//if the stack is small, make sure to just fake copying it with zero functions
-		if (Runner::getCurrentStack()->stack.size() < maxLength) {
-			out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rend());
-			for (unsigned int i = 0; i < maxLength - Runner::getCurrentStack()->stack.size(); i++) {
-				out->push_back(Stack::zeroF());
-			}
-		} else {
-			out = std::vector<CharmFunction>(Runner::getCurrentStack()->stack.rbegin(), Runner::getCurrentStack()->stack.rbegin() + maxLength);
-		}
-		std::reverse(out->begin(), out->end());
-		//check the popped values to see if they match up with a type signature
-		//NOTE: this is repeated in typeSignatureTock
-		//TODO: DRY
-		for (auto unit : type->units) {
-			bool isSignatureValid = true;
-			//check the type signature against the stack
-			for (unsigned int i = 0; i < unit.pops.size(); i++) {
-				auto popSig = unit.pops.at(i);
-				auto popStack = out->at(i);
-				if (popSig == TYPESIG_ANY) {
-					isSignatureValid = true;
-				} else if (popSig == TYPESIG_LIST) {
-					isSignatureValid = TYPESIG_LIST == charmFunctionToType(popStack);
-				} else if (popSig == TYPESIG_LISTSTRING) {
-					isSignatureValid = (TYPESIG_LIST == charmFunctionToType(popStack) || TYPESIG_STRING == charmFunctionToType(popStack));
-				} else if (popSig == TYPESIG_STRING) {
-					isSignatureValid = TYPESIG_STRING == charmFunctionToType(popStack);
-				} else if (popSig == TYPESIG_INT) {
-					isSignatureValid = TYPESIG_INT == charmFunctionToType(popStack);
-				} else if (popSig == TYPESIG_FLOAT) {
-					isSignatureValid = TYPESIG_FLOAT == charmFunctionToType(popStack);
-				}
-				if (!isSignatureValid) {
-					break;
-				}
-			}
-			// and if it's still valid by the time the types have been checked, then
-			// we return and don't error
-			if (isSignatureValid) {
-				return out;
-			}
-		}
-		//if we exited the type signature checking function without finding a valid type signature
-		std::stringstream typeSigError;
-		typeSigError << "Type signature check for function `" << name << "` failed." << std::endl;
-		typeSigError << "The function has type signature `" << charmTypeSignatureToString(*type) << "` but it popped types `";
-		for (CharmFunction& f : (*out)) {
-			if (f.functionType == LIST_FUNCTION) {
-				typeSigError << "list ";
-			} else if (f.functionType == STRING_FUNCTION) {
-				typeSigError << "string ";
-			} else if (f.functionType == NUMBER_FUNCTION) {
-				if (f.numberValue.whichType == FLOAT_VALUE) {
-					typeSigError << "float ";
-				} else if (f.numberValue.whichType == INTEGER_VALUE) {
-					typeSigError << "int ";
-				}
-			}
-		}
-		typeSigError << "`" << std::endl;
-		runtime_die(typeSigError.str());
-	}
-	//this returns an empty std::option
-	return out;
-}
-void Runner::typeSignatureTock(std::vector<CharmFunction> tick) {
-
-}
-
-
-void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext context) {
+/*
+void Runner::handleDefinedFunctions(CharmFunction f) {
 	//PredefinedFunctions.h holds all the functions written in C++
 	//other than that, if these functions aren't built in, they are run through
 	//the functionDefinitions table.
@@ -171,21 +93,21 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext context) {
 	//functionDefinitions table.
 	if (DEBUGMODE) {
 		puts("ALL PREDEFINED FUNCTIONS: ");
-		for (auto f : pF->cppFunctionNames) {
+		for (auto f : pF.nativeFunctions) {
 			printf("%s ", f.first.c_str());
 		}
 		puts("");
 	}
-	bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
-	bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
+	bool isPredefinedFunction = (pF.nativeFunctions.find(f.functionName) != pF.nativeFunctions.end());
+	bool isFFIFunction = (ffi.mutateFFIFuncs.find(f.functionName) != ffi.mutateFFIFuncs.end());
 	ONLYDEBUG printf("isPredefinedFunction? %s. isFFIFunction? %s\n", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
 	if (isPredefinedFunction) {
 		//run the predefined function!
 		//(note: the function context AKA the definition we are running code from
 		//is passed in for tail call optimization in PredefinedFunctions.cpp::ifthen())
-		pF->functionLookup(f.functionName, this, context);
+		pF.functionLookup(f.functionName, this, context);
 	} else if (isFFIFunction) {
-		ffi->runFFI(f.functionName, this);
+		ffi.runFFI(f.functionName, this);
 	} else {
 		//alright, now we get down and dirty
 		//look through the functionDefinitions table for a function with
@@ -226,47 +148,12 @@ void Runner::handleDefinedFunctions(CharmFunction f, RunnerContext context) {
 	}
 }
 
-void Runner::addNamespacePrefix(CharmFunction& f, std::string ns) {
-	if (ns == "") {
-		return;
-	}
-	if (f.functionType == NUMBER_FUNCTION) {
-		return;
-	} else if (f.functionType == STRING_FUNCTION) {
-		return;
-	} else if (f.functionType == LIST_FUNCTION) {
-		for (CharmFunction& currentFunction : f.literalFunctions) {
-			addNamespacePrefix(currentFunction, ns);
-		}
-		return;
-	} else if (f.functionType == FUNCTION_DEFINITION) {
-		f.functionName = ns + f.functionName;
-		for (CharmFunction& currentFunction : f.literalFunctions) {
-			addNamespacePrefix(currentFunction, ns);
-		}
-		return;
-	} else if (f.functionType == DEFINED_FUNCTION) {
-		bool isAlreadyDefined = (functionDefinitions.find(f.functionName) != functionDefinitions.end());
-		bool isPredefinedFunction = (pF->cppFunctionNames.find(f.functionName) != pF->cppFunctionNames.end());
-		bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
-		ONLYDEBUG printf("isAlreadyDefined: %s, isPredefinedFunction: %s, isFFIFunction: %s\n", isAlreadyDefined ? "Yes" : "No", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
-		if (isPredefinedFunction || isFFIFunction || isAlreadyDefined) {
-			//don't rename the function if it was defined globally outside of this file
-			//or it was already defined (aka: in the prelude)
-			//note: adding the "if already defined" clause ensures that functions from its own file don't trip the system,
-			//as those functions were already transformed and had their namespace prepended.
-		} else {
-			f.functionName = ns + f.functionName;
-		}
-	}
-}
-
 void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext& context, std::string ns) {
 	context.fIndex = 0;
 	for (CharmFunction currentFunction : parsedProgram) {
 		if (ns != "") {
 			ONLYDEBUG printf("ADDING NAMESPACE %s\n", ns.c_str());
-			Runner::addNamespacePrefix(currentFunction, ns);
+			addNamespacePrefix(currentFunction, ns);
 		}
 		//alright, now we get into the running portion
 		if (currentFunction.functionType == NUMBER_FUNCTION) {
@@ -297,31 +184,61 @@ void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext& contex
 		} else if (currentFunction.functionType == DEFINED_FUNCTION) {
 			ONLYDEBUG puts("RUNNING AS DEFINED_FUNCTION");
 			//check the top of the stack before the function itself runs
-			auto tick = Runner::typeSignatureTick(currentFunction.functionName, context);
 			//let's do these defined functions now
 			Runner::handleDefinedFunctions(currentFunction, context);
 			//lol you thought i'd do it here
 			//check the stack at function's exit to make sure the type signature holds up
-			//if the optional is unset, there was no type sig provided so don't bother running this
-			if (tick) {
-				Runner::typeSignatureTock(*tick);
-			}
 		}
 		context.fIndex++;
 	}
 	ONLYDEBUG puts("EXITING RUNNER::RUN");
 }
-
-void Runner::run(std::pair<CHARM_LIST_TYPE, FunctionAnalyzer*> parsedProgramWithAnalyzer, std::string ns) {
-	RunnerContext rC;
-	rC.fA = parsedProgramWithAnalyzer.second;
-	
-	FunctionDefinition tempFD = FunctionDefinition();
-	tempFD.functionName = "";
-	tempFD.functionBody = CHARM_LIST_TYPE();
-	rC.fD = tempFD;
-	
-	rC.fIndex = 0;
-	rC.inDefinition = false;
-	Runner::runWithContext(parsedProgramWithAnalyzer.first, rC, ns);
+*/
+void Runner::run() {
+	for (Token tok : this->tokens) {
+		std::visit([this](auto& arg){
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, Token::TypeSignature>) {
+				// TODO
+			}
+			if constexpr (std::is_same_v<T, Token::List>) {
+				// TODO
+				CharmFunction f = {
+					.functionType = LIST_FUNCTION,
+					.literalFunctions = {}
+				};
+				this->getCurrentStack()->push(f);
+			}
+			if constexpr (std::is_same_v<T, Token::String>) {
+				CharmFunction f = {
+					.functionType = STRING_FUNCTION,
+					.stringValue = arg.string
+				};
+				this->getCurrentStack()->push(f);
+			}
+			if constexpr (std::is_same_v<T, Token::Number>) {
+				// TODO
+				CharmFunction f = {
+					.functionType = NUMBER_FUNCTION,
+					.numberValue = {
+						.whichType = FLOAT_VALUE,
+						.floatValue = arg.number
+					}
+				};
+				this->getCurrentStack()->push(f);
+			}
+			if constexpr (std::is_same_v<T, Token::Definition>) {
+				// TODO
+				FunctionDefinition f = {
+					.functionName = arg.functionName,
+					.functionBody = {},
+					.definitionInfo = {}
+				};
+				this->addFunctionDefinition(f);
+			}
+			if constexpr (std::is_same_v<T, Token::Function>) {
+				// TODO
+			}
+		}, tok.token);
+	}
 }
