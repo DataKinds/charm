@@ -148,58 +148,47 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 	}
 }
 
-void Runner::runWithContext(CHARM_LIST_TYPE parsedProgram, RunnerContext& context, std::string ns) {
-	context.fIndex = 0;
-	for (CharmFunction currentFunction : parsedProgram) {
-		if (ns != "") {
-			ONLYDEBUG printf("ADDING NAMESPACE %s\n", ns.c_str());
-			addNamespacePrefix(currentFunction, ns);
-		}
-		//alright, now we get into the running portion
-		if (currentFunction.functionType == NUMBER_FUNCTION) {
-			ONLYDEBUG puts("RUNNING AS NUMBER_FUNCTION");
-			//first, let's do the numbers
-			Runner::getCurrentStack()->push(currentFunction);
-			//easy, right? let's do more
-		} else if (currentFunction.functionType == STRING_FUNCTION) {
-			ONLYDEBUG puts("RUNNING AS STRING_FUNCTION");
-			//now we push strings onto the stack
-			Runner::getCurrentStack()->push(currentFunction);
-			//still p easy ye
-		} else if (currentFunction.functionType == LIST_FUNCTION) {
-			ONLYDEBUG puts("RUNNING AS LIST_FUNCTION");
-			//now we push on the lists
-			Runner::getCurrentStack()->push(currentFunction);
-			//wow this is easy right? now get ready baby
-		} else if (currentFunction.functionType == FUNCTION_DEFINITION) {
-			ONLYDEBUG puts("RUNNING AS FUNCTION_DEFINTION");
-			//lets define some functions bruh
-			FunctionDefinition tempFunction;
-			tempFunction.functionName = currentFunction.functionName;
-			tempFunction.functionBody = currentFunction.literalFunctions;
-			tempFunction.definitionInfo = currentFunction.definitionInfo;
-			Runner::addFunctionDefinition(tempFunction);
-			ONLYDEBUG printf("ADDED FUNCTION DEFINITION FOR %s\n", tempFunction.functionName.c_str());
-			//that was easy too! oh no...
-		} else if (currentFunction.functionType == DEFINED_FUNCTION) {
-			ONLYDEBUG puts("RUNNING AS DEFINED_FUNCTION");
-			//check the top of the stack before the function itself runs
-			//let's do these defined functions now
-			Runner::handleDefinedFunctions(currentFunction, context);
-			//lol you thought i'd do it here
-			//check the stack at function's exit to make sure the type signature holds up
-		}
-		context.fIndex++;
-	}
-	ONLYDEBUG puts("EXITING RUNNER::RUN");
-}
 */
-void Runner::run() {
-	for (Token tok : this->tokens) {
+
+void runFunction(std::string f) {
+	//PredefinedFunctions.h holds all the functions written in C++
+	//other than that, if these functions aren't built in, they are run through
+	//the functionDefinitions table.
+
+	//first, make sure that the function we're trying to run exists in the PredefinedFunctions
+	//table. if it doesn't - assume it's defined in Charm and run through the
+	//functionDefinitions table.
+	if (DEBUGMODE) {
+		puts("ALL PREDEFINED FUNCTIONS: ");
+		for (auto f_ : pF.nativeFunctions) {
+			printf("%s ", f_.first.c_str());
+		}
+		puts("");
+	}
+	ONLYDEBUG printf("isPredefinedFunction? %s. isFFIFunction? %s\n", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
+	// if it's predefined nattively
+	if (pF.nativeFunctions.find(f) != pF.nativeFunctions.end()) {
+		//run the predefined function!
+		//(note: the function context AKA the definition we are running code from
+		//is passed in for tail call optimization in PredefinedFunctions.cpp::ifthen())
+		pF.functionLookup(f, this, context);
+	// else it's defined through FFI
+	} else if (ffi.mutateFFIFuncs.find(f) != ffi.mutateFFIFuncs.end()) {
+		ffi.runFFI(f, this);
+	} else {
+		// TODO: tail call elimination
+		auto possibleFunction = functionDefinitions.find(f.functionName);
+		if (possibleFunction != functionDefinitions.end()) {
+			Runner::run(possibleFunction->second.functionBody);
+		}
+	}
+}
+void Runner::run(std::vector<Token> tokens) {
+	for (Token tok : tokens) {
 		std::visit([this](auto& arg){
 			using T = std::decay_t<decltype(arg)>;
 			if constexpr (std::is_same_v<T, Token::TypeSignature>) {
-				// TODO
+				// pass
 			}
 			if constexpr (std::is_same_v<T, Token::List>) {
 				// TODO
@@ -237,7 +226,7 @@ void Runner::run() {
 				this->addFunctionDefinition(f);
 			}
 			if constexpr (std::is_same_v<T, Token::Function>) {
-				// TODO
+				Runner::runFunction(arg.function);
 			}
 		}, tok.token);
 	}

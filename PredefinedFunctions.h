@@ -13,11 +13,6 @@ class Runner;
 class FunctionDefinition;
 class RunnerContext;
 
-struct BuiltinFunction {
-	std::variant<std::function<void(Runner*)>, std::function<void(Runner*, RunnerContext)>> f;
-	bool takesContext;
-};
-
 class PredefinedFunctions {
 private:
 	//helper function to ensure the function is 2 things:
@@ -25,9 +20,8 @@ private:
 	//b) an int
 	static bool isInt(CharmFunction f);
 public:
-	std::unordered_map<std::string, BuiltinFunction> nativeFunctions;
+	std::unordered_map<std::string, std::function<void(Runner*)>> nativeFunctions;
 	PredefinedFunctions();
-	void functionLookup(std::string functionName, Runner* r, RunnerContext& context);
-	void addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext)> f);
+	void functionLookup(std::string functionName, Runner& r);
 	void addBuiltinFunction(std::string n, std::function<void(Runner*)> f);
 };

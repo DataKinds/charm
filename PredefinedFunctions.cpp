@@ -109,6 +109,7 @@ PredefinedFunctions::PredefinedFunctions() {
 	/*************************************
 	FUNCTION DEFINITION
 	*************************************/
+	/*
 	addBuiltinFunction("def", [](Runner* r, RunnerContext context) {
 		//function body
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -140,6 +141,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		fD.definitionInfo = defInfo;
 		r->addFunctionDefinition(fD);
 	});
+	*/
 	addBuiltinFunction("ffi", [](Runner* r) {
 		//library symbol
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -378,6 +380,7 @@ PredefinedFunctions::PredefinedFunctions() {
 	/*************************************
 	CONTROL FLOW
 	*************************************/
+	/*
 	addBuiltinFunction("i", [](Runner* r, RunnerContext context) {
 		//pop the top of the stack and run it
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -388,6 +391,7 @@ PredefinedFunctions::PredefinedFunctions() {
 			runtime_die("Non list passed to `i`.");
 		}
 	});
+	*/
 	addBuiltinFunction("q", [](Runner* r) {
 		CharmFunction f1 = r->getCurrentStack()->pop();
 		CharmFunction list;
@@ -395,6 +399,7 @@ PredefinedFunctions::PredefinedFunctions() {
 		list.literalFunctions.push_back(f1);
 		r->getCurrentStack()->push(list);
 	});
+	/*
 	addBuiltinFunction("ifthen", [](Runner* r, RunnerContext context) {
 		//the arguments to this function are a little different...
 		//ifthen performs very basic tail-call optimization on its two sections (truthy/falsy)
@@ -542,6 +547,8 @@ PredefinedFunctions::PredefinedFunctions() {
 				runtime_die("Non list passed to `ifthen`.");
 			}
 	});
+	*/
+	/*
 	addBuiltinFunction("inline", [](Runner* r, RunnerContext context) {
 		//the boxed function to take in
 		CharmFunction f1 = r->getCurrentStack()->pop();
@@ -562,6 +569,7 @@ PredefinedFunctions::PredefinedFunctions() {
 			runtime_die("Non list passed to `inline`.");
 		}
 	});
+	*/
 	/*************************************
 	BOOLEAN OPS
 	*************************************/

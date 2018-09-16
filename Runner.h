@@ -87,5 +87,7 @@ public:
 	FFI& ffi;
 	std::unordered_map<std::string, FunctionDefinition> definitions;
 
-	Runner(std::vector<Token> tokens, std::string ns);
+	Runner(std::string ns);
+	void run(std::vector<Token> tokens);
+	void runFunction(std::string f);
 }
