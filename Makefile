@@ -1,4 +1,4 @@
-LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o
+LIB_OBJECT_FILES = Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o Lexer.o
 OBJECT_FILES = main.o Prelude.charm.o $(LIB_OBJECT_FILES)
 EMSCRIPTEN_OBJECT_FILES = CInterpretationCapsule.o Runner.o Stack.o PredefinedFunctions.o FunctionAnalyzer.o FFI.o Parser.o Prelude.charm.o
 
@@ -76,6 +76,8 @@ FFI.o: FFI.cpp
 	$(DEFAULT_OBJECT_LINE) FFI.cpp
 CInterpretationCapsule.o: CInterpretationCapsule.cpp
 	$(DEFAULT_OBJECT_LINE) CInterpretationCapsule.cpp
+CInterpretationCapsule.o: Lexer.cpp
+	$(DEFAULT_OBJECT_LINE) Lexer.cpp
 
 clean:
 	-rm $(OBJECT_FILES)

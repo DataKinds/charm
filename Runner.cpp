@@ -8,21 +8,22 @@
 #include "FFI.h"
 #include "FunctionAnalyzer.h"
 
-Runner::Runner() {
+Runner::Runner(std::string ns) {
+	this->ns = ns;
 	//initialize the stacks
 	CharmFunction zero = Stack::zeroF();
 	currentStackName = zero;
 	stacks.push_back(Stack(zero));
-	pF = new PredefinedFunctions();
-	ffi = new FFI();
+	pF.reset(new PredefinedFunctions());
+	ffi.reset(new FFI());
 }
 
 void Runner::addFunctionDefinition(FunctionDefinition fD) {
 	//first, check and make sure there's no other definition with
 	//the same name. if there is, overwrite it. if not, just push_back
 	//this definition.
-	if (functionDefinitions.find(fD.functionName) == functionDefinitions.end()) {
-		functionDefinitions[fD.functionName] = fD;
+	if (definitions.find(fD.functionName) == definitions.end()) {
+		definitions[fD.functionName] = fD;
 	}
 }
 
@@ -34,13 +35,13 @@ bool Runner::doesStackExist(CharmFunction name) {
 	}
 	return false;
 }
-Stack* Runner::getCurrentStack() {
+Stack& Runner::getCurrentStack() {
 	for (unsigned int s = 0; s < stacks.size(); s++) {
 		if (stacks[s].isNameEqualTo(Runner::currentStackName)) {
-			return &(stacks[s]);
+			return stacks[s];
 		}
 	}
-	return &(stacks[0]);
+	return stacks[0];
 }
 
 void Runner::switchCurrentStack(CharmFunction name) {
@@ -82,6 +83,42 @@ void Runner::setReference(CharmFunction key, CharmFunction value) {
 	//if it wasn't previously defined then
 	references.push_back(newRef);
 }
+
+void Runner::addNamespacePrefix(CharmFunction& f, std::string ns) {
+	if (ns == "") {
+		return;
+	}
+	if (f.functionType == NUMBER_FUNCTION) {
+		return;
+	} else if (f.functionType == STRING_FUNCTION) {
+		return;
+	} else if (f.functionType == LIST_FUNCTION) {
+		for (CharmFunction& currentFunction : f.literalFunctions) {
+			addNamespacePrefix(currentFunction, ns);
+		}
+		return;
+	} else if (f.functionType == FUNCTION_DEFINITION) {
+		f.functionName = ns + f.functionName;
+		for (CharmFunction& currentFunction : f.literalFunctions) {
+			addNamespacePrefix(currentFunction, ns);
+		}
+		return;
+	} else if (f.functionType == DEFINED_FUNCTION) {
+		bool isAlreadyDefined = (definitions.find(f.functionName) != definitions.end());
+		bool isPredefinedFunction = (pF->nativeFunctions.find(f.functionName) != pF->nativeFunctions.end());
+		bool isFFIFunction = (ffi->mutateFFIFuncs.find(f.functionName) != ffi->mutateFFIFuncs.end());
+		ONLYDEBUG printf("isAlreadyDefined: %s, isPredefinedFunction: %s, isFFIFunction: %s\n", isAlreadyDefined ? "Yes" : "No", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
+		if (isPredefinedFunction || isFFIFunction || isAlreadyDefined) {
+			//don't rename the function if it was defined globally outside of this file
+			//or it was already defined (aka: in the prelude)
+			//note: adding the "if already defined" clause ensures that functions from its own file don't trip the system,
+			//as those functions were already transformed and had their namespace prepended.
+		} else {
+			f.functionName = ns + f.functionName;
+		}
+	}
+}
+
 /*
 void Runner::handleDefinedFunctions(CharmFunction f) {
 	//PredefinedFunctions.h holds all the functions written in C++
@@ -150,7 +187,7 @@ void Runner::handleDefinedFunctions(CharmFunction f) {
 
 */
 
-void runFunction(std::string f) {
+void Runner::runFunction(std::string f) {
 	//PredefinedFunctions.h holds all the functions written in C++
 	//other than that, if these functions aren't built in, they are run through
 	//the functionDefinitions table.
@@ -160,25 +197,25 @@ void runFunction(std::string f) {
 	//functionDefinitions table.
 	if (DEBUGMODE) {
 		puts("ALL PREDEFINED FUNCTIONS: ");
-		for (auto f_ : pF.nativeFunctions) {
+		for (auto f_ : pF->nativeFunctions) {
 			printf("%s ", f_.first.c_str());
 		}
 		puts("");
 	}
-	ONLYDEBUG printf("isPredefinedFunction? %s. isFFIFunction? %s\n", isPredefinedFunction ? "Yes" : "No", isFFIFunction ? "Yes" : "No");
+	ONLYDEBUG printf("isPredefinedFunction? %s. isFFIFunction? %s\n", (pF->nativeFunctions.find(f) != pF->nativeFunctions.end()) ? "Yes" : "No", (ffi->mutateFFIFuncs.find(f) != ffi->mutateFFIFuncs.end()) ? "Yes" : "No");
 	// if it's predefined nattively
-	if (pF.nativeFunctions.find(f) != pF.nativeFunctions.end()) {
+	if (pF->nativeFunctions.find(f) != pF->nativeFunctions.end()) {
 		//run the predefined function!
 		//(note: the function context AKA the definition we are running code from
 		//is passed in for tail call optimization in PredefinedFunctions.cpp::ifthen())
-		pF.functionLookup(f, this, context);
+		pF->functionLookup(f, *this);
 	// else it's defined through FFI
-	} else if (ffi.mutateFFIFuncs.find(f) != ffi.mutateFFIFuncs.end()) {
-		ffi.runFFI(f, this);
+	} else if (ffi->mutateFFIFuncs.find(f) != ffi->mutateFFIFuncs.end()) {
+		ffi->runFFI(f, this);
 	} else {
 		// TODO: tail call elimination
-		auto possibleFunction = functionDefinitions.find(f.functionName);
-		if (possibleFunction != functionDefinitions.end()) {
+		auto possibleFunction = definitions.find(f);
+		if (possibleFunction != definitions.end()) {
 			Runner::run(possibleFunction->second.functionBody);
 		}
 	}
@@ -192,37 +229,33 @@ void Runner::run(std::vector<Token> tokens) {
 			}
 			if constexpr (std::is_same_v<T, Token::List>) {
 				// TODO
-				CharmFunction f = {
-					.functionType = LIST_FUNCTION,
-					.literalFunctions = {}
-				};
-				this->getCurrentStack()->push(f);
+				CharmFunction f;
+				f.functionType = LIST_FUNCTION;
+				f.literalFunctions = {};
+				this->getCurrentStack().push(f);
 			}
 			if constexpr (std::is_same_v<T, Token::String>) {
-				CharmFunction f = {
-					.functionType = STRING_FUNCTION,
-					.stringValue = arg.string
-				};
-				this->getCurrentStack()->push(f);
+				CharmFunction f;
+				f.functionType = STRING_FUNCTION;
+				f.stringValue = arg.string;
+				this->getCurrentStack().push(f);
 			}
 			if constexpr (std::is_same_v<T, Token::Number>) {
 				// TODO
-				CharmFunction f = {
-					.functionType = NUMBER_FUNCTION,
-					.numberValue = {
-						.whichType = FLOAT_VALUE,
-						.floatValue = arg.number
-					}
-				};
-				this->getCurrentStack()->push(f);
+				CharmFunction f;
+				f.functionType = NUMBER_FUNCTION;
+				CharmNumber n;
+				n.whichType = FLOAT_VALUE;
+				n.floatValue = arg.number;
+				f.numberValue = n;
+				this->getCurrentStack().push(f);
 			}
 			if constexpr (std::is_same_v<T, Token::Definition>) {
 				// TODO
-				FunctionDefinition f = {
-					.functionName = arg.functionName,
-					.functionBody = {},
-					.definitionInfo = {}
-				};
+				FunctionDefinition f;
+				f.functionName = arg.functionName,
+				f.functionBody = {};
+				f.definitionInfo = {};
 				this->addFunctionDefinition(f);
 			}
 			if constexpr (std::is_same_v<T, Token::Function>) {

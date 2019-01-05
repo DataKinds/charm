@@ -23,7 +23,7 @@
 #include "Runner.h"
 #include "Debug.h"
 
-const std::string VERSION = "0.3.0";
+#define VERSION "1.0.0"
 
 template<std::vector<std::string>* arg, std::string* flag, std::function<void()>* f>
 struct CommandLineLambda {
@@ -62,17 +62,13 @@ struct CommandLineOptional {
 
 
 int main(int argc, char const *argv[]) {
-	Lexer lexer = Lexer();
-	Parser parser = Parser();
-	Runner runner = Runner();
-
 	//parse command line arguments
 	static std::vector<std::string> args;
 	args.assign(argv + 1, argv + argc);
 
 	static std::string helpFlag("-h");
 	static std::function<void()> helpF = []() {
-		printf("Charm Interpreter v%s\n", VERSION.c_str());
+		printf("Charm Interpreter v%s\n", VERSION);
 		puts("By @Aearnus");
 		puts("Usage:");
 		puts("    charm [flags] [input file]");
@@ -91,7 +87,7 @@ int main(int argc, char const *argv[]) {
 
 	static std::string versionFlag("-v");
 	static std::function<void()> versionF = []() {
-		printf("charm version %s, built on %s at %s.\n", VERSION.c_str(), __DATE__, __TIME__);
+		printf("charm version %s, built on %s at %s.\n", VERSION, __DATE__, __TIME__);
 	};
 	CommandLineLambda<&args, &versionFlag, &versionF> versionArg;
 	if (versionArg.runArg()) {
@@ -112,28 +108,33 @@ int main(int argc, char const *argv[]) {
 		return -1;
 	}
 
+	//initialize the runtime and load the prelude
+	Runner runner = Runner("");
+	try {
+		//load up the Prelude.charm file
+		Lexer lexer = Lexer(prelude);
+		Parser parser = Parser(lexer.consumeAllLexemes());
+		runner.run(parser.consumeAllTokens());
+	} catch (std::exception &e) {
+		printf("Prelude.charm nonexistant or unopenable. This shouldn't ever happen! Please report it to the charm devs.\n");
+		printf("Error: %s\n\n", e.what());
+		return -1;
+	}
 	//parse input file
 	std::optional<std::string> optFileName;
 	if (args.size() > 0) {
 		optFileName = args.back();
 	}
-
 	//if theres a file to run, load it and run it
 	if (optFileName) {
-		//first, load the prelude
 		try {
-			//load up the Prelude.charm file
-			runner.run(parser.lex(prelude));
-		} catch (std::exception &e) {
-			printf("Prelude.charm nonexistant or unopenable. This shouldn't ever happen! Please report it to the charm devs.\n");
-			printf("Error: %s\n\n", e.what());
-			return -1;
-		}
-		try {
+			//then load up the input file
 			std::string line;
 			std::ifstream inFile(*optFileName);
 			while (std::getline(inFile, line)) {
-				runner.run(parser.lex(line));
+				Lexer lexer = Lexer(line);
+				Parser parser = Parser(lexer.consumeAllLexemes());
+				runner.run(parser.consumeAllTokens());
 			}
 		} catch (std::exception &e) {
 			printf("%s nonexistant or unopenable.\n", (*optFileName).c_str());
@@ -141,25 +142,17 @@ int main(int argc, char const *argv[]) {
 			return -1;
 		}
   	} else {
-		printf("Charm Interpreter v%s\n", VERSION.c_str());
+		printf("Charm Interpreter v%s\n", VERSION);
 		printf("Made by @Aearnus\n");
-		//first, load the prelude
-		try {
-			//load up the Prelude.charm file
-			runner.run(parser.lex(prelude));
-			printf("Prelude.charm loaded.\n");
-		} catch (std::exception &e) {
-			printf("Prelude.charm nonexistant or unopenable. This shouldn't ever happen! Please report it to the charm devs.\n");
-			printf("Error: %s\n\n", e.what());
-			return -1;
-		}
 		try {
 			//if one was supplied, load up an extra interactive file
 			if (interactiveFileOpt) {
 				std::string line;
 				std::ifstream interactiveFile(*interactiveFileOpt);
 				while (std::getline(interactiveFile, line)) {
-					runner.run(parser.lex(line));
+					Lexer lexer = Lexer(line);
+					Parser parser = Parser(lexer.consumeAllLexemes());
+					runner.run(parser.consumeAllTokens());
 				}
 				printf("%s loaded.\n", (*interactiveFileOpt).c_str());
 			}
@@ -175,7 +168,7 @@ int main(int argc, char const *argv[]) {
 		//begin the interactive loop if there isnt a file to run
 		while (true) {
 			std::stringstream prompt;
-			prompt << "Charm (Stack " << charmFunctionToString(runner.getCurrentStack()->name) << ")$ ";
+			prompt << "Charm (Stack " << charmFunctionToString(runner.getCurrentStack().name) << ")$ ";
 #if USE_READLINE == true
 			std::string codeInput(readline(prompt.str().c_str()));
 			add_history(codeInput.c_str());
@@ -185,27 +178,15 @@ int main(int argc, char const *argv[]) {
 			std::cin >> codeInput;
 #endif
 			try {
-				auto parsedProgram = parser.lex(codeInput);
-				ONLYDEBUG printf("TOKEN TYPES: ");
-				for (auto currentFunction : parsedProgram.first) {
-					ONLYDEBUG printf("%i ", currentFunction.functionType);
-				}
-				ONLYDEBUG printf("\n");
+				Lexer lexer = Lexer(codeInput);
+				Parser parser = Parser(lexer.consumeAllLexemes());
+				auto parsedProgram = parser.consumeAllTokens();
 				runner.run(parsedProgram);
 			} catch (const std::runtime_error& e) {
 				//don't do anything, the parsetime_die and runtime_die macros will always spit out messages.
 				//printf("ERROR: %s\n", e.what());
 				//return -1;
 			}
-			ONLYDEBUG printf("THE STACK (just the types): ");
-			CHARM_STACK_TYPE postStack = runner.getCurrentStack()->stack;
-			ONLYDEBUG printf("\n");
-			ONLYDEBUG printf("DEFINED FUNCTIONS: ");
-			auto functionDefinitions = runner.functionDefinitions;
-			for (auto currentFunction : functionDefinitions) {
-				ONLYDEBUG printf("%s ", currentFunction.second.functionName.c_str());
-			}
-			ONLYDEBUG printf("\n");
 		}
 #endif
 	}

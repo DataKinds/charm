@@ -31,24 +31,12 @@ static std::string get_input_line() {
 #endif
 
 void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*)> f) {
-	BuiltinFunction bf;
-	bf.f = f; bf.takesContext = false;
-	cppFunctionNames[n] = bf;
+	nativeFunctions[n] = f;
 }
-void PredefinedFunctions::addBuiltinFunction(std::string n, std::function<void(Runner*, RunnerContext)> f) {
-	BuiltinFunction bf;
-	bf.f = f; bf.takesContext = true;
-	cppFunctionNames[n] = bf;
-}
-void PredefinedFunctions::functionLookup(std::string functionName, Runner* r, RunnerContext& context) {
-	auto f = cppFunctionNames.at(functionName);
-	if (f.takesContext) {
-		auto castF = std::get<std::function<void(Runner*, RunnerContext)>>(f.f);
-		castF(r, context);
-	} else {
-		auto castF = std::get<std::function<void(Runner*)>>(f.f);
-		castF(r);
-	}
+
+void PredefinedFunctions::functionLookup(std::string functionName, Runner& r) {
+	auto f = nativeFunctions.at(functionName);
+	f(&r);
 }
 
 PredefinedFunctions::PredefinedFunctions() {

@@ -187,9 +187,3 @@ std::vector<Lexeme> Lexer::consumeAllLexemes() {
         out.push_back(Lexer::consumeLexeme());
     }
 }
-
-// f : R^2 -> R^3
-// f ([x; y]) = [x; y; 0]
-
-// g : R^2 -> R^2
-// g rotates a vector 45 degrees clockwise
