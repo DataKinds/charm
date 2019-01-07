@@ -2,8 +2,10 @@
 
 #include <variant>
 #include <vector>
+#include <algorithm>
 
 #include "ParserTypes.h"
+#include "Error.h"
 
 // for Lexer.h
 struct Lexeme {
@@ -50,4 +52,49 @@ struct Token {
 		Number,
 		Definition,
 		Function> token;
+
+    CharmFunction toCharmFunction() {
+        Token tok = *this;
+        CharmFunction out;
+        std::visit([&](auto& arg){
+            using T = std::decay_t<decltype(arg)>;
+            if constexpr (std::is_same_v<T, Token::TypeSignature>) {
+                runtime_die("Couldn't convert a type signature to a charm function");
+            }
+            if constexpr (std::is_same_v<T, Token::List>) {
+                out.functionType = LIST_FUNCTION;
+                out.literalFunctions = {};
+                for (Token inner : arg.list) {
+                    out.literalFunctions.push_back(inner.toCharmFunction());
+                }
+            }
+            if constexpr (std::is_same_v<T, Token::String>) {
+                out.functionType = STRING_FUNCTION;
+                out.stringValue = arg.string;
+            }
+            if constexpr (std::is_same_v<T, Token::Number>) {
+                out.functionType = NUMBER_FUNCTION;
+                CharmNumber n;
+                n.whichType = FLOAT_VALUE;
+                n.floatValue = arg.number;
+                out.numberValue = n;
+            }
+            if constexpr (std::is_same_v<T, Token::Definition>) {
+                // FIXME: this should never be used
+                out.functionType = FUNCTION_DEFINITION;
+                out.functionName = arg.functionName,
+                out.literalFunctions = {};
+                for (Token inner : arg.definition) {
+                    out.literalFunctions.push_back(inner.toCharmFunction());
+                }
+                out.definitionInfo = {};
+            }
+            if constexpr (std::is_same_v<T, Token::Function>) {
+                out.functionType = DEFINED_FUNCTION;
+                out.functionName = arg.function;
+            }
+        }, tok.token);
+        return out;
+    }
+
 };

@@ -76,7 +76,7 @@ FFI.o: FFI.cpp
 	$(DEFAULT_OBJECT_LINE) FFI.cpp
 CInterpretationCapsule.o: CInterpretationCapsule.cpp
 	$(DEFAULT_OBJECT_LINE) CInterpretationCapsule.cpp
-CInterpretationCapsule.o: Lexer.cpp
+Lexer.o: Lexer.cpp
 	$(DEFAULT_OBJECT_LINE) Lexer.cpp
 
 clean:

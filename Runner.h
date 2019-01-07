@@ -1,20 +1,24 @@
 #pragma once
+
 #include <vector>
 #include <unordered_map>
 #include <memory>
+
 #include "ParserTypes.h"
+#include "PredefinedFunctions.h"
+#include "FFI.h"
 #include "Types.h"
 #include "Stack.h"
 
 //in PredefinedFunctions.h
-class PredefinedFunctions;
+//class PredefinedFunctions;
 
 //in FFI.h
-class FFI;
+//class FFI;
 
 struct FunctionDefinition {
 	std::string functionName;
-	std::vector<Token> functionBody;
+	std::vector<CharmFunction> functionBody;
 	CharmFunctionDefinitionInfo definitionInfo;
 };
 
@@ -23,7 +27,6 @@ struct Reference {
 	CharmFunction value;
 };
 
-extern "C"
 class Runner {
 private:
 	//handle the functions that we don't know about
@@ -59,5 +62,6 @@ public:
 
 	Runner(std::string ns);
 	void run(std::vector<Token> tokens);
+	void runList(std::vector<CharmFunction> list);
 	void runFunction(std::string f);
 };

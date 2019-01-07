@@ -52,6 +52,7 @@ enum CharmNumberType {
 };
 
 struct CharmNumber {
+	CharmNumber() : whichType(FLOAT_VALUE) {}
 	CharmNumberType whichType;
 	mpz_class integerValue;
 	mpf_class floatValue;
@@ -179,9 +180,11 @@ inline std::string charmFunctionToString(CharmFunction f) {
 			if (exponent < 0) {
 				out << "0." << outString.insert(0, std::abs(exponent), '0');
 			} else if (exponent == 0) {
-				out << "0." << outString;
-			} else if (exponent > 0) {
-				out << outString.insert(exponent, 1, '.');
+				out << "1.0";
+			} else if (exponent == 1) {
+				out << outString << ".0";
+			} else if (exponent > 1) {
+				out << outString.insert(1, exponent - 1, '0');
 			}
 			break;
 		}
@@ -254,4 +257,3 @@ struct CharmDefinition {
 
 class FunctionDefinition;
 class FunctionAnalyzer;
-

@@ -247,4 +247,5 @@ std::vector<Token> Parser::consumeAllTokens() {
 		while (Parser::skipLineBreak()) {}
 		out.push_back(Parser::consumeToken());
 	}
+	return out;
 }

@@ -216,51 +216,46 @@ void Runner::runFunction(std::string f) {
 		// TODO: tail call elimination
 		auto possibleFunction = definitions.find(f);
 		if (possibleFunction != definitions.end()) {
-			Runner::run(possibleFunction->second.functionBody);
+			Runner::runList(possibleFunction->second.functionBody);
+		}
+	}
+}
+void Runner::runList(std::vector<CharmFunction> list) {
+	for (CharmFunction func : list) {
+		switch (func.functionType) {
+			case FUNCTION_DEFINITION:
+				break;
+			case LIST_FUNCTION:
+				this->getCurrentStack().push(func);
+				break;
+			case NUMBER_FUNCTION:
+				this->getCurrentStack().push(func);
+				break;
+			case STRING_FUNCTION:
+				this->getCurrentStack().push(func);
+				break;
+			case DEFINED_FUNCTION:
+				Runner::runFunction(func.functionName);
+				break;
 		}
 	}
 }
 void Runner::run(std::vector<Token> tokens) {
 	for (Token tok : tokens) {
-		std::visit([this](auto& arg){
-			using T = std::decay_t<decltype(arg)>;
-			if constexpr (std::is_same_v<T, Token::TypeSignature>) {
-				// pass
+		if (std::holds_alternative<Token::Definition>(tok.token)) {
+			FunctionDefinition f;
+			f.functionName = std::get<Token::Definition>(tok.token).functionName;
+			f.functionBody = {};
+			for (Token inner : std::get<Token::Definition>(tok.token).definition) {
+				f.functionBody.push_back(inner.toCharmFunction());
 			}
-			if constexpr (std::is_same_v<T, Token::List>) {
-				// TODO
-				CharmFunction f;
-				f.functionType = LIST_FUNCTION;
-				f.literalFunctions = {};
-				this->getCurrentStack().push(f);
-			}
-			if constexpr (std::is_same_v<T, Token::String>) {
-				CharmFunction f;
-				f.functionType = STRING_FUNCTION;
-				f.stringValue = arg.string;
-				this->getCurrentStack().push(f);
-			}
-			if constexpr (std::is_same_v<T, Token::Number>) {
-				// TODO
-				CharmFunction f;
-				f.functionType = NUMBER_FUNCTION;
-				CharmNumber n;
-				n.whichType = FLOAT_VALUE;
-				n.floatValue = arg.number;
-				f.numberValue = n;
-				this->getCurrentStack().push(f);
-			}
-			if constexpr (std::is_same_v<T, Token::Definition>) {
-				// TODO
-				FunctionDefinition f;
-				f.functionName = arg.functionName,
-				f.functionBody = {};
-				f.definitionInfo = {};
-				this->addFunctionDefinition(f);
-			}
-			if constexpr (std::is_same_v<T, Token::Function>) {
-				Runner::runFunction(arg.function);
-			}
-		}, tok.token);
+			f.definitionInfo = {};
+			this->addFunctionDefinition(f);
+		} else if (std::holds_alternative<Token::TypeSignature>(tok.token)) {
+			// TODO
+			;
+		} else {
+			this->runList({tok.toCharmFunction()});
+		}
 	}
 }

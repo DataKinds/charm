@@ -1,10 +1,11 @@
-#include "Lexer.h"
-#include "Error.h"
-
 #include <iterator>
 #include <string>
 #include <variant>
 #include <vector>
+#include <optional>
+
+#include "Lexer.h"
+#include "Error.h"
 
 Lexer::Lexer(std::string line) {
     this->rest = line;
@@ -101,6 +102,8 @@ std::optional<std::string> Lexer::consumeNumber() {
 }
 std::optional<std::string> Lexer::consumeWhitespace() {
     std::string out = "";
+    if (this->rest.length() == 0)
+        return std::nullopt;
     if (std::isspace(this->rest.at(0))) {
         while (std::isspace(this->rest.at(0))) {
             out = out + this->rest.at(0);
@@ -184,6 +187,9 @@ std::vector<Lexeme> Lexer::consumeAllLexemes() {
     std::vector<Lexeme> out;
     while (this->rest.length() > 0) {
         while (Lexer::consumeWhitespace()) {}
+        if (this->rest.length() == 0)
+            break;
         out.push_back(Lexer::consumeLexeme());
     }
+    return out;
 }
