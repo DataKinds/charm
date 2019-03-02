@@ -19,10 +19,10 @@ data CharmTerm =
   deriving (Show)
 
 parseCharm :: Parser [CharmTerm]
-parseCharm = many parseAll
+parseCharm = some parseAll
 
 parseAll :: Parser CharmTerm
-parseAll = between (space) (space) $ choice [parseDef, parseTypeSig, parseList, parseIdent, parseNumber, parseString]
+parseAll = foldr1 (<|>) $ try . between space space <$> [parseDef, parseTypeSig, parseList, parseString, parseNumber, parseIdent]
 
 parseIdent :: Parser CharmTerm
 parseIdent = some (try letterChar <|> try digitChar) >>= (return . CharmIdent)
@@ -50,7 +50,11 @@ parseString = do
   return . CharmString $ str
 
 parseList :: Parser CharmTerm
-parseList = between (char '[') (char ']') (many parseAll) >>= (return . CharmList)
+parseList = do
+  char '['
+  terms <- many parseAll
+  char ']'
+  return . CharmList $ terms
 
 parseTypeSig :: Parser CharmTerm
 parseTypeSig = do
