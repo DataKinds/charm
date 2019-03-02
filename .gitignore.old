@@ -1,0 +1,20 @@
+# c++ files
+*.o
+gmon.out
+
+# charm files
+charm
+charm-release
+libcharmffi.a
+*.stats
+*.gch
+
+# eclipse files
+/.cproject
+/.project
+
+# emscripten files
+charm.html*
+
+# tup files
+/.tup

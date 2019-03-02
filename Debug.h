@@ -1,1 +1,0 @@
-#define ONLYDEBUG if(DEBUGMODE)
