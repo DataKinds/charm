@@ -14,9 +14,9 @@ data CharmTerm =
   | CharmNumber Rational
   | CharmString String
   | CharmList [CharmTerm]
-  | CharmTypeSig String [CharmTerm]
+  | CharmTypeSig String ([CharmTerm], [CharmTerm])
   | CharmDef String [CharmTerm]
-  deriving (Show)
+  deriving (Show, Eq)
 
 parseCharm :: Parser [CharmTerm]
 parseCharm = some parseAll
@@ -55,7 +55,8 @@ parseList = do
   terms <- many parseAll
   char ']'
   return . CharmList $ terms
-
+  
+{-
 parseTypeSig :: Parser CharmTerm
 parseTypeSig = do
   (CharmIdent s) <- parseIdent
@@ -73,6 +74,19 @@ parseTypeSig = do
         optional $ string "->"
         space
         return ident
+-}
+
+-- TODO: parsing nested type signatures
+parseTypeSig :: Parser CharmTerm
+parseTypeSig = do
+  (CharmIdent s) <- parseIdent
+  space
+  string "::"
+  pre <- many (between space space parseIdent)
+  string "->"
+  post <- many (between space space parseIdent)
+  optional newline
+  return $ CharmTypeSig s (pre, post)
 
 parseDef :: Parser CharmTerm
 parseDef = do
