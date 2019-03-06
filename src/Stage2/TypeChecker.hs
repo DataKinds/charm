@@ -68,3 +68,25 @@ checkGoal env goal@(pre, post) terms =
       err@(Left _) -> err
       (Right ((== post) -> True)) -> Right post
       (Right post') -> Left $ "Couldn't match given type signature\n    " ++ show goal ++ "\n with actual type\n    " ++ show post'
+
+
+--- PRELUDE FUNCTION TYPES ---
+type T = ([CharmTerm], [CharmTerm])
+
+ch_t_p :: T
+ch_t_p = ([CharmIdent "any"], [])
+
+ch_t_pstring :: T
+ch_t_pstring = ([CharmIdent "string"], [])
+
+ch_t_newline :: T
+ch_t_newline = ([], [])
+
+ch_t_getline :: T
+ch_t_getline = ([], [CharmIdent "string"])
+
+ch_t_type :: T
+ch_t_type = ([CharmIdent "any"], [CharmIdent "any", CharmIdent "string"])
+
+ch_t_def :: T
+ch_t_def = ([CharmIdent "string", CharmIdent "list"], [])
