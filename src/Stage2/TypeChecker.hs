@@ -10,7 +10,8 @@ import Control.Monad.Writer
 import Data.List
 import Data.Bifunctor
 import qualified Data.Set as S
-
+import Debug.Trace
+  
 --              stack in   , stack out
 type TypeEnvironment = M.Map String T
 
@@ -48,6 +49,31 @@ typeMatch bound (CharmTypeVar a) (CharmTypeVar b) =
     Nothing -> False
 typeMatch bound a b = typeMatch bound b a
 
+-- Uses the types on the passed in stack to derive concrete values for type variables
+getTypeVarBindings' :: [CharmTypeTerm] -- The types on the stack pre function call
+                    -> T -- The function type
+                    -> M.Map String CharmTypeTerm -- Recursive term
+                    -> Either String (M.Map String CharmTypeTerm) -- Either an error or a map of bound variables
+getTypeVarBindings' (top:pre) sig@(T ((CharmTypeVar top'):pre') post') rec =
+  case M.lookup top' rec of
+    (Just t) -> (if t == top then getTypeVarBindings' pre (T pre' post') rec else Left $ "Couldn't reconcile type variable\n    " ++ top' ++ "\nThis type variable was bound to the type\n    " ++ show t ++ "\nbut took on the type\n    " ++ show top)
+    Nothing -> getTypeVarBindings' pre (T pre' post') (M.insert top' top rec)
+getTypeVarBindings' (top:pre) sig@(T (top':pre') post') rec = getTypeVarBindings' pre (T pre' post') rec
+getTypeVarBindings' [] sig@(T [] post') rec = Right rec
+getTypeVarBindings' pre sig@(T [] post') rec = Right rec
+getTypeVarBindings' [] sig rec = Left $ "Exhausted the stack while binding type variables for type\n    " ++ show sig
+
+getTypeVarBindings pre sig = getTypeVarBindings' pre sig M.empty
+
+bindTypeVars :: [CharmTypeTerm] -> M.Map String CharmTypeTerm -> Either String [CharmTypeTerm]
+bindTypeVars ts vars = sequence $
+  (\case
+      CharmTypeVar t ->
+        case M.lookup t vars of
+          Just binding -> Right binding
+          Nothing -> Left $ "Unbound type variable\n    " ++ t ++ "\nWhile binding type signature\n    " ++ show ts
+      t -> Right t) <$> ts
+
 -- TODO: fix literally everything that uses this
 isTypeVar (CharmTypeVar _) = True
 isTypeVar _ = False
@@ -72,18 +98,15 @@ checkTypeVarExistence sig@(T pre post) =
 unifyTypes :: [CharmTypeTerm] -- The types on the stack before this call
            -> T -- Function's type
            -> Either String [CharmTypeTerm] -- Either an error message or the remaining types on the stack
-unifyTypes pre sig@(T pre' post') =
-  let
-    -- the variables bound in the first half of the type signature
-    boundVars = M.fromList . fmap (bimap typeVar id) . filter (isTypeVar . fst) $ zip pre' pre 
-    -- rebinds type variables to their bound values
-    rebind = fmap (\case { CharmTypeVar s -> M.findWithDefault (CharmType "impossible") s boundVars; t -> t })
-    matched = zipWith (typeMatch boundVars) pre (rebind pre')
-  in do
-    checkTypeVarExistence sig
-    case and matched of
-      True -> Right $ (rebind post') ++ (drop (length pre') pre)
-      False -> Left $ "Couldn't unify given type\n    " ++ show sig ++ "\nand expected type\n    " ++ show pre
+unifyTypes pre sig@(T pre' post') = do
+  checkTypeVarExistence sig
+  vars <- getTypeVarBindings pre sig
+  boundPre <- bindTypeVars pre' vars
+  boundPost <- bindTypeVars post' vars
+  let matched = zipWith (typeMatch vars) pre boundPre
+  case and matched of
+    True -> Right $ (boundPost) ++ (drop (length pre') pre)
+    False -> Left $ "Couldn't unify given type\n    " ++ show sig ++ "\nand expected type\n    " ++ show pre
 
 -- Same as unifyTypes, but resolves type signatures through the TypeEnvironment
 -- For use with `foldr` in `check` and `checkGoal`
@@ -117,7 +140,7 @@ checkGoal env goal@(T pre post) terms =
   let
     unified = foldr (flip $ unifyWithEnv env) (Right pre) terms
   in
-    case unified of
+    case trace ("unified is: " ++ show unified) unified of
       err@(Left _) -> err
       (Right ((== post) -> True)) -> Right post
       (Right post') -> Left $ "Couldn't match given type signature\n    " ++ show goal ++ "\n with actual type\n    " ++ show (T pre post')
