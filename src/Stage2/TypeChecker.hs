@@ -140,7 +140,7 @@ checkGoal env goal@(T pre post) terms =
   let
     unified = foldr (flip $ unifyWithEnv env) (Right pre) terms
   in
-    case trace ("unified is: " ++ show unified) unified of
+    case unified of
       err@(Left _) -> err
       (Right ((== post) -> True)) -> Right post
       (Right post') -> Left $ "Couldn't match given type signature\n    " ++ show goal ++ "\n with actual type\n    " ++ show (T pre post')
