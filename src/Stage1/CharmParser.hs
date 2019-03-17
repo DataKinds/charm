@@ -3,7 +3,8 @@
 module Stage1.CharmParser where
 
 import Text.Megaparsec
-import Text.Megaparsec.Char hiding (space)
+import Text.Megaparsec.Debug
+import Text.Megaparsec.Char
 import Data.Ratio
 import Data.Void
 import Control.Monad
@@ -17,18 +18,20 @@ data CharmTypeTerm =
   | CharmTypeVar String
   deriving (Show, Eq)
 
+data T = T [CharmTypeTerm] [CharmTypeTerm] deriving (Show, Eq)
+
 data CharmTerm =
   CharmIdent String
   | CharmNumber Rational
   | CharmString String
   | CharmList [CharmTerm]
-  | CharmTypeSig String ([CharmTypeTerm], [CharmTypeTerm])
+  | CharmTypeSig String T
   | CharmDef String [CharmTerm]
   deriving (Show, Eq)
 
 -- the default `space` matches newlines, this one doesn't
-space :: Parser ()
-space = void $ takeWhileP (Just "white space") (\c -> isSpace c && c /= '\n')
+space' :: Parser ()
+space' = void $ takeWhileP (Just "white space") (\c -> isSpace c && c /= '\n')
 
 parseCharm :: Parser [CharmTerm]
 parseCharm = some parseAll
@@ -68,26 +71,6 @@ parseList = do
   char ']'
   return . CharmList $ terms
   
-{-
-parseTypeSig :: Parser CharmTerm
-parseTypeSig = do
-  (CharmIdent s) <- parseIdent
-  space
-  string "::"
-  space
-  idents <- some parseOneType
-  newline
-  return $ CharmTypeSig s idents
-    where
-      parseOneType :: Parser CharmTerm
-      parseOneType = do
-        ident <- parseIdent
-        space
-        optional $ string "->"
-        space
-        return ident
--}
-
 parseTypeTerm :: Parser CharmTypeTerm
 parseTypeTerm = try parseTypeQ <|> try parseType <|> try parseTypeVar
   where
@@ -113,20 +96,20 @@ parseTypeTerm = try parseTypeQ <|> try parseType <|> try parseTypeVar
 parseTypeSig :: Parser CharmTerm
 parseTypeSig = do
   (CharmIdent s) <- parseIdent
-  space
+  space'
   string ":"
-  pre <- many (between space space parseTypeTerm)
+  pre <- (try $ many (between space' space' parseTypeTerm)) <|> (char ' ' *> return []) 
   string "->"
-  post <- many (between space space parseTypeTerm)
-  newline
-  return $ CharmTypeSig s (pre, post)
+  post <- (try $ many (between space' space' parseTypeTerm)) <|> (space1 *> return []) 
+  space
+  return $ CharmTypeSig s (T pre post)
 
 parseDef :: Parser CharmTerm
-parseDef = do
+parseDef = dbg "Def" $ do
   (CharmIdent s) <- parseIdent
-  space
+  space'
   string ":="
-  space
+  space'
   def <- some parseAll
-  newline
+  space
   return $ CharmDef s def

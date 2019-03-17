@@ -8,8 +8,8 @@ import Control.Monad.State
 import Control.Monad.Writer
 import Data.List
 
---                                   stack in   , stack out
-type TypeEnvironment = M.Map String ([CharmTypeTerm], [CharmTypeTerm])
+--              stack in   , stack out
+type TypeEnvironment = M.Map String T
 
 pruneTypeSignatures :: [CharmTerm] -> State TypeEnvironment [CharmTerm]
 pruneTypeSignatures (term:terms) = case term of
@@ -21,21 +21,28 @@ pruneTypeSignatures (term:terms) = case term of
     return (term:pruned)
 pruneTypeSignatures [] = return []
 
-typeMatch :: CharmTypeTerm -> CharmTypeTerm -> Bool
+--typeMatch :: M.Map String CharmTypeTerm -- The type variables
+--          -> CharmTypeTerm -> CharmTypeTerm
+--          -> Bool
 typeMatch (CharmType "Any") _ = True
 typeMatch _ (CharmType "Any") = False
 typeMatch a b = a == b
 
+-- Make sure that type variables are all introduced
+-- on the left side before being used on the right side
+checkTypeVarExistence :: T -> Either String ()
+checkTypeVarExistence  asd = error "undefiend"
+
 -- Take a stack of types and see if you can apply a function to it
 unifyTypes :: [CharmTypeTerm] -- The types on the stack before this call
-           -> ([CharmTypeTerm], [CharmTypeTerm]) -- Function's type
+           -> T -- Function's type
            -> Either String [CharmTypeTerm] -- Either an error message or the remaining types on the stack
-unifyTypes pre sig =
+unifyTypes pre sig@(T pre' post') =
   let
-    matched = zipWith typeMatch pre (fst sig)
+    matched = zipWith typeMatch pre pre'
   in
     case and matched of
-      True -> Right $ (drop (length sig) pre) ++ (snd sig)
+      True -> Right $ post' ++ (drop (length pre') pre)
       False -> Left $ "Couldn't unify given type\n    " ++ show sig ++ "\nand expected type\n    " ++ show pre
 
 -- Same as unifyTypes, but resolves type signatures through the TypeEnvironment
@@ -52,9 +59,9 @@ unifyWithEnv env (Right pre) (CharmDef fname def) =
   case M.lookup fname env of
     Nothing -> Left $ "Couldn't find type signature for function definition\n    " ++ show fname
     Just t -> checkGoal env t def
-unifyWithEnv env (Right pre) (CharmNumber _) = unifyTypes pre ([], [CharmType "Num"])
-unifyWithEnv env (Right pre) (CharmString _) = unifyTypes pre ([], [CharmType "String"])
-unifyWithEnv env (Right pre) (CharmList _) = unifyTypes pre ([], [CharmType "List"])
+unifyWithEnv env (Right pre) (CharmNumber _) = unifyTypes pre (T [] [CharmType "Num"])
+unifyWithEnv env (Right pre) (CharmString _) = unifyTypes pre (T [] [CharmType "String"])
+unifyWithEnv env (Right pre) (CharmList _) = unifyTypes pre (T [] [CharmType "List"])
 unifyWithEnv env err@(Left _) next = err
 
 check :: TypeEnvironment -- The type signatures to check 
@@ -63,10 +70,10 @@ check :: TypeEnvironment -- The type signatures to check
 check env terms = foldr (flip $ unifyWithEnv env) (Right []) terms
 
 checkGoal :: TypeEnvironment -- The environment type signatures
-          -> ([CharmTypeTerm], [CharmTypeTerm]) -- The "goal" type signature
+          -> T -- The "goal" type signature
           -> [CharmTerm] -- The functions to check
           -> Either String [CharmTypeTerm] -- Either an error or success (current stack types)
-checkGoal env goal@(pre, post) terms =
+checkGoal env goal@(T pre post) terms =
   let
     unified = foldr (flip $ unifyWithEnv env) (Right pre) terms
   in
@@ -77,15 +84,13 @@ checkGoal env goal@(pre, post) terms =
 
 
 --- PRELUDE FUNCTION TYPES ---
-type T = ([CharmTypeTerm], [CharmTypeTerm])
-
 registerType :: String -> T -> TypeEnvironment -> TypeEnvironment
 registerType = M.insert
 
 defaultEnv :: TypeEnvironment
 defaultEnv =
-  registerType "p" ([CharmType "Any"], []) .
-  registerType "pstring" ([CharmType "String"], []) .
-  registerType "getline" ([], [CharmType "String"]) .
-  registerType "newline" ([], []) .
-  registerType "type" ([CharmType "Any"], [CharmType "Any", CharmType "String"]) $ M.empty
+  registerType "p" (T [CharmType "Any"] []) .
+  registerType "pstring" (T [CharmType "String"] []) .
+  registerType "getline" (T [] [CharmType "String"]) .
+  registerType "newline" (T [] []) .
+  registerType "type" (T [CharmType "Any"] [CharmType "Any", CharmType "String"]) $ M.empty
