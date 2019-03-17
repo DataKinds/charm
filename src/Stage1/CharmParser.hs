@@ -3,9 +3,11 @@
 module Stage1.CharmParser where
 
 import Text.Megaparsec
-import Text.Megaparsec.Char
+import Text.Megaparsec.Char hiding (space)
 import Data.Ratio
 import Data.Void
+import Control.Monad
+import Data.Char
 
 type Parser = Parsec Void String
 
@@ -23,6 +25,10 @@ data CharmTerm =
   | CharmTypeSig String ([CharmTypeTerm], [CharmTypeTerm])
   | CharmDef String [CharmTerm]
   deriving (Show, Eq)
+
+-- the default `space` matches newlines, this one doesn't
+space :: Parser ()
+space = void $ takeWhileP (Just "white space") (\c -> isSpace c && c /= '\n')
 
 parseCharm :: Parser [CharmTerm]
 parseCharm = some parseAll
@@ -112,7 +118,7 @@ parseTypeSig = do
   pre <- many (between space space parseTypeTerm)
   string "->"
   post <- many (between space space parseTypeTerm)
-  optional newline
+  newline
   return $ CharmTypeSig s (pre, post)
 
 parseDef :: Parser CharmTerm
