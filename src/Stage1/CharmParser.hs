@@ -108,7 +108,7 @@ parseDef :: Parser CharmTerm
 parseDef = do
   (CharmIdent s) <- parseIdent
   space'
-  string ":="
+  string "="
   space'
   def <- some parseAll
   space
