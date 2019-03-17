@@ -105,7 +105,7 @@ parseTypeSig = do
   return $ CharmTypeSig s (T pre post)
 
 parseDef :: Parser CharmTerm
-parseDef = dbg "Def" $ do
+parseDef = do
   (CharmIdent s) <- parseIdent
   space'
   string ":="
