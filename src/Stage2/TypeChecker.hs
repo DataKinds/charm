@@ -1,4 +1,5 @@
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Stage2.TypeChecker where
 
@@ -7,6 +8,8 @@ import qualified Data.Map.Strict as M
 import Control.Monad.State
 import Control.Monad.Writer
 import Data.List
+import Data.Bifunctor
+import qualified Data.Set as S
 
 --              stack in   , stack out
 type TypeEnvironment = M.Map String T
@@ -21,17 +24,49 @@ pruneTypeSignatures (term:terms) = case term of
     return (term:pruned)
 pruneTypeSignatures [] = return []
 
---typeMatch :: M.Map String CharmTypeTerm -- The type variables
---          -> CharmTypeTerm -> CharmTypeTerm
---          -> Bool
-typeMatch (CharmType "Any") _ = True
-typeMatch _ (CharmType "Any") = False
-typeMatch a b = a == b
+-- TODO: properly implement CharmTypeQ
+typeMatch :: M.Map String CharmTypeTerm -- The bound type variables
+          -> CharmTypeTerm -> CharmTypeTerm
+          -> Bool
+typeMatch bound (CharmType "Any") _ = True
+typeMatch bound (CharmType a) (CharmType b) = a == b
+typeMatch bound (CharmType a) (CharmTypeQ b) = a == b
+typeMatch bound a@(CharmType _) (CharmTypeVar b) =
+  case M.lookup b bound of
+    Just b' -> a == b'
+    Nothing -> False
+typeMatch bound (CharmTypeQ a) (CharmTypeQ b) = a == b
+typeMatch bound a@(CharmTypeQ _) (CharmTypeVar b) =
+  case M.lookup b bound of
+    Just b' -> a == b'
+    Nothing -> False
+typeMatch bound (CharmTypeVar a) (CharmTypeVar b) =
+  case M.lookup a bound of
+    Just a' -> case M.lookup b bound of
+      Just b' -> a' == b'
+      Nothing -> False
+    Nothing -> False
+typeMatch bound a b = typeMatch bound b a
+
+-- TODO: fix literally everything that uses this
+isTypeVar (CharmTypeVar _) = True
+isTypeVar _ = False
+typeVar (CharmTypeVar s) = s
+typeVar _ = error "miscalled `typeVar`"
 
 -- Make sure that type variables are all introduced
 -- on the left side before being used on the right side
 checkTypeVarExistence :: T -> Either String ()
-checkTypeVarExistence  asd = error "undefiend"
+checkTypeVarExistence sig@(T pre post) =
+  let
+    preVars = S.fromList $ filter isTypeVar pre
+    postVars = S.fromList $ filter isTypeVar post
+
+    nonexistentVars = postVars S.\\ preVars
+  in
+    case null nonexistentVars of
+      True -> Right ()
+      False -> Left $ "Nonexistent type variables " ++ show nonexistentVars ++ " were introduced."
 
 -- Take a stack of types and see if you can apply a function to it
 unifyTypes :: [CharmTypeTerm] -- The types on the stack before this call
@@ -39,10 +74,15 @@ unifyTypes :: [CharmTypeTerm] -- The types on the stack before this call
            -> Either String [CharmTypeTerm] -- Either an error message or the remaining types on the stack
 unifyTypes pre sig@(T pre' post') =
   let
-    matched = zipWith typeMatch pre pre'
-  in
+    -- the variables bound in the first half of the type signature
+    boundVars = M.fromList . fmap (bimap typeVar id) . filter (isTypeVar . fst) $ zip pre' pre 
+    -- rebinds type variables to their bound values
+    rebind = fmap (\case { CharmTypeVar s -> M.findWithDefault (CharmType "impossible") s boundVars; t -> t })
+    matched = zipWith (typeMatch boundVars) pre (rebind pre')
+  in do
+    checkTypeVarExistence sig
     case and matched of
-      True -> Right $ post' ++ (drop (length pre') pre)
+      True -> Right $ (rebind post') ++ (drop (length pre') pre)
       False -> Left $ "Couldn't unify given type\n    " ++ show sig ++ "\nand expected type\n    " ++ show pre
 
 -- Same as unifyTypes, but resolves type signatures through the TypeEnvironment
@@ -80,7 +120,7 @@ checkGoal env goal@(T pre post) terms =
     case unified of
       err@(Left _) -> err
       (Right ((== post) -> True)) -> Right post
-      (Right post') -> Left $ "Couldn't match given type signature\n    " ++ show goal ++ "\n with actual type\n    " ++ show post'
+      (Right post') -> Left $ "Couldn't match given type signature\n    " ++ show goal ++ "\n with actual type\n    " ++ show (T pre post')
 
 
 --- PRELUDE FUNCTION TYPES ---

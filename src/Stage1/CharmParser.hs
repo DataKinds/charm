@@ -16,7 +16,7 @@ data CharmTypeTerm =
   CharmType String
   | CharmTypeQ String
   | CharmTypeVar String
-  deriving (Show, Eq)
+  deriving (Show, Eq, Ord)
 
 data T = T [CharmTypeTerm] [CharmTypeTerm] deriving (Show, Eq)
 
