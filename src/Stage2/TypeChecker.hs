@@ -26,9 +26,10 @@ typeMatch (CharmType "Any") _ = True
 typeMatch _ (CharmType "Any") = False
 typeMatch a b = a == b
 
+-- Take a stack of types and see if you can apply a function to it
 unifyTypes :: [CharmTypeTerm] -- The types on the stack before this call
-            -> ([CharmTypeTerm], [CharmTypeTerm]) -- Function's type
-            -> Either String [CharmTypeTerm] -- Either an error message or the remaining types on the stack
+           -> ([CharmTypeTerm], [CharmTypeTerm]) -- Function's type
+           -> Either String [CharmTypeTerm] -- Either an error message or the remaining types on the stack
 unifyTypes pre sig =
   let
     matched = zipWith typeMatch pre (fst sig)
@@ -37,11 +38,20 @@ unifyTypes pre sig =
       True -> Right $ (drop (length sig) pre) ++ (snd sig)
       False -> Left $ "Couldn't unify given type\n    " ++ show sig ++ "\nand expected type\n    " ++ show pre
 
-
+-- Same as unifyTypes, but resolves type signatures through the TypeEnvironment
+-- For use with `foldr` in `check` and `checkGoal`
+unifyWithEnv :: TypeEnvironment
+             -> Either String [CharmTypeTerm] -- An error, or the types on the stack
+             -> CharmTerm -- The term to resolve or check (this includes definitions)
+             -> Either String [CharmTypeTerm] -- Either an error message or the remaining types on the stack
 unifyWithEnv env (Right pre) (CharmIdent termname) =
   case M.lookup termname env of
     Nothing -> Left $ "Couldn't find type signature for function\n    " ++ show termname
     Just t -> unifyTypes pre t
+unifyWithEnv env (Right pre) (CharmDef fname def) =
+  case M.lookup fname env of
+    Nothing -> Left $ "Couldn't find type signature for function definition\n    " ++ show fname
+    Just t -> checkGoal env t def
 unifyWithEnv env (Right pre) (CharmNumber _) = unifyTypes pre ([], [CharmType "Num"])
 unifyWithEnv env (Right pre) (CharmString _) = unifyTypes pre ([], [CharmType "String"])
 unifyWithEnv env (Right pre) (CharmList _) = unifyTypes pre ([], [CharmType "List"])
