@@ -9,7 +9,7 @@ import Control.Monad.Writer
 import Data.List
 
 --                                   stack in   , stack out
-type TypeEnvironment = M.Map String ([CharmTerm], [CharmTerm])
+type TypeEnvironment = M.Map String ([CharmTypeTerm], [CharmTypeTerm])
 
 pruneTypeSignatures :: [CharmTerm] -> State TypeEnvironment [CharmTerm]
 pruneTypeSignatures (term:terms) = case term of
@@ -21,48 +21,44 @@ pruneTypeSignatures (term:terms) = case term of
     return (term:pruned)
 pruneTypeSignatures [] = return []
 
-typeMatch :: CharmTerm -> CharmTerm -> Bool
-typeMatch (CharmIdent "any") _ = True
-typeMatch _ (CharmIdent "any") = False
+typeMatch :: CharmTypeTerm -> CharmTypeTerm -> Bool
+typeMatch (CharmType "Any") _ = True
+typeMatch _ (CharmType "Any") = False
 typeMatch a b = a == b
 
-unifyTypes :: [CharmTerm] -- The types on the stack before this call
-            -> ([CharmTerm], [CharmTerm]) -- Function's type
-            -> Either String [CharmTerm] -- Either an error message or the remaining types on the stack
+unifyTypes :: [CharmTypeTerm] -- The types on the stack before this call
+            -> ([CharmTypeTerm], [CharmTypeTerm]) -- Function's type
+            -> Either String [CharmTypeTerm] -- Either an error message or the remaining types on the stack
 unifyTypes pre sig =
   let
-    paddedPre = if (length pre < length (fst sig)) then replicate (length (fst sig) - length pre) (CharmIdent "int") ++ pre else pre
-    matched = zipWith typeMatch paddedPre (fst sig)
+    matched = zipWith typeMatch pre (fst sig)
   in
     case and matched of
       True -> Right $ (drop (length sig) pre) ++ (snd sig)
       False -> Left $ "Couldn't unify given type\n    " ++ show sig ++ "\nand expected type\n    " ++ show pre
 
+
+unifyWithEnv env (Right pre) (CharmIdent termname) =
+  case M.lookup termname env of
+    Nothing -> Left $ "Couldn't find type signature for function\n    " ++ show termname
+    Just t -> unifyTypes pre t
+unifyWithEnv env (Right pre) (CharmNumber _) = unifyTypes pre ([], [CharmType "Num"])
+unifyWithEnv env (Right pre) (CharmString _) = unifyTypes pre ([], [CharmType "String"])
+unifyWithEnv env (Right pre) (CharmList _) = unifyTypes pre ([], [CharmType "List"])
+unifyWithEnv env err@(Left _) next = err
+
 check :: TypeEnvironment -- The type signatures to check 
       -> [CharmTerm]     -- The functions themselves
-      -> Either String [CharmTerm] -- Either an error or success (current stack types)
-check env terms =
-  let
-    unifyWithEnv (Right pre) (CharmIdent termname) =
-      case M.lookup termname env of
-        Nothing -> Left $ "Couldn't find type signature for function\n    " ++ show termname
-        Just t -> unifyTypes pre t
-    unifyWithEnv err@(Left _) next = err
-  in
-    foldr (flip unifyWithEnv) (Right []) terms
+      -> Either String [CharmTypeTerm] -- Either an error or success (current stack types)
+check env terms = foldr (flip $ unifyWithEnv env) (Right []) terms
 
 checkGoal :: TypeEnvironment -- The environment type signatures
-          -> ([CharmTerm], [CharmTerm]) -- The "goal" type signature
+          -> ([CharmTypeTerm], [CharmTypeTerm]) -- The "goal" type signature
           -> [CharmTerm] -- The functions to check
-          -> Either String [CharmTerm] -- Either an error or success (current stack types)
+          -> Either String [CharmTypeTerm] -- Either an error or success (current stack types)
 checkGoal env goal@(pre, post) terms =
   let
-    unifyWithEnv (Right pre') (CharmIdent termname) =
-      case M.lookup termname env of
-        Nothing -> Left $ "Couldn't find type signature for function\n    " ++ show termname
-        Just t -> unifyTypes pre' t
-    unifyWithEnv err@(Left _) next = err
-    unified = foldr (flip unifyWithEnv) (Right pre) terms
+    unified = foldr (flip $ unifyWithEnv env) (Right pre) terms
   in
     case unified of
       err@(Left _) -> err
@@ -71,22 +67,15 @@ checkGoal env goal@(pre, post) terms =
 
 
 --- PRELUDE FUNCTION TYPES ---
-type T = ([CharmTerm], [CharmTerm])
+type T = ([CharmTypeTerm], [CharmTypeTerm])
 
-ch_t_p :: T
-ch_t_p = ([CharmIdent "any"], [])
+registerType :: String -> T -> TypeEnvironment -> TypeEnvironment
+registerType = M.insert
 
-ch_t_pstring :: T
-ch_t_pstring = ([CharmIdent "string"], [])
-
-ch_t_newline :: T
-ch_t_newline = ([], [])
-
-ch_t_getline :: T
-ch_t_getline = ([], [CharmIdent "string"])
-
-ch_t_type :: T
-ch_t_type = ([CharmIdent "any"], [CharmIdent "any", CharmIdent "string"])
-
-ch_t_def :: T
-ch_t_def = ([CharmIdent "string", CharmIdent "list"], [])
+defaultEnv :: TypeEnvironment
+defaultEnv =
+  registerType "p" ([CharmType "Any"], []) .
+  registerType "pstring" ([CharmType "String"], []) .
+  registerType "getline" ([], [CharmType "String"]) .
+  registerType "newline" ([], []) .
+  registerType "type" ([CharmType "Any"], [CharmType "Any", CharmType "String"]) $ M.empty

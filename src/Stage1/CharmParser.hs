@@ -9,12 +9,18 @@ import Data.Void
 
 type Parser = Parsec Void String
 
+data CharmTypeTerm =
+  CharmType String
+  | CharmTypeQ String
+  | CharmTypeVar String
+  deriving (Show, Eq)
+
 data CharmTerm =
   CharmIdent String
   | CharmNumber Rational
   | CharmString String
   | CharmList [CharmTerm]
-  | CharmTypeSig String ([CharmTerm], [CharmTerm])
+  | CharmTypeSig String ([CharmTypeTerm], [CharmTypeTerm])
   | CharmDef String [CharmTerm]
   deriving (Show, Eq)
 
@@ -76,15 +82,36 @@ parseTypeSig = do
         return ident
 -}
 
+parseTypeTerm :: Parser CharmTypeTerm
+parseTypeTerm = try parseTypeQ <|> try parseType <|> try parseTypeVar
+  where
+    parseTypeQ :: Parser CharmTypeTerm
+    parseTypeQ = do
+      term <- (try parseType <|> try parseTypeVar)
+      string "?"
+      return term
+
+    parseType :: Parser CharmTypeTerm
+    parseType = do
+      head <- upperChar
+      rest <- many alphaNumChar
+      return $ CharmType (head : rest)
+
+    parseTypeVar :: Parser CharmTypeTerm
+    parseTypeVar = do
+      (CharmIdent s) <- parseIdent
+      return . CharmTypeVar $ s
+  
+
 -- TODO: parsing nested type signatures
 parseTypeSig :: Parser CharmTerm
 parseTypeSig = do
   (CharmIdent s) <- parseIdent
   space
-  string "::"
-  pre <- many (between space space parseIdent)
+  string ":"
+  pre <- many (between space space parseTypeTerm)
   string "->"
-  post <- many (between space space parseIdent)
+  post <- many (between space space parseTypeTerm)
   optional newline
   return $ CharmTypeSig s (pre, post)
 
