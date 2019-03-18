@@ -85,7 +85,7 @@ typeVar _ = error "miscalled `typeVar`"
 checkTypeVarExistence :: T -> Either String ()
 checkTypeVarExistence sig@(T pre post) =
   let
-    preVars = S.fromList $ filter isTypeVar pre
+    preVars = trace ("sig: " ++ show sig) $ S.fromList $ filter isTypeVar pre
     postVars = S.fromList $ filter isTypeVar post
 
     nonexistentVars = postVars S.\\ preVars
@@ -139,7 +139,8 @@ checkGoal :: TypeEnvironment -- The environment type signatures
 checkGoal env goal@(T pre post) terms =
   let
     unified = foldr (flip $ unifyWithEnv env) (Right pre) terms
-  in
+  in do
+    checkTypeVarExistence goal
     case unified of
       err@(Left _) -> err
       (Right ((== post) -> True)) -> Right post
