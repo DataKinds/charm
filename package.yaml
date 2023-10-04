@@ -21,13 +21,16 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
-- megaparsec
+- megaparsec >= 9
 - mtl
 - containers
 - transformers
 
 library:
   source-dirs: src
+  default-extensions:
+  - LambdaCase
+  - DeriveGeneric
 
 executables:
   charm-exe:

@@ -1,0 +1,11 @@
+"Quotes should be able to contain \" escaped end quotes" pop
+2.24565 -2397 0 1 2 100 
+1 2 3 drop -1234 " hi" "hello" [1 2 3]
+f : Num -> Num 
+f := 1 + ;
+
+[1 2 3]
+
+[[1 2 ] 4 5 [5 6 7]]
+
+g : Any -> Num 

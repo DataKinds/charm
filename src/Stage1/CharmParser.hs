@@ -9,8 +9,9 @@ import Data.Ratio
 import Data.Void
 import Control.Monad
 import Data.Char
+import Data.Maybe (isJust, fromJust)
 
-type Parser = Parsec Void String
+type Lexer = Parsec Void String
 
 data CharmTypeTerm =
   CharmType String
@@ -29,87 +30,164 @@ data CharmTerm =
   | CharmDef String [CharmTerm]
   deriving (Show, Eq)
 
--- the default `space` matches newlines, this one doesn't
-space' :: Parser ()
-space' = void $ takeWhileP (Just "white space") (\c -> isSpace c && c /= '\n')
+-- Let's begin by lexing the input string into tokens
+data CharmToken = 
+  TokenNumDecimal String String
+  | TokenNumInteger String 
+  | TokenQuote String -- We take the whole string as a token to apply different escaping rules
+  | TokenBareWord String
+  -- Simple Tokens (without extra data)
+  | TokenColon -- :
+  | TokenAssign -- :=
+  | TokenEndAssign -- ;
+  | TokenOpenParen -- (
+  | TokenCloseParen -- )
+  | TokenOpenBracket -- [
+  | TokenCloseBracket -- ]
+  | TokenArrow -- -> 
+  | TokenAlternative -- |
+  | TokenVariadic -- ...
+  deriving (Show, Eq, Ord)
 
-parseCharm :: Parser [CharmTerm]
-parseCharm = some parseAll
+tokenDecimal :: Lexer CharmToken 
+tokenDecimal = do
+  neg <- many $ char '-'
+  pre <- some digitChar
+  char '.'
+  post <- some digitChar
+  return $ TokenNumDecimal (neg ++ pre) post 
 
-parseAll :: Parser CharmTerm
-parseAll = foldr1 (<|>) $ try . between space space <$> [parseDef, parseTypeSig, parseList, parseString, parseNumber, parseIdent]
+tokenInteger :: Lexer CharmToken
+tokenInteger = do
+  neg <- many $ char '-'
+  num <- some digitChar
+  return . TokenNumInteger $ neg ++ num
 
-parseIdent :: Parser CharmTerm
-parseIdent = some (try letterChar <|> try digitChar) >>= (return . CharmIdent)
+tokenBareWord :: Lexer CharmToken
+tokenBareWord = TokenBareWord <$> some (satisfy (\c -> or [isAlphaNum c,isPunctuation c, isSymbol c]))
 
-parseNumber :: Parser CharmTerm
-parseNumber = try parseDouble <|> try parseInteger
-  where
-    parseDouble :: Parser CharmTerm
-    parseDouble = do
-      pre <- some digitChar
-      char '.'
-      post <- some digitChar
-      return . CharmNumber $ ((read pre :: Integer) % 1) + ((read post :: Integer) % (10 * (fromIntegral $ length post)))
-      
-    parseInteger :: Parser CharmTerm
-    parseInteger = do
-      num <- some digitChar
-      return . CharmNumber $ (read num :: Integer) % 1
-
-parseString :: Parser CharmTerm
-parseString = do
+tokenQuote :: Lexer CharmToken
+tokenQuote = do
   char '"'
-  str <- many (satisfy (\c -> c /= '"'))
+  str <- many $ noneOf ['\\', '"'] <|> (char '\\' >> anySingle)
   char '"'
-  return . CharmString $ str
+  return . TokenQuote $ str
 
-parseList :: Parser CharmTerm
-parseList = do
-  char '['
-  terms <- many parseAll
-  char ']'
-  return . CharmList $ terms
-  
-parseTypeTerm :: Parser CharmTypeTerm
-parseTypeTerm = try parseTypeQ <|> try parseType <|> try parseTypeVar
+tokenSimple :: Lexer CharmToken
+tokenSimple = 
+      (string ":="  >> return TokenAssign)
+  <|> (char ':'   >> return TokenColon)
+  <|> (char ';'     >> return TokenEndAssign)
+  <|> (char '('     >> return TokenOpenParen)
+  <|> (char ')'     >> return TokenCloseParen)
+  <|> (char '['     >> return TokenOpenBracket)
+  <|> (char ']'     >> return TokenCloseBracket)
+  <|> (string "->"  >> return TokenArrow)
+  <|> (char '|'     >> return TokenAlternative)
+  <|> (string "..." >> return TokenVariadic)
+
+charmTokens :: Lexer [CharmToken]
+charmTokens = many $ foldr1 (<|>) (chompSpaces <$> parserList)
   where
-    parseTypeQ :: Parser CharmTypeTerm
-    parseTypeQ = do
-      term <- (try parseType <|> try parseTypeVar)
-      string "?"
-      return term
+    parserList = [tokenDecimal, tokenInteger, tokenQuote, tokenSimple, tokenBareWord]
+    chompSpaces parser = space >> try parser <* space
 
-    parseType :: Parser CharmTypeTerm
-    parseType = do
-      head <- upperChar
-      rest <- many alphaNumChar
-      return $ CharmType (head : rest)
+-- Now let's turn those tokens into an AST
+type Parser = Parsec Void [CharmToken]
 
-    parseTypeVar :: Parser CharmTypeTerm
-    parseTypeVar = do
-      (CharmIdent s) <- parseIdent
-      return . CharmTypeVar $ s
+data CharmAST = 
+  -- Data level syntax
+  ASTName String
+  | ASTNumber Rational
+  | ASTQuote String
+  | ASTNest [CharmAST]
+  | ASTDefinition String [CharmAST]
+  -- Type level syntax
+  | ASTTypeNest [CharmAST] [CharmAST]
+  | ASTTypeAssignment String [CharmAST] [CharmAST]
+  | ASTTypeVariadic CharmAST
+  | ASTTypeAlternative [CharmAST]
+  deriving (Show, Eq)
+
+consumeExtracted :: (CharmToken -> Maybe a) -> Parser a
+consumeExtracted extract = satisfy (isJust . extract) >>= (return . fromJust . extract)
+
+astName :: Parser CharmAST
+astName = ASTName <$> consumeExtracted (\case { 
+  (TokenBareWord s) -> Just s;
+  _ -> Nothing })
+
+astNest :: Parser CharmAST
+astNest = ASTNest <$> between (single TokenOpenBracket) (single TokenCloseBracket) (many astTerm)
+
+-- Parse a single data level Charm term 
+astTerm :: Parser CharmAST
+astTerm = foldr1 (<|>) (try <$> parserList)
+  where
+    astNumber :: Parser Rational
+    astNumber = consumeExtracted (\case { 
+      (TokenNumDecimal n d) -> let
+        top = (read n :: Integer) % 1
+        bot = (read d :: Integer) % (10 * (fromIntegral $ length d))
+        in
+          Just $ top + bot;
+      (TokenNumInteger s) -> Just ((read s :: Integer) % 1);
+      _ -> Nothing
+      }) 
+    astQuote :: Parser String
+    astQuote = consumeExtracted (\case { 
+      (TokenQuote s) -> Just s;
+      _ -> Nothing 
+      })
+    parserList :: [Parser CharmAST]
+    parserList = [astNest, ASTNumber <$> astNumber, ASTQuote <$> astQuote, astName]
+
+astTypeNest :: Parser CharmAST
+astTypeNest = between (single TokenOpenBracket) (single TokenCloseBracket) $ do
+  precond <- many astTypeTerm
+  single TokenArrow 
+  postcond <- many astTypeTerm 
+  return (ASTTypeNest precond postcond)
+
+-- Parse a single type level Charm term 
+astTypeTerm :: Parser CharmAST 
+astTypeTerm = foldr1 (<|>) (try <$> parserList)
+  where 
+    parserList :: [Parser CharmAST]
+    parserList = [astName, astTypeNest]
+
+astTypeAssignment :: Parser CharmAST
+astTypeAssignment = do
+  name <- astName
+  single TokenColon
+  precond <- many astTypeTerm
+  single TokenArrow 
+  postcond <- many astTypeTerm 
+  return (ASTTypeAssignment (\case { ASTName s -> s } $ name) precond postcond)
   
+astDefinition :: Parser CharmAST
+astDefinition = do
+  name <- astName
+  single TokenAssign
+  body <- many astTerm
+  single TokenEndAssign
+  return $ ASTDefinition (\case { ASTName s -> s } $ name) body
 
--- TODO: parsing nested type signatures
-parseTypeSig :: Parser CharmTerm
-parseTypeSig = do
-  (CharmIdent s) <- parseIdent
-  space'
-  string ":"
-  pre <- (try $ many (between space' space' parseTypeTerm)) <|> (char ' ' *> return []) 
-  string "->"
-  post <- (try $ many (between space' space' parseTypeTerm)) <|> (space1 *> return []) 
-  space
-  return $ CharmTypeSig s (T pre post)
+charmAST :: Parser [CharmAST]
+charmAST = many $ foldr1 (<|>) (try <$> [astDefinition, astTypeAssignment, astTerm])
 
-parseDef :: Parser CharmTerm
-parseDef = do
-  (CharmIdent s) <- parseIdent
-  space'
-  string "="
-  space'
-  def <- some parseAll
-  space
-  return $ CharmDef s def
+data CharmParsingError = 
+  CharmParsingLexError (ParseErrorBundle String Void)
+  | CharmParsingParseError (ParseErrorBundle [CharmToken] Void)
+  deriving (Show)
+runCharmParser ::
+     String -- Name of the source file
+  -> String -- Parser input
+  -> Either CharmParsingError [CharmAST] -- Successful parse
+runCharmParser n i = 
+  case (runParser charmTokens n i) of
+    Left lexError -> Left $ CharmParsingLexError lexError
+    Right parsedTokens -> 
+      case (runParser charmAST n parsedTokens) of
+        Left parseError -> Left $ CharmParsingParseError parseError
+        Right parsedAst -> Right parsedAst
