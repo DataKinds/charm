@@ -106,7 +106,7 @@ data CharmAST =
   | ASTTypeNest [CharmAST] [CharmAST]
   | ASTTypeAssignment String [CharmAST] [CharmAST]
   | ASTTypeVariadic CharmAST
-  | ASTTypeAlternative [CharmAST]
+  | ASTTypeAlternative [CharmAST] [CharmAST]
   deriving (Show, Eq)
 
 consumeExtracted :: (CharmToken -> Maybe a) -> Parser a
@@ -148,6 +148,13 @@ astTypeNest = between (single TokenOpenBracket) (single TokenCloseBracket) $ do
   single TokenArrow 
   postcond <- many astTypeTerm 
   return (ASTTypeNest precond postcond)
+
+astTypeAlternative :: Parser CharmAST
+astTypeAlternative = between (single TokenOpenParen) (single TokenCloseParen) $ do
+  left <- many astTypeTerm
+  single TokenAlternative
+  right <- many astTypeTerm 
+  return (ASTTypeAlternative left right)
 
 -- Parse a single type level Charm term 
 astTypeTerm :: Parser CharmAST 
