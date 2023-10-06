@@ -6,6 +6,7 @@ import Control.Monad.Trans.State
 import Control.Monad.Trans.Writer.CPS
 import Control.Monad.Trans.Class
 import Control.Monad.Except
+import Control.Monad.Trans.Except
 import Data.Bifunctor
 import qualified Data.Char as C
 import Data.List
@@ -25,9 +26,10 @@ data CharmType =
   | TypeVariadic CharmType                  -- A...
   | TypeAlternative [CharmType] [CharmType] -- (A B C | X Y Z)
   deriving (Show, Eq)
-  
+
 type TypeEnvironment = M.Map String CharmType -- What Charm functions have what type?
 type TypeVarBindings = M.Map String CharmType -- What type variables have a concrete binding? 
+type TypeContext = State TypeVarBindings -- This is a function that needs access to the typechecker state!
 
 data CharmTypeError =
   TypeErrorGotXWantedY CharmType CharmType
@@ -90,39 +92,39 @@ concretize ctx (TypeVar v) = case M.lookup v ctx of
 concretize ctx t = t
 
 unifyOne
-  :: TypeVarBindings                   -- What type vars are currently bound?
-  -> CharmType                         -- Pre-evaluation stack type
-  -> CharmType                         -- Function's popped type
-  -> Either CharmTypeError [CharmType] -- Either a unification error or what's left of the pre-evaluation stack
-unifyOne = go
+  :: TypeVarBindings                   
+  -> CharmType                         -- RHS type term (ie Pre-evaluation stack type)
+  -> CharmType                         -- LHS type term (ie Function's popped type)
+  -> ExceptT CharmTypeError TypeContext [CharmType] -- Either a unification error or what's left of the RHS after unification
+unifyOne ctx = go
   where
-    go :: TypeVarBindings -> CharmType -> CharmType -> Either CharmTypeError [CharmType]
-    go _ x@(TypeConcrete s) y@(TypeConcrete s')     = case s == s' of
-      True -> Right []
-      False -> Left $ TypeErrorGotXWantedY x y
-    go ctx x@(TypeConcrete s) y@(TypeVar v)      = case concretize ctx y of
+    go :: CharmType -> CharmType -> ExceptT CharmTypeError (State TypeVarBindings) [CharmType]
+    go x@(TypeConcrete s) y@(TypeConcrete s')     = case s == s' of
+      True -> return []
+      False -> throwError $ TypeErrorGotXWantedY x y
+    go x@(TypeConcrete s) y@(TypeVar v)      = case concretize ctx y of
       TypeConcrete concV -> go ctx x (TypeConcrete concV)
       -- TODO: this should create the binding for the type var!
-      TypeVar v -> Left $ TypeErrorUnboundVar v
-    go ctx x@(TypeAlternative _ _) y@(TypeAlternative _ _)
-      | concX == concY = Right []
+      TypeVar v -> throwError $ TypeErrorUnboundVar v
+    go x@(TypeAlternative _ _) y@(TypeAlternative _ _)
+      | concX == concY = return []
       -- TODO: partial unification?
-      | otherwise = Left $ TypeErrorGotXWantedY x y
+      | otherwise = throwError $ TypeErrorGotXWantedY x y
       where
         concX = concretize ctx x
         concY = concretize ctx y
-    go ctx x@(TypeAlternative _ _) y = Left $ TypeErrorGotXWantedY x y
-    go ctx x@(TypeNest _ _) y@(TypeNest _ _)
+    go x@(TypeAlternative _ _) y = throwError $ TypeErrorGotXWantedY x y
+    go x@(TypeNest _ _) y@(TypeNest _ _)
       -- TODO: concretizing both sides here might not be right
-      | concX == concY = Right []
-      | otherwise = Left $ TypeErrorGotXWantedY x y
+      | concX == concY = return []
+      | otherwise = throwError $ TypeErrorGotXWantedY x y
       where
         concX = concretize ctx x
         concY = concretize ctx y
-    go ctx x@(TypeNest _ _) y = Left $ TypeErrorGotXWantedY x y
+    go x@(TypeNest _ _) y = throwError $ TypeErrorGotXWantedY x y
 
     -- Invalid types to be on the stack, something went really wrong
-    go _ (TypeVar _) _                         = Left TypeErrorFatal
+    go (TypeVar _) _                         = throwError TypeErrorFatal
     
 -- Unifies (or fails to unify) a single function `f` in a known type context
 unify
