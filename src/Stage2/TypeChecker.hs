@@ -79,60 +79,89 @@ extractTypesFromAST = \case
     return (term:pruned)
 
 -- Convert all TypeVars to their concrete representations if possible
-concretize :: TypeVarBindings -> CharmType -> CharmType
--- TODO: we could totally introduce  nested typevar quantifiers
--- but for now something like `f : [b -> c] -> c` accepts any concrete unary function (like Num -> Num)
--- as opposed to only functions with typevars like `g : x -> y`
-concretize ctx (TypeNest pre post) = (TypeNest `on` fmap (concretize ctx)) pre post
-concretize ctx (TypeAlternative l r) = (TypeAlternative `on` fmap (concretize ctx)) l r
-concretize ctx (TypeVariadic t) = TypeVariadic . concretize ctx $ t
-concretize ctx (TypeVar v) = case M.lookup v ctx of
+concretize :: CharmType -> TypeContext CharmType
+-- TODO: we could totally introduce nested typevar quantifiers but for
+-- now something like `f : [b -> c] -> c` accepts any concrete unary
+-- function (like Num -> Num) as well as functions with typevars like
+-- `g : x -> y`
+concretize (TypeNest pre post) = do
+  concPre <- sequence $ concretize <$> pre
+  concPost <- sequence $ concretize <$> post
+  return $ TypeNest concPre concPost
+concretize (TypeAlternative l r) = do
+  concL <- sequence $ concretize <$> l
+  concR <- sequence $ concretize <$> r
+  return $ TypeAlternative concL concR
+concretize (TypeVariadic t) = do
+  concT <- concretize t
+  return $ TypeVariadic concT
+concretize (TypeVar v) = get >>= (\ctx -> return $ case M.lookup v ctx of
   Just concV -> concV
-  Nothing -> TypeVar v
-concretize ctx t = t
+  Nothing -> TypeVar v)
+concretize t = return t
+
+
+-- a note about quantifiers: we're only allowing rank 1 types for
+-- now. this means that quantifiers are always at the very start of a
+-- function's signature. if there's an
+
+-- `f : a b [b -> c] -> c`
+
+-- then there's an implicit forall here
+
+--`f : (forall a b c.) a b [b -> c] -> c`
 
 unifyOne
-  :: TypeVarBindings                   
-  -> CharmType                         -- RHS type term (ie Pre-evaluation stack type)
-  -> CharmType                         -- LHS type term (ie Function's popped type)
-  -> ExceptT CharmTypeError TypeContext [CharmType] -- Either a unification error or what's left of the RHS after unification
-unifyOne ctx = go
+  :: CharmType                         -- LHS type term (ie Pre-evaluation stack type)
+  -> CharmType                         -- RHS type term (ie Function's popped type)
+  -> ExceptT CharmTypeError TypeContext [CharmType] -- Either a unification error or what's left of the LHS after unification
+unifyOne lhs rhs = do
+  guard lhs rhs
+  go lhs rhs
   where
-    go :: CharmType -> CharmType -> ExceptT CharmTypeError (State TypeVarBindings) [CharmType]
-    go x@(TypeConcrete s) y@(TypeConcrete s')     = case s == s' of
+    guard :: CharmType -> CharmType -> ExceptT CharmTypeError TypeContext [CharmType]
+    guard lhs rhs = do
+      concLhs <- lift $ concretize lhs
+      concRhs <- lift $ concretize rhs
+      -- There shouldn't ever be unbound variables on the LHS
+      when (concLhs /= lhs) $ throwError TypeErrorFatal
+        
+    go :: CharmType -> CharmType -> ExceptT CharmTypeError TypeContext [CharmType]
+    go x y@(TypeVar _) = do
+      concY <- lift $ concretize y
+      case concY of
+        -- The type var hasn't been bound and needs to be!
+        TypeVar v -> do
+          modify (M.insert v x) 
+          go x x
+        -- The type var's already been bound!
+        t -> go x t
+    go x@(TypeConcrete s) y@(TypeConcrete s') = case s == s' of
       True -> return []
       False -> throwError $ TypeErrorGotXWantedY x y
-    go x@(TypeConcrete s) y@(TypeVar v)      = case concretize ctx y of
-      TypeConcrete concV -> go ctx x (TypeConcrete concV)
-      -- TODO: this should create the binding for the type var!
-      TypeVar v -> throwError $ TypeErrorUnboundVar v
-    go x@(TypeAlternative _ _) y@(TypeAlternative _ _)
-      | concX == concY = return []
-      -- TODO: partial unification?
-      | otherwise = throwError $ TypeErrorGotXWantedY x y
-      where
-        concX = concretize ctx x
-        concY = concretize ctx y
-    go x@(TypeAlternative _ _) y = throwError $ TypeErrorGotXWantedY x y
-    go x@(TypeNest _ _) y@(TypeNest _ _)
-      -- TODO: concretizing both sides here might not be right
-      | concX == concY = return []
-      | otherwise = throwError $ TypeErrorGotXWantedY x y
-      where
-        concX = concretize ctx x
-        concY = concretize ctx y
+ 
+    go x@(TypeNest _ _) y@(TypeNest _ _) = do
+      concX <- lift $ concretize x
+      concY <- lift $ concretize y
+      if concX == concY then return [] else throwError $ TypeErrorGotXWantedY x y
     go x@(TypeNest _ _) y = throwError $ TypeErrorGotXWantedY x y
+    go x y@(TypeNest _ _) = throwError $ TypeErrorGotXWantedY x y
 
-    -- Invalid types to be on the stack, something went really wrong
-    go (TypeVar _) _                         = throwError TypeErrorFatal
+    go (TypeVariadic x) (TypeVariadic y) = go x y
+    go x (TypeVariadic y) = -- if it unifies, push (y...|)
+
+    go x@(TypeAlternative l r) y@(TypeAlternative l' r') = do
+      concY <- lift $ concretize y
+      -- TODO: partial unification?
+      if x == concY then return [] else throwError $ TypeErrorGotXWantedY x y
+    go x@(TypeAlternative _ _) y = throwError $ TypeErrorGotXWantedY x y
     
--- Unifies (or fails to unify) a single function `f` in a known type context
+-- Unifies (or fails to unify) a single function `f` in a known stack type context
 unify
   :: [CharmType]                       -- Pre-evaluation stack types
   -> [CharmType]                       -- f's popped types 
-  -> [CharmType]                       -- f's pushed types
-  -> Either CharmTypeError [CharmType] -- Either a unification error or the post-evaluation stack
-unify ctx pre post = undefined
+  -> Except CharmTypeError [CharmType] -- Either a unification error or the post-evaluation stack
+unify pre post = 
   
 
 -- TODO: properly implement CharmTypeQ
