@@ -27,14 +27,25 @@ data CharmType =
   | TypeAlternative [CharmType] [CharmType] -- (A B C | X Y Z)
   deriving (Show, Eq)
 
-type TypeEnvironment = M.Map String CharmType -- What Charm functions have what type?
+type TypeEnvironment = M.Map String ([CharmType], [CharmType]) -- What Charm functions have what type?
 type TypeVarBindings = M.Map String CharmType -- What type variables have a concrete binding? 
 type TypeContext = State TypeVarBindings -- This is a function that needs access to the typechecker state!
+runTypeContext :: StateT (M.Map k a1) m a2 -> m (a2, M.Map k a1)
+runTypeContext tc = runStateT tc M.empty
 
 data CharmTypeError =
-  TypeErrorGotXWantedY CharmType CharmType
+  -- The type system expected one thing here but saw another!
+  TypeErrorGotXWantedY CharmType CharmType 
+  -- The stack ran empty when it shouldn't have! Here's what was popped.
+  | TypeErrorStackUnderflow CharmType
+  -- A function pushed more than it said it would in its type signature.
+  -- Here's what it pushed.
+  | TypeErrorPushedTooMuch [CharmType]
+  -- A type variable did not appear on the LHS of a function before appearing on the RHS. 
   | TypeErrorUnboundVar String
-  | TypeErrorFatal
+  | TypeErrorUnimplemented CharmType
+  | TypeErrorUnknownFunction String
+  | TypeErrorFatal (Maybe String)
   deriving (Show)
 
 -- Takes a single AST term and transforms it into its CharmType representation
@@ -64,15 +75,15 @@ typeFromAST = go
     go (ASTDefinition _ _) = Left "malformed definition in type!"
 
 -- Takes a whole Charm program and strips the types from it, saving them in a TypeEnvironment
--- Can output errors if a type is malformed entirely
-extractTypesFromAST :: [CharmAST] -> StateT TypeEnvironment (Writer [String]) [CharmAST]
+-- Can output errors if a type is malformed entirely. Result is the AST sans types.
+extractTypesFromAST :: [CharmAST] -> WriterT [String] (State TypeEnvironment) [CharmAST]
 extractTypesFromAST = \case
   [] -> return []
   (ASTTypeAssignment name pretypes posttypes):rest -> do
     let typeSigWithError = (typeFromAST $ ASTTypeNest pretypes posttypes) :: Either String CharmType
     case typeSigWithError of
-      Left err -> lift $ tell [err]
-      Right typeSig -> modify (M.insert name typeSig)
+      Left err -> tell [err]
+      Right (TypeNest lhs rhs)-> lift $ modify (M.insert name (lhs, rhs))
     extractTypesFromAST rest
   term:rest -> do
     pruned <- extractTypesFromAST rest
@@ -124,7 +135,8 @@ unifyOne lhs rhs = do
       concLhs <- lift $ concretize lhs
       concRhs <- lift $ concretize rhs
       -- There shouldn't ever be unbound variables on the LHS
-      when (concLhs /= lhs) $ throwError TypeErrorFatal
+      when (concLhs /= lhs) $ throwError (TypeErrorFatal $ Just "Unbound var on LHS!")
+      pure []
         
     go :: CharmType -> CharmType -> ExceptT CharmTypeError TypeContext [CharmType]
     go x y@(TypeVar _) = do
@@ -132,36 +144,51 @@ unifyOne lhs rhs = do
       case concY of
         -- The type var hasn't been bound and needs to be!
         TypeVar v -> do
-          modify (M.insert v x) 
+          lift $ modify (M.insert v x) 
           go x x
         -- The type var's already been bound!
         t -> go x t
+
     go x@(TypeConcrete s) y@(TypeConcrete s') = case s == s' of
       True -> return []
       False -> throwError $ TypeErrorGotXWantedY x y
+    go x y@(TypeConcrete s) = throwError $ TypeErrorGotXWantedY x y
  
-    go x@(TypeNest _ _) y@(TypeNest _ _) = do
-      concX <- lift $ concretize x
-      concY <- lift $ concretize y
-      if concX == concY then return [] else throwError $ TypeErrorGotXWantedY x y
-    go x@(TypeNest _ _) y = throwError $ TypeErrorGotXWantedY x y
-    go x y@(TypeNest _ _) = throwError $ TypeErrorGotXWantedY x y
+    -- go x@(TypeNest a b) y@(TypeNest _ _) = do
+    --   concY@(TypeNest c d) <- lift $ concretize y
+    --   if x == concY then return [] else throwError $ TypeErrorGotXWantedY x y
+    -- -- go x@(TypeNest _ _) y = throwError $ TypeErrorGotXWantedY x y
+    -- go x y@(TypeNest _ _) = throwError $ TypeErrorGotXWantedY x y
+    go x@(TypeNest _ _) _ = throwError $ TypeErrorUnimplemented x
+    go _ y@(TypeNest _ _) = throwError $ TypeErrorUnimplemented y
 
-    go (TypeVariadic x) (TypeVariadic y) = go x y
-    go x (TypeVariadic y) = -- if it unifies, push (y...|)
+    -- go (TypeVariadic x) (TypeVariadic y) = go x y
+    -- go x (TypeVariadic y) = -- if it unifies, push (y...|)
+    go x@(TypeVariadic _) _ = throwError $ TypeErrorUnimplemented x
+    go _ y@(TypeVariadic _) = throwError $ TypeErrorUnimplemented y
 
-    go x@(TypeAlternative l r) y@(TypeAlternative l' r') = do
-      concY <- lift $ concretize y
-      -- TODO: partial unification?
-      if x == concY then return [] else throwError $ TypeErrorGotXWantedY x y
-    go x@(TypeAlternative _ _) y = throwError $ TypeErrorGotXWantedY x y
+    -- go x@(TypeAlternative l r) y@(TypeAlternative l' r') = do
+    --   concY <- lift $ concretize y
+    --   -- TODO: partial unification?
+    --   if x == concY then return [] else throwError $ TypeErrorGotXWantedY x y
+    -- go x@(TypeAlternative _ _) y = throwError $ TypeErrorGotXWantedY x y
+    go x@(TypeAlternative _ _) _ = throwError $ TypeErrorUnimplemented x
+    go _ y@(TypeAlternative _ _) = throwError $ TypeErrorUnimplemented y
+
     
 -- Unifies (or fails to unify) a single function `f` in a known stack type context
 unify
   :: [CharmType]                       -- Pre-evaluation stack types
   -> [CharmType]                       -- f's popped types 
-  -> Except CharmTypeError [CharmType] -- Either a unification error or the post-evaluation stack
-unify pre post = 
+  -> ExceptT CharmTypeError TypeContext [CharmType] -- Either a unification error or the post-evaluation stack
+unify (x:lhs) (y:rhs) = do
+  leftoverTypes <- unifyOne x y
+  recurseTypes <- unify lhs rhs
+  return $ leftoverTypes ++ recurseTypes
+unify [] [] = pure []
+unify lhs [] = pure lhs
+unify [] (y:_) = throwError $ TypeErrorStackUnderflow y
+
   
 
 -- TODO: properly implement CharmTypeQ
