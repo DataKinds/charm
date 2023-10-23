@@ -77,7 +77,12 @@ typecheck asts = do
     throwError errs
 
 main :: IO ()
-main = putStrLn ":)" 
+main = do
+  let preludeFilename = "standard_lib/prelude.charm"
+  contents <- readFile preludeFilename
+  putStrLn $ "Reading from Prelude at " ++ preludeFilename
+  putStrLn contents
+  print $ runCharmParser "<stdin>" contents 
 -- main = do
 --   input <- getUntilEmptyLine
 --   -- Stage 1

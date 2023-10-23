@@ -91,9 +91,7 @@ may be used as a sort of "hatch" out of the type system.
         s ts = unwords $ show <$> ts
     show (TypeOptional t) = show t ++ "?"
     show (TypeAny) = "Any"
-
 \end{code}
-
 
 These are helper types that are mostly internal to the typechecker. 
 
@@ -173,7 +171,6 @@ CharmType representation.
         -- Disallow common prefixes in alternative statements
         let commonPrefixLen = length . takeWhile (id) $ zipWith (==) typeL typeR
         when (commonPrefixLen > 0) (throwError $ "alternative has common prefix " ++ show (take commonPrefixLen typeL))
-        -- TODO: disallow different-length branches
         return $ TypeAlternative typeL typeR
       go (ASTTypeNest pre post) = do
         typePre <- sequence $ go <$> pre

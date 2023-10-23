@@ -170,6 +170,7 @@ astTypeAssignment = do
   precond <- many astTypeTerm
   single TokenArrow 
   postcond <- many astTypeTerm 
+  single TokenEndAssign
   return (ASTTypeAssignment (\case { ASTName s -> s } $ name) precond postcond)
   
 astDefinition :: Parser CharmAST
