@@ -77,7 +77,7 @@ typecheck asts = do
     throwError errs
 
 main :: IO ()
-main = putStrLn "ok!"
+main = putStrLn ":)" 
 -- main = do
 --   input <- getUntilEmptyLine
 --   -- Stage 1
