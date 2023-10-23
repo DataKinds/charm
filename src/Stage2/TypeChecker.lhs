@@ -76,6 +76,22 @@ may be used as a sort of "hatch" out of the type system.
     | TypeOptional CharmType                  -- A?
     | TypeAny                                 -- Any
     deriving (Eq)
+
+  instance Show CharmType where
+    show (TypeNest as bs) = "[" ++ s as ++ " -> " ++ s bs ++ "]"
+      where
+        s :: [CharmType] -> String
+        s ts = unwords $ show <$> ts
+    show (TypeVar v) = v
+    show (TypeConcrete c) = c
+    show (TypeVariadic t) = show t ++ "..."
+    show (TypeAlternative as bs) = "(" ++ s as ++ " | " ++ s bs ++ ")"
+      where
+        s :: [CharmType] -> String
+        s ts = unwords $ show <$> ts
+    show (TypeOptional t) = show t ++ "?"
+    show (TypeAny) = "Any"
+
 \end{code}
 
 
