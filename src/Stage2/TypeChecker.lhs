@@ -98,7 +98,7 @@ These are helper types that are mostly internal to the typechecker.
 What Charm functions have what type? This is returned by `extractTypesFromAST`
 after walking the AST.
 
-> type TypeEnvironment = M.Map String ([CharmType], [CharmType]) 
+> type TypeEnvironmentz = M.Map String ([CharmType], [CharmType]) 
 
 What type variables have a concrete binding? 
 Right now, this is the entirety of the internal state of the typechecker.
@@ -385,7 +385,7 @@ few useful identities hold here:
       go (TypeAlternative [] []) (TypeAlternative [] []) = pure []
       -- The RHS ran out in a balanced way after popping the LHS
       go x@(TypeAlternative as bs) (TypeAlternative [] []) = pure [x]
-      -- One of the branches was unbalanced. T  his is an error condition.
+      -- One of the branches was unbalanced. This is an error condition.
       go x@(TypeAlternative [] _) y@(TypeAlternative _ _) = throwError $ TypeErrorGotXWantedY x y
       go x@(TypeAlternative _ []) y@(TypeAlternative _ _) = throwError $ TypeErrorGotXWantedY x y
       go x@(TypeAlternative _ _) y@(TypeAlternative [] _) = throwError $ TypeErrorGotXWantedY x y
@@ -410,5 +410,68 @@ known sequence of types on the top of it.
   unify [] [] = pure []
   unify lhs [] = pure lhs
   unify [] (y:_) = throwError $ TypeErrorStackUnderflow y
+
+  apply :: [CharmType] -> [CharmType] -> [CharmType] -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType])
+  apply = undefined
+  -- This is the most general of the unification functions
+  -- Takes the stack, a func's popped types, a func's pushed types,
+  -- and returns either a type unification error on failure,
+  -- or the state of the stack after applying the func. This state
+  -- includes both the underflowed values the func attempted to pop,
+  -- along with the values pushed back onto the stack.
 \end{code}
 
+Type inference
+--------------
+
+The following section is concerned with inferring the stack effects a
+set of functions would have if they were executed.
+
+First, a function to lift single AST terms to their types.
+
+\begin{code}
+  liftAST
+    :: TypeEnvironment -- The known type signatures of all functions
+    -> CharmAST        -- The AST term to lift
+    -> Except CharmTypeError ([CharmType], [CharmType])      -- The types popped and pushed, respectively, by the AST term
+  liftAST te (ASTName n) = case lookup n te of
+      Just (popped, pushed) -> return (popped, pushed)
+      Nothing -> throwError $ TypeErrorUnknownFunction n
+  liftAST te (ASTNumber _) = return ([], [TypeConcrete "Num"])
+  liftAST te (ASTQuote _) = return ([], [TypeConcrete "Str"])
+  liftAST te (ASTNest body) = infer body
+  liftAST te (ASTDefinition _ _) = return ([], [])
+  liftAST te _ = throwError $ TypeErrorFatal (Just "liftAST got unexpected type-level term!")
+\end{code}
+
+And a function to ingest a sequence of AST terms and produce their overall stack effect
+
+\begin{code}
+  unifyUnderflow
+    :: [CharmType]                                    -- Pre-evaluation stack types
+    -> [CharmType]                                    -- f's popped types
+    -> ExceptT -- Either a unification error or the pops and pushes of the post eval stack
+       CharmTypeError
+       TypeContext ([CharmType], [CharmType]) 
+  unifyUnderflow (x:lhs) (y:rhs) = do
+    leftoverTypes <- unifyOne x y
+    (recursePops, recursePushes) <- unifyUnderflow (leftoverTypes ++ lhs) rhs
+    return (recursePops, recursePushes)
+  unifyUnderflow [] [] = pure ([], [])
+  unifyUnderflow lhs [] = pure ([], lhs)
+  unifyUnderflow [] rhs = pure (rhs, [])
+\end{code}
+
+
+\begin{code}
+  infer
+    :: TypeEnvironment
+    -> [CharmAST]
+    -> Except CharmTypeError ([CharmType], [CharmType])
+  infer te asts = go asts ([], [])
+    where
+      go :: CharmAST -> ([CharmType], [CharmType]) -> Except CharmTypeError ([CharmType], [CharmType])
+      go ast (underflow, overflow) = do
+        (pops, pushes) <- liftAST te ast
+        lift $ runTypeContext $ unifyUnderflow overflow pops
+\end{code}
