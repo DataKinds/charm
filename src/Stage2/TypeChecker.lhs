@@ -449,28 +449,32 @@ stack and the popped types don't unify.
     :: [CharmType] -- Pre-evaluation stack
     -> [CharmType] -- The func's popped types, half its signature
     -> [CharmType] -- The func's pushed types, the other half of its signature
-    -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType]) -- Either a unification error or the stack under/overflow
-  applyAndUnify = go ([], [])
+    -- Either a unification error or the stack's underflow and overflow.
+    -- Note that the overflow includes the stack itself.
+    -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType]) 
+  applyAndUnify stack = go ([], stack)
     where
       -- | A wrapper that tracks intermediate underflow / overflow state
-      go :: ([CharmType], [CharmType]) -> [CharmType] -> [CharmType] -> [CharmType] -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType])
+      go
+        :: ([CharmType], [CharmType]) -> [CharmType] -> [CharmType]
+        -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType])
       -- First, pop all the function's popped types, checking that
       -- they unify with what's on the stack
-      go (under, over) (top:stack) (pop:pops) pushes = do
+      go (under, (top:stack)) (pop:pops) pushes = do
         leftoverTypes <- unifyOne top pop
-        go (under, over) (leftoverTypes ++ stack) pops pushes
+        go (under, stack) pops pushes
       -- If the stack runs dry, start tracking its underflow
-      go (under, over) [] (pop:pops) pushes = do
+      go (under, []) (pop:pops) pushes = do
         concPop <- lift $ concretize pop
-        go (concPop:under, over) [] pops pushes
+        go (concPop:under, []) pops pushes
       -- Once we've popped all that the function wanted to pop, push
       -- the types the function wanted to push
-      go (under, over) stack [] (push:pushes) = do
+      go (under, stack) [] (push:pushes) = do
         concPush <- lift $ concretize push
-        go (under, concPush:over) stack [] pushes
+        go (under, stack ++ [concPush]) [] pushes
       -- Finally, if there's no more to push or pop, we've got our
       -- final underflow and overflow states
-      go underover stack [] [] = pure underover
+      go understack [] [] = pure understack
 
   -- | A wrapper for applyAndUnify that discards the TypeContext at the
   -- | end of the application. This function is usually more useful, as
@@ -539,6 +543,6 @@ Alongside a coroutine that lifts sequences of AST terms to their types
         (under', over') <- evalAndUnify over pops pushes
         -- TODO: the typevars on the stack must be mangled before
         -- combining to preserve quantifiers
-        go (under' ++ under, over' ++ over) te asts
+        go (under' ++ under, over') te asts
       go underover te [] = pure underover
 \end{code}
