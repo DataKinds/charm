@@ -536,6 +536,9 @@ Alongside a coroutine that lifts sequences of AST terms to their types
       go :: ([CharmType], [CharmType]) -> TypeEnvironment -> [CharmAST] -> Except CharmTypeError ([CharmType], [CharmType])
       go (under, over) te (ast:asts) = do
         (pops, pushes) <- liftAST te ast
-        evalAndUnify over pops pushes
+        (under', over') <- evalAndUnify over pops pushes
+        -- TODO: the typevars on the stack must be mangled before
+        -- combining to preserve quantifiers
+        go (under' ++ under, over' ++ over) te asts
       go underover te [] = pure underover
 \end{code}

@@ -90,14 +90,21 @@ main = do
   putStrLn "=============================="
   ast <- either (\err -> ioError $ userError (show err)) pure $ runCharmParser "<prelude>" contents
   putStrLn "Parsed the following AST"
+  putStrLn "------------------------------"
   print ast
   putStrLn "=============================="
   let ((prunedAST, errs), typeEnv) = runIdentity $ runTypeContext (runWriterT $ extractTypesFromAST ast)
   when ((length errs) > 0) (ioError $ userError (show errs))
-  putStrLn "Parsed the following type signatures"
+  putStrLn "Got type signatures:"
+  putStrLn "------------------------------"
   print typeEnv
-  putStrLn "Pared down the following AST"
+  putStrLn ""
+  putStrLn "Pared down AST:"
+  putStrLn "------------------------------"
   print prunedAST
+  putStrLn "=============================="
+  putStrLn "Inferred stack effect:"
+  print $ infer typeEnv prunedAST
 -- main = do
 --   input <- getUntilEmptyLine
 --   -- Stage 1

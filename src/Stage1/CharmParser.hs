@@ -5,6 +5,7 @@ module Stage1.CharmParser where
 import Text.Megaparsec
 import Text.Megaparsec.Debug
 import Text.Megaparsec.Char
+import Data.Foldable
 import Data.Ratio
 import Data.Void
 import Control.Monad
@@ -48,6 +49,9 @@ data CharmToken =
   | TokenAlternative -- |
   | TokenVariadic -- ...
   deriving (Show, Eq, Ord)
+
+instance (Show a, Ord a) => VisualStream [a] where
+  showTokens _ = unwords . toList . fmap show
 
 tokenDecimal :: Lexer CharmToken 
 tokenDecimal = do
