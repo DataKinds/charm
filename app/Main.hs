@@ -8,6 +8,8 @@ import Control.Monad.Trans.Writer.CPS
 import Control.Monad.Except
 import Control.Monad
 import Control.Monad.Trans.Except
+import Data.Either
+import Data.Functor.Identity
 import Data.Maybe
 import qualified Data.Map.Strict as M
 
@@ -18,7 +20,8 @@ getUntilEmptyLine = do
     "" -> return input
     s -> liftM (\ss -> s ++ "\n" ++ ss) $ getUntilEmptyLine
 
--- A pretty wrapper for Stage2.TypeChecker.extractTypesFromAST
+-- | A pretty wrapper for Stage2.TypeChecker.extractTypesFromAST.
+-- | Strips type signatures from an AST and returns them in a TypeEnvironment.
 extractTypes :: [CharmAST] -> Except [CharmTypeError] (TypeEnvironment, [CharmAST])
 extractTypes asts = do
   let typeEnvAction = runWriterT (extractTypesFromAST asts) 
@@ -80,9 +83,21 @@ main :: IO ()
 main = do
   let preludeFilename = "standard_lib/prelude.charm"
   contents <- readFile preludeFilename
+  putStrLn "=============================="
   putStrLn $ "Reading from Prelude at " ++ preludeFilename
+  putStrLn "------------------------------"
   putStrLn contents
-  print $ runCharmParser "<stdin>" contents 
+  putStrLn "=============================="
+  ast <- either (\err -> ioError $ userError (show err)) pure $ runCharmParser "<prelude>" contents
+  putStrLn "Parsed the following AST"
+  print ast
+  putStrLn "=============================="
+  let ((prunedAST, errs), typeEnv) = runIdentity $ runTypeContext (runWriterT $ extractTypesFromAST ast)
+  when ((length errs) > 0) (ioError $ userError (show errs))
+  putStrLn "Parsed the following type signatures"
+  print typeEnv
+  putStrLn "Pared down the following AST"
+  print prunedAST
 -- main = do
 --   input <- getUntilEmptyLine
 --   -- Stage 1

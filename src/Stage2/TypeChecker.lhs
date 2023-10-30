@@ -29,6 +29,7 @@ Let's start by establishing the imports we need.
   import Control.Monad.Trans.State
   import Control.Monad.Trans.Writer.CPS
   import Data.Bifunctor
+  import Data.Functor.Identity
   import Data.Function ()
   import Data.List
   import Debug.Trace
@@ -98,7 +99,7 @@ These are helper types that are mostly internal to the typechecker.
 What Charm functions have what type? This is returned by `extractTypesFromAST`
 after walking the AST.
 
-> type TypeEnvironmentz = M.Map String ([CharmType], [CharmType]) 
+> type TypeEnvironment = M.Map String ([CharmType], [CharmType]) 
 
 What type variables have a concrete binding? 
 Right now, this is the entirety of the internal state of the typechecker.
@@ -110,8 +111,8 @@ state of the typechecker.
 
 > type TypeContext = State TypeVarBindings 
 
-And finally, this is just a helper function for running the typechecker and
-discarding its internal state.
+And finally, this is just a helper function for running the
+typechecker with an empty internal state.
 
 > runTypeContext :: StateT (M.Map k a1) m a2 -> m (a2, M.Map k a1)
 > runTypeContext tc = runStateT tc M.empty
@@ -308,7 +309,14 @@ term.
             go x x
           -- The type var's already been bound!
           t -> go x t
-      go x@(TypeVar _) y = go y x
+      go x@(TypeVar _) y = do
+        concX <- lift $ concretize x
+        case concX of
+          -- An unbound type var found itself onto the stack!
+          -- It already failed to match another type var by name, so let's throw
+          TypeVar a -> throwError $ TypeErrorGotXWantedY x y
+          -- 
+            
 \end{code}
 
 `TypeAny` is unified first after `TypeVar`s so that it may force-unify with any
@@ -394,7 +402,87 @@ few useful identities hold here:
       go x@(TypeAlternative _ _) y = throwError $ TypeErrorGotXWantedY x y
       go x y@(TypeAlternative _ _) = throwError $ TypeErrorGotXWantedY x y
 \end{code}
-    
+
+Now we introduce the most general of the unification functions:
+`applyAndUnify`. It ingests the state of the stack along with a
+function's full type signature (both popped and pushed types). It then
+returns the _underflow_ and the _overflow_ of the function with
+respect to the stack.
+
+The _underflow_ is the first element of the result tuple. It
+represents any type that was popped while the stack was empty. In a
+forward type-checking context, this represents an Underflow error. In
+a type-inference context, this may be used to infer the popped
+arguments of a nest or function.
+
+The _overflow_ is the second element of the result tuple. It
+represents any types left on the stack after the evaluation of the
+described function. It is made as concrete as possible -- all
+variables bound in the TypeContext are substituted before getting
+pushed.
+
+Note that the names of `TypeVar`s may be mangled if they overlap with
+`TypeVar`s that have already been quantified on the stack. Remember
+that type quantifiers only exist at the top level of a function's
+signature atm. In the future, there needs to be a way to store
+(un)bound type variables along with the type signatures themselves.
+
+This function can fail and throw a `CharmTypeError` in many ways, but
+the most notable is that it throws a `TypeErrorGotXWantedY` if the
+stack and the popped types don't unify.
+ 
+\begin{code}
+  -- | Mangles the name of any type var on the stack if it conflicts
+  -- with a newly quantified type var.
+  mangleVars :: [CharmType] -> [CharmType] -> [CharmType]
+  mangleVars stack pops = stack
+
+  -- TODO: mangle the pre-evaluation stack before beginning
+ 
+  -- | This is the most general of the unification functions
+  -- | Takes the stack, a func's popped types, a func's pushed types,
+  -- | and returns either a type unification error on failure,
+  -- | or the state of the stack after applying the func. This state
+  -- | includes both the underflowed values the func attempted to pop,
+  -- | along with the values pushed back onto the stack.
+  applyAndUnify
+    :: [CharmType] -- Pre-evaluation stack
+    -> [CharmType] -- The func's popped types, half its signature
+    -> [CharmType] -- The func's pushed types, the other half of its signature
+    -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType]) -- Either a unification error or the stack under/overflow
+  applyAndUnify = go ([], [])
+    where
+      -- | A wrapper that tracks intermediate underflow / overflow state
+      go :: ([CharmType], [CharmType]) -> [CharmType] -> [CharmType] -> [CharmType] -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType])
+      -- First, pop all the function's popped types, checking that
+      -- they unify with what's on the stack
+      go (under, over) (top:stack) (pop:pops) pushes = do
+        leftoverTypes <- unifyOne top pop
+        go (under, over) (leftoverTypes ++ stack) pops pushes
+      -- If the stack runs dry, start tracking its underflow
+      go (under, over) [] (pop:pops) pushes = do
+        concPop <- lift $ concretize pop
+        go (concPop:under, over) [] pops pushes
+      -- Once we've popped all that the function wanted to pop, push
+      -- the types the function wanted to push
+      go (under, over) stack [] (push:pushes) = do
+        concPush <- lift $ concretize push
+        go (under, concPush:over) stack [] pushes
+      -- Finally, if there's no more to push or pop, we've got our
+      -- final underflow and overflow states
+      go underover stack [] [] = pure underover
+
+  -- | A wrapper for applyAndUnify that discards the TypeContext at the
+  -- | end of the application. This function is usually more useful, as
+  -- | quantifiers cannot extend past function borders anyway.
+  evalAndUnify :: [CharmType] -> [CharmType] -> [CharmType] -> Except CharmTypeError ([CharmType], [CharmType])
+  evalAndUnify stack pops pushes = mapExceptT forget $ applyAndUnify stack pops pushes
+    where
+      forget :: TypeContext (Either CharmTypeError ([CharmType], [CharmType])) -> Identity (Either CharmTypeError ([CharmType], [CharmType]))
+      forget tc = fst <$> runTypeContext tc
+  
+\end{code}
+
 Unifies (or fails to unify) a single function `f` when the stack has a
 known sequence of types on the top of it.
 
@@ -411,14 +499,6 @@ known sequence of types on the top of it.
   unify lhs [] = pure lhs
   unify [] (y:_) = throwError $ TypeErrorStackUnderflow y
 
-  apply :: [CharmType] -> [CharmType] -> [CharmType] -> ExceptT CharmTypeError TypeContext ([CharmType], [CharmType])
-  apply = undefined
-  -- This is the most general of the unification functions
-  -- Takes the stack, a func's popped types, a func's pushed types,
-  -- and returns either a type unification error on failure,
-  -- or the state of the stack after applying the func. This state
-  -- includes both the underflowed values the func attempted to pop,
-  -- along with the values pushed back onto the stack.
 \end{code}
 
 Type inference
@@ -434,44 +514,28 @@ First, a function to lift single AST terms to their types.
     :: TypeEnvironment -- The known type signatures of all functions
     -> CharmAST        -- The AST term to lift
     -> Except CharmTypeError ([CharmType], [CharmType])      -- The types popped and pushed, respectively, by the AST term
-  liftAST te (ASTName n) = case lookup n te of
+  liftAST te (ASTName n) = case M.lookup n te of
       Just (popped, pushed) -> return (popped, pushed)
       Nothing -> throwError $ TypeErrorUnknownFunction n
   liftAST te (ASTNumber _) = return ([], [TypeConcrete "Num"])
   liftAST te (ASTQuote _) = return ([], [TypeConcrete "Str"])
-  liftAST te (ASTNest body) = infer body
+  liftAST te (ASTNest body) = infer te body
   liftAST te (ASTDefinition _ _) = return ([], [])
   liftAST te _ = throwError $ TypeErrorFatal (Just "liftAST got unexpected type-level term!")
 \end{code}
 
-And a function to ingest a sequence of AST terms and produce their overall stack effect
-
-\begin{code}
-  unifyUnderflow
-    :: [CharmType]                                    -- Pre-evaluation stack types
-    -> [CharmType]                                    -- f's popped types
-    -> ExceptT -- Either a unification error or the pops and pushes of the post eval stack
-       CharmTypeError
-       TypeContext ([CharmType], [CharmType]) 
-  unifyUnderflow (x:lhs) (y:rhs) = do
-    leftoverTypes <- unifyOne x y
-    (recursePops, recursePushes) <- unifyUnderflow (leftoverTypes ++ lhs) rhs
-    return (recursePops, recursePushes)
-  unifyUnderflow [] [] = pure ([], [])
-  unifyUnderflow lhs [] = pure ([], lhs)
-  unifyUnderflow [] rhs = pure (rhs, [])
-\end{code}
-
+Alongside a coroutine that lifts sequences of AST terms to their types 
 
 \begin{code}
   infer
     :: TypeEnvironment
     -> [CharmAST]
     -> Except CharmTypeError ([CharmType], [CharmType])
-  infer te asts = go asts ([], [])
+  infer = go ([], [])
     where
-      go :: CharmAST -> ([CharmType], [CharmType]) -> Except CharmTypeError ([CharmType], [CharmType])
-      go ast (underflow, overflow) = do
+      go :: ([CharmType], [CharmType]) -> TypeEnvironment -> [CharmAST] -> Except CharmTypeError ([CharmType], [CharmType])
+      go (under, over) te (ast:asts) = do
         (pops, pushes) <- liftAST te ast
-        lift $ runTypeContext $ unifyUnderflow overflow pops
+        evalAndUnify over pops pushes
+      go underover te [] = pure underover
 \end{code}
